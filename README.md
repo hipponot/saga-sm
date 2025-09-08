@@ -1,70 +1,104 @@
-# saga-sm
+# saga-sm - Saga Schedule Manager
 
-Complete schedule management solution with tRPC API and interactive web client built with saga-soa infrastructure.
+**saga-sm** is a tRPC API service that provides schedule management functionality for Saga Connect, built with saga-soa infrastructure.
 
-## Project Structure
+## 🚀 Quick Start for New Developers
+
+### What is saga-soa?
+
+**saga-soa** is our shared infrastructure framework for building consistent APIs across different protocols:
+
+- **Multi-protocol support**: REST endpoints, tRPC procedures, and TypeGraphQL resolvers
+- **Common patterns**: Dependency injection, logging, database connections, and PubSub events
+- **Developer experience**: Hot reloading, type safety, and consistent project structure
+- **Business logic organization**: Sector-based architecture for domain separation
+
+### What is saga-sm?
+
+This project provides:
+
+- **Schedule CRUD operations**: Create, read, update, delete schedules
+- **Real-time updates**: PubSub events for schedule changes
+- **Type-safe API**: Full TypeScript support from API to client
+- **Interactive testing**: Web client for endpoint exploration and testing
+
+## 📁 Project Structure
 
 ```
 saga-sm/
 ├── apps/
-│   ├── api/                    # tRPC API service
+│   ├── api/                    # tRPC API service (port 3000)
 │   │   ├── src/
-│   │   │   ├── sectors/        # Business logic sectors
+│   │   │   ├── sectors/        # Business logic by domain
 │   │   │   │   ├── schedule/   # Schedule management
 │   │   │   │   └── pubsub/     # Event definitions
 │   │   │   ├── main.ts         # API bootstrap
 │   │   │   └── inversify.config.ts
 │   │   └── package.json
-│   └── web-client/             # Next.js test application
-│       ├── app/
+│   └── web-client/             # Next.js test client (port 3001)
+│       ├── app/                # Testing interfaces
 │       │   ├── endpoints/      # Interactive endpoint testing
 │       │   ├── api-test/       # Connection testing
 │       │   ├── schedule-demo/  # Live demo interface
 │       │   └── page.tsx        # Home page
-│       ├── src/services/       # tRPC client services
+│       ├── src/services/       # tRPC client integration
 │       └── package.json
-├── scripts/                    # Setup automation scripts
+├── scripts/                    # Development setup automation
 └── package.json               # Workspace orchestration
 ```
 
-## Development Setup
+## 🛠️ Development Setup
 
 ### Prerequisites
 
-- Node.js >= 18
-- pnpm >= 8
-- MongoDB (running locally or accessible remotely)
-- saga-soa repository (for local development)
+- **Node.js** >= 18
+- **pnpm** >= 8
+- **MongoDB** (local or remote)
+- **saga-soa repository** (must be cloned alongside this project)
+
+### Required Directory Structure
+
+```
+dev/
+├── saga-soa/          # Shared infrastructure (clone first)
+└── saga-sm/           # This project
+```
 
 ### Quick Setup
 
-1. **Clone and setup both repositories:**
-   ```bash
-   # Directory structure
-   dev/
-   ├── saga-soa/
-   └── saga-sm/
-   ```
+**1. Clone both repositories:**
+```bash
+cd dev/
+git clone [saga-soa-repo-url] saga-soa
+git clone [saga-sm-repo-url] saga-sm
+```
 
-2. **Run automated setup:**
-   ```bash
-   cd saga-sm
-   
-   # Option A: pnpm link (recommended for active development)
-   ./scripts/setup-local-dev.sh
-   
-   # Option B: file protocol (simpler, automatic updates)
-   ./scripts/setup-file-protocol.sh
-   ```
+**2. Link saga-sm to saga-soa for concurrent development:**
+```bash
+cd saga-sm
 
-3. **Start development servers:**
-   ```bash
-   # Terminal 1: saga-soa packages in watch mode
-   cd ../saga-soa && turbo run dev --filter='@saga-soa/*'
-   
-   # Terminal 2: saga-sm applications
-   cd saga-sm && pnpm dev
-   ```
+# Option A: pnpm link (recommended for active saga-soa development)
+./scripts/setup-local-dev.sh
+
+# Option B: file protocol (simpler, automatic updates)
+./scripts/setup-file-protocol.sh
+```
+
+**3. Configure environment:**
+```bash
+# Copy and customize API configuration
+cp apps/api/.env.example apps/api/.env
+# Update MongoDB URI and other settings as needed
+```
+
+**4. Start development servers:**
+```bash
+# Terminal 1: Start saga-soa packages (if using pnpm link)
+cd ../saga-soa && turbo run dev --filter='@saga-soa/*'
+
+# Terminal 2: Start saga-sm applications
+cd saga-sm && pnpm dev
+```
 
 ### Applications
 
@@ -78,24 +112,30 @@ saga-sm/
   - Live schedule management demo
   - Connection diagnostics
 
-### Environment Configuration
+## 📜 Available Scripts
 
-1. Copy `apps/api/.env.example` to `apps/api/.env`
-2. Update configuration values as needed
+### Root Level (Turborepo)
+```bash
+pnpm dev          # Run both API and web client
+pnpm build        # Build all applications  
+pnpm test         # Run all tests
+pnpm check        # Full validation (build + test + lint + typecheck)
+pnpm lint         # Lint all code
+pnpm typecheck    # TypeScript validation
+```
 
-### Scripts
+### Individual Applications
+```bash
+# API only
+pnpm --filter @saga-sm/api dev
+pnpm --filter @saga-sm/api test
 
-**Root Level (Turborepo orchestration):**
-- `pnpm dev` - Run both API and web client in dev mode
-- `pnpm build` - Build all applications
-- `pnpm test` - Run all tests
-- `pnpm check` - Full validation across all apps
+# Web client only  
+pnpm --filter @saga-sm/web-client dev
+pnpm --filter @saga-sm/web-client test
+```
 
-**Individual Apps:**
-- `pnpm --filter @saga-sm/api dev` - Run API only
-- `pnpm --filter @saga-sm/web-client dev` - Run web client only
-
-## Architecture
+## 🏗️ Architecture
 
 ### API Application (`apps/api/`)
 
@@ -106,20 +146,6 @@ Following saga-soa patterns:
 - **tRPC API** - Type-safe API endpoints
 - **PubSub events** - Real-time event system
 - **4-space indentation** - Code style consistency
-
-**Available Endpoints:**
-- `schedule.getSchedules` - Get all schedules
-- `schedule.getScheduleById` - Get schedule by ID  
-- `schedule.createSchedule` - Create new schedule
-- `schedule.updateSchedule` - Update existing schedule
-- `schedule.deleteSchedule` - Delete schedule
-
-**PubSub Events:**
-- `schedule:created` - Schedule created
-- `schedule:updated` - Schedule updated
-- `schedule:deleted` - Schedule deleted
-- `schedule:started` - Schedule execution started
-- `schedule:completed` - Schedule execution completed
 
 ### Web Client Application (`apps/web-client/`)
 
@@ -137,7 +163,41 @@ Next.js 15 application with App Router providing:
 - `/api-test` - Connection testing and diagnostics
 - `/schedule-demo` - Live schedule management interface
 
-## Development Features
+## 📡 Available Endpoints
+
+The tRPC API provides these schedule management endpoints:
+
+- `schedule.getSchedules` - Retrieve all schedules
+- `schedule.getScheduleById` - Get specific schedule by ID
+- `schedule.createSchedule` - Create new schedule
+- `schedule.updateSchedule` - Update existing schedule
+- `schedule.deleteSchedule` - Remove schedule
+
+## 📻 PubSub Events
+
+Real-time events for schedule changes:
+
+- `schedule:created` - New schedule created
+- `schedule:updated` - Schedule modified
+- `schedule:deleted` - Schedule removed
+- `schedule:started` - Schedule execution began
+- `schedule:completed` - Schedule execution finished
+
+## 🧪 Testing
+
+### Run Tests
+```bash
+pnpm test                         # All tests across workspace
+pnpm --filter @saga-sm/api test  # API tests only
+pnpm --filter @saga-sm/web-client test # Client tests only
+```
+
+### Test Types
+- **Unit tests**: Individual function/class testing
+- **Integration tests**: API endpoint and database testing
+- **Type checking**: TypeScript validation across codebase
+
+## 🔧 Development Features
 
 ### Hot Reloading
 - saga-soa packages rebuild automatically when changed
@@ -158,7 +218,27 @@ The web client provides comprehensive testing tools:
 - Shared type definitions (when available)
 - End-to-end type safety from API to client
 
-## Deployment
+## 🚨 Troubleshooting
+
+### Common Issues
+
+**"saga-soa packages not found"**
+- Ensure saga-soa is cloned in the correct directory structure
+- Re-run the setup script: `./scripts/setup-local-dev.sh`
+
+**"Database connection failed"**
+- Check MongoDB is running locally or update `MONGODB_URI` in `apps/api/.env`
+- Verify network connectivity to remote MongoDB instance
+
+**"Port already in use"**
+- API (3000), Web Client (3001), or PubSub (3002) ports are occupied
+- Stop other services or update port configuration
+
+**"Hot reloading not working"**
+- Restart both terminal sessions
+- Verify saga-soa packages are building with `turbo run dev`
+
+## 🚀 Deployment
 
 When ready for production:
 
@@ -166,3 +246,10 @@ When ready for production:
 2. Build applications: `pnpm build`
 3. Deploy API and web client independently
 4. Configure environment variables for production
+
+## 📚 Next Steps
+
+1. **Explore the codebase**: Start with `apps/api/src/sectors/schedule/`
+2. **Test the API**: Use the web client to understand available endpoints
+3. **Read saga-soa docs**: Understand the underlying infrastructure patterns
+4. **Make your first change**: Add a new endpoint or modify existing logic
