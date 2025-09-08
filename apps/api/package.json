@@ -28,7 +28,6 @@
         "@saga-soa/db": "file:../../../saga-soa/packages/db",
         "@saga-soa/logger": "file:../../../saga-soa/packages/logger",
         "@saga-soa/pubsub-core": "file:../../../saga-soa/packages/pubsub-core",
-        "@saga-soa/config": "file:../../../saga-soa/packages/config",
         "inversify": "^6.0.2",
         "reflect-metadata": "^0.2.2",
         "zod": "^3.22.4"
