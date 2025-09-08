@@ -1,0 +1,27 @@
+{
+    "name": "saga-sm",
+    "version": "1.0.0",
+    "description": "Schedule management service with API and web client",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "turbo run dev",
+        "build": "turbo run build",
+        "test": "turbo run test",
+        "check": "turbo run check",
+        "lint": "turbo run lint",
+        "typecheck": "turbo run typecheck",
+        "clean": "turbo run clean"
+    },
+    "devDependencies": {
+        "@types/node": "^18.19.31",
+        "prettier": "^3.2.5",
+        "turbo": "^2.0.0",
+        "typescript": "^5.8.2"
+    },
+    "engines": {
+        "node": ">=18",
+        "pnpm": ">=8"
+    },
+    "packageManager": "pnpm@8.15.4"
+}

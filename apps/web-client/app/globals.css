@@ -1,0 +1,130 @@
+:root {
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 214, 219, 220;
+    --background-end-rgb: 255, 255, 255;
+    
+    /* Color system matching saga-soa patterns */
+    --blue-rgb: 37, 99, 235;
+    --green-rgb: 34, 197, 94;
+    --red-rgb: 239, 68, 68;
+    --purple-rgb: 147, 51, 234;
+    --yellow-rgb: 245, 158, 11;
+    --emerald-rgb: 16, 185, 129;
+    
+    /* Semantic colors */
+    --success: rgb(var(--green-rgb));
+    --warning: rgb(var(--yellow-rgb));
+    --error: rgb(var(--red-rgb));
+    --info: rgb(var(--blue-rgb));
+    
+    /* Background and foreground */
+    --foreground: rgb(var(--foreground-rgb));
+    --background: linear-gradient(
+        to bottom,
+        transparent,
+        rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --foreground-rgb: 255, 255, 255;
+        --background-start-rgb: 0, 0, 0;
+        --background-end-rgb: 0, 0, 0;
+    }
+}
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+html,
+body {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    transition: all 0.25s;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: rgb(var(--blue-rgb));
+    color: white;
+}
+
+.btn-secondary {
+    background-color: rgb(var(--purple-rgb));
+    color: white;
+}
+
+.btn-success {
+    background-color: rgb(var(--green-rgb));
+    color: white;
+}
+
+.btn-danger {
+    background-color: rgb(var(--red-rgb));
+    color: white;
+}
+
+input,
+textarea,
+select {
+    font-family: inherit;
+    padding: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    width: 100%;
+    max-width: 400px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: rgb(var(--blue-rgb));
+    box-shadow: 0 0 0 2px rgba(var(--blue-rgb), 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    input,
+    textarea,
+    select {
+        background-color: #1a1a1a;
+        border-color: #333;
+        color: white;
+    }
+}

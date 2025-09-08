@@ -1,0 +1,203 @@
+.container {
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.header {
+    margin-bottom: 3rem;
+}
+
+.backLink {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: rgb(var(--blue-rgb));
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.backLink:hover {
+    text-decoration: underline;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: rgb(var(--blue-rgb));
+}
+
+.header p {
+    opacity: 0.8;
+    font-size: 1.1rem;
+}
+
+.main {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.connectionCard {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.connectionCard h2 {
+    color: rgb(var(--purple-rgb));
+    margin-bottom: 2rem;
+}
+
+.statusIndicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.statusLight {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.statusLight.connected {
+    background-color: rgb(var(--green-rgb));
+    box-shadow: 0 0 10px rgba(var(--green-rgb), 0.5);
+}
+
+.statusLight.disconnected {
+    background-color: rgb(var(--red-rgb));
+    box-shadow: 0 0 10px rgba(var(--red-rgb), 0.5);
+}
+
+.statusLight.pulsing {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+.statusText {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.lastPing {
+    margin-bottom: 2rem;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.quickActions h2 {
+    color: rgb(var(--green-rgb));
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.actionGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.actionCard {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.actionCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border-color: rgba(var(--blue-rgb), 0.5);
+}
+
+.actionCard h3 {
+    color: rgb(var(--blue-rgb));
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.actionCard p {
+    opacity: 0.8;
+    line-height: 1.5;
+}
+
+.apiInfo h2 {
+    color: rgb(var(--yellow-rgb));
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.infoItem {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.infoItem strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: rgb(var(--purple-rgb));
+}
+
+.infoItem code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .main {
+        gap: 2rem;
+    }
+    
+    .connectionCard,
+    .actionCard {
+        padding: 1.5rem;
+    }
+    
+    .actionGrid,
+    .infoGrid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}

@@ -1,0 +1,242 @@
+.container {
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.header {
+    margin-bottom: 3rem;
+}
+
+.backLink {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: rgb(var(--blue-rgb));
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.backLink:hover {
+    text-decoration: underline;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: rgb(var(--blue-rgb));
+}
+
+.header p {
+    opacity: 0.8;
+    font-size: 1.1rem;
+}
+
+.main {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.createSection {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.createSection h2 {
+    color: rgb(var(--green-rgb));
+    margin-bottom: 2rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formGroup label {
+    font-weight: 600;
+    color: rgb(var(--purple-rgb));
+}
+
+.checkboxLabel {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 0.5rem !important;
+    cursor: pointer;
+}
+
+.checkboxLabel input[type="checkbox"] {
+    width: auto !important;
+    max-width: auto !important;
+}
+
+.scheduleList h2 {
+    color: rgb(var(--yellow-rgb));
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 3rem;
+    opacity: 0.6;
+}
+
+.scheduleGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.scheduleCard {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.scheduleCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border-color: rgba(var(--blue-rgb), 0.3);
+}
+
+.scheduleHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.scheduleHeader h3 {
+    color: rgb(var(--blue-rgb));
+    font-size: 1.25rem;
+    margin: 0;
+    flex: 1;
+}
+
+.scheduleActions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status.active {
+    background: rgba(var(--green-rgb), 0.2);
+    color: rgb(var(--green-rgb));
+}
+
+.status.completed {
+    background: rgba(var(--blue-rgb), 0.2);
+    color: rgb(var(--blue-rgb));
+}
+
+.status.cancelled {
+    background: rgba(var(--red-rgb), 0.2);
+    color: rgb(var(--red-rgb));
+}
+
+.scheduleActions button {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+}
+
+.scheduleDescription {
+    margin-bottom: 1.5rem;
+    opacity: 0.8;
+    line-height: 1.5;
+}
+
+.scheduleDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.timeInfo {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.timeInfo strong {
+    color: rgb(var(--purple-rgb));
+    min-width: 60px;
+}
+
+.recurringBadge {
+    background: rgba(var(--yellow-rgb), 0.2);
+    color: rgb(var(--yellow-rgb));
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    align-self: flex-start;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .main {
+        gap: 2rem;
+    }
+    
+    .createSection {
+        padding: 1.5rem;
+    }
+    
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+    
+    .scheduleGrid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .scheduleHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .scheduleActions {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+}

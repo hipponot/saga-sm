@@ -1,0 +1,30 @@
+{
+    "pipeline": {
+        "build": {
+            "dependsOn": ["^build"],
+            "inputs": ["$TURBO_DEFAULT$", ".env*"],
+            "outputs": [".next/**", "dist/**"]
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "test": {
+            "dependsOn": ["build"],
+            "inputs": ["$TURBO_DEFAULT$", "src/**/*.test.*", "src/**/*.spec.*"]
+        },
+        "lint": {
+            "inputs": ["$TURBO_DEFAULT$"]
+        },
+        "typecheck": {
+            "dependsOn": ["^build"],
+            "inputs": ["$TURBO_DEFAULT$"]
+        },
+        "clean": {
+            "cache": false
+        },
+        "check": {
+            "dependsOn": ["build", "test", "lint", "typecheck"]
+        }
+    }
+}
