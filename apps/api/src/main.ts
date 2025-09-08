@@ -6,8 +6,8 @@ import { ILogger } from '@saga-soa/logger'
 import { IMongoConnMgr } from '@saga-soa/db'
 
 async function bootstrap() {
-    const logger = container.get&lt;ILogger&gt;('ILogger')
-    const mongoConnMgr = container.get&lt;IMongoConnMgr&gt;('IMongoConnMgr')
+    const logger = container.get<ILogger>('ILogger')
+    const mongoConnMgr = container.get<IMongoConnMgr>('IMongoConnMgr')
 
     try {
         logger.info('Starting saga-sm service...')
@@ -35,10 +35,10 @@ async function bootstrap() {
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
-    const logger = container.get&lt;ILogger&gt;('ILogger')
+    const logger = container.get<ILogger>('ILogger')
     logger.info('Shutting down saga-sm service...')
     
-    const mongoConnMgr = container.get&lt;IMongoConnMgr&gt;('IMongoConnMgr')
+    const mongoConnMgr = container.get<IMongoConnMgr>('IMongoConnMgr')
     await mongoConnMgr.disconnect()
     
     process.exit(0)
