@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import styles from './page.module.css'
-import { SCHEDULE_ENDPOINTS } from '../../src/services/endpoints'
+import { EXAMPLE_ENDPOINTS } from '../../src/services/endpoints'
 import { TrpcCurlService } from '../../src/services/trpc-curl-service'
 import { TrpcClientService } from '../../src/services/trpc-client-service'
 import type { Endpoint, ApiResponse } from '../../src/services/types'
@@ -21,7 +21,7 @@ export default function ApiTestPage() {
     const trpcService = new TrpcClientService()
 
     const handleEndpointChange = (endpointId: string) => {
-        const endpoint = SCHEDULE_ENDPOINTS.find(ep => ep.id === endpointId)
+        const endpoint = EXAMPLE_ENDPOINTS.find(ep => ep.id === endpointId)
         setSelectedEndpoint(endpoint || null)
         setInputData(endpoint?.sampleInput ? endpoint.sampleInput : '')
         setResponse('')
@@ -61,7 +61,7 @@ export default function ApiTestPage() {
             <div className={styles.container}>
                 <header>
                     <Link href="/" className={styles.backLink}>← Back to Home</Link>
-                    <h1 className={styles.title}>🧪 Schedule API Tester</h1>
+                    <h1 className={styles.title}>🧪 Example API Tester</h1>
                     <p className={styles.subtitle}>
                         Interactive endpoint testing with dropdown selection, code generation, and response inspection
                     </p>
@@ -114,7 +114,7 @@ export default function ApiTestPage() {
                         className={styles.input}
                     >
                         <option value="">Choose an endpoint...</option>
-                        {SCHEDULE_ENDPOINTS.map(endpoint => (
+                        {EXAMPLE_ENDPOINTS.map(endpoint => (
                             <option key={endpoint.id} value={endpoint.id}>
                                 {endpoint.name} ({endpoint.method})
                             </option>
