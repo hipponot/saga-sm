@@ -12,6 +12,7 @@ import type { ExpressServerConfig, TRPCServerConfig } from '@saga-soa/api-core'
 // import { ConfigProvider, IConfigProvider } from '@saga-soa/config'
 
 import { PubSubService } from './services/pubsub.service.js'
+import { ExampleHelper, type IExampleHelper } from './sectors/example/helpers/example_helper.js'
 
 const container = new Container()
 
@@ -63,5 +64,8 @@ container.bind(ControllerLoader).toSelf().inSingletonScope()
 
 // Bind PubSub Service
 container.bind('PubSubService').to(PubSubService).inSingletonScope()
+
+// Bind Example Helper
+container.bind<IExampleHelper>('IExampleHelper').to(ExampleHelper).inSingletonScope()
 
 export { container }
