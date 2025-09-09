@@ -1,24 +1,67 @@
 import { Container } from 'inversify'
 import 'reflect-metadata'
 
-import { ILogger, PinoLogger } from '@saga-soa/logger'
-import { IMongoConnMgr, MongoProvider } from '@saga-soa/db'
-import { ExpressServer, TRPCServer } from '@saga-soa/api-core'
-import { PubSubServer } from '@saga-soa/pubsub-core/server'
-import { ConfigProvider, IConfigProvider } from '@saga-soa/config'
+import { PinoLogger, PinoLoggerSchema } from '@saga-soa/logger'
+import type { ILogger, PinoLoggerConfig } from '@saga-soa/logger'
+import { MongoProvider, MongoProviderSchema } from '@saga-soa/db'
+import type { IMongoConnMgr, MongoProviderConfig } from '@saga-soa/db'
+import { ExpressServer, ExpressServerSchema } from '@saga-soa/api-core/express-server'
+import { TRPCServer, TRPCServerSchema } from '@saga-soa/api-core/trpc-server'
+import { ControllerLoader } from '@saga-soa/api-core/utils/controller-loader'
+import type { ExpressServerConfig, TRPCServerConfig } from '@saga-soa/api-core'
+// import { ConfigProvider, IConfigProvider } from '@saga-soa/config'
+
+import { PubSubService } from './services/pubsub.service.js'
 
 const container = new Container()
 
+// Configuration
+const pinoLoggerConfig: PinoLoggerConfig = {
+    configType: 'PINO_LOGGER',
+    level: 'info',
+    isExpressContext: false,
+    prettyPrint: false
+}
+
+const mongoConfig: MongoProviderConfig = {
+    configType: 'MONGO',
+    instanceName: 'saga-sm-db',
+    host: 'localhost',
+    port: 27017,
+    database: 'saga-sm'
+}
+
+const expressConfig: ExpressServerConfig = {
+    configType: 'EXPRESS_SERVER',
+    port: 3000,
+    logLevel: 'info',
+    name: 'saga-sm-api'
+}
+
+const trpcConfig: TRPCServerConfig = {
+    configType: 'TRPC_SERVER',
+    name: 'saga-sm-trpc',
+    basePath: '/trpc'
+}
+
+container.bind('PinoLoggerConfig').toConstantValue(pinoLoggerConfig)
+container.bind('MongoProviderConfig').toConstantValue(mongoConfig)
+container.bind('ExpressServerConfig').toConstantValue(expressConfig)
+container.bind('TRPCServerConfig').toConstantValue(trpcConfig)
+
 // Core infrastructure
-container.bind&lt;ILogger&gt;('ILogger').to(PinoLogger).inSingletonScope()
-container.bind&lt;IConfigProvider&gt;('IConfigProvider').to(ConfigProvider).inSingletonScope()
-container.bind&lt;IMongoConnMgr&gt;('IMongoConnMgr').to(MongoProvider).inSingletonScope()
+container.bind('ILogger').to(PinoLogger).inSingletonScope()
+// container.bind('IConfigProvider').to(ConfigProvider).inSingletonScope()
+container.bind('IMongoConnMgr').to(MongoProvider).inSingletonScope()
 
 // Servers
 container.bind(ExpressServer).toSelf().inSingletonScope()
 container.bind(TRPCServer).toSelf().inSingletonScope()
-container.bind(PubSubServer).toSelf().inSingletonScope()
 
-// Schedule management services will be added here
+// Bind ControllerLoader
+container.bind(ControllerLoader).toSelf().inSingletonScope()
+
+// Bind PubSub Service
+container.bind('PubSubService').to(PubSubService).inSingletonScope()
 
 export { container }

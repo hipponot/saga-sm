@@ -6,7 +6,7 @@ import { TRPC_ENDPOINT } from './endpoints'
 type AppRouter = any // Placeholder - will be replaced with proper types
 
 export class TrpcClientService implements ServiceInterface {
-    private client: any
+    private client: ReturnType<typeof createTRPCClient<AppRouter>>
 
     constructor() {
         this.client = createTRPCClient<AppRouter>({

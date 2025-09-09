@@ -1,1 +1,1 @@
-export { scheduleRouter } from './schedule-router.js'
+// Controllers are dynamically loaded by ControllerLoader

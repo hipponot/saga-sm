@@ -1,203 +1,300 @@
-.container {
-    min-height: 100vh;
-    padding: 2rem;
+.page {
+  --gray-rgb: 0, 0, 0;
+  --gray-alpha-200: rgba(var(--gray-rgb), 0.08);
+  --gray-alpha-100: rgba(var(--gray-rgb), 0.05);
+
+  --button-primary-hover: #383838;
+  --button-secondary-hover: #f2f2f2;
+
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans);
 }
 
-.header {
-    margin-bottom: 3rem;
+@media (prefers-color-scheme: dark) {
+  .page {
+    --gray-rgb: 255, 255, 255;
+    --gray-alpha-200: rgba(var(--gray-rgb), 0.145);
+    --gray-alpha-100: rgba(var(--gray-rgb), 0.06);
+
+    --button-primary-hover: #ccc;
+    --button-secondary-hover: #1a1a1a;
+  }
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
 .backLink {
-    display: inline-block;
-    margin-bottom: 1rem;
-    color: rgb(var(--blue-rgb));
-    text-decoration: none;
-    font-weight: 500;
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 1rem;
+  display: inline-block;
 }
 
 .backLink:hover {
-    text-decoration: underline;
+  color: var(--foreground);
 }
 
-.header h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    color: rgb(var(--blue-rgb));
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--foreground) 0%, #666 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.header p {
-    opacity: 0.8;
-    font-size: 1.1rem;
+.subtitle {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
 }
 
-.main {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 3rem;
+.section {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  background: var(--gray-alpha-100);
+  border: 1px solid var(--gray-alpha-200);
+  border-radius: 12px;
 }
 
-.connectionCard {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 2rem;
-    text-align: center;
+.sectionTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--foreground);
 }
 
-.connectionCard h2 {
-    color: rgb(var(--purple-rgb));
-    margin-bottom: 2rem;
+.infoBox {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
-.statusIndicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
+.infoText {
+  margin: 0;
+  color: var(--foreground);
+  line-height: 1.5;
 }
 
-.statusLight {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    transition: all 0.3s ease;
+.infoTextStrong {
+  font-weight: 600;
+  color: rgb(59, 130, 246);
 }
 
-.statusLight.connected {
-    background-color: rgb(var(--green-rgb));
-    box-shadow: 0 0 10px rgba(var(--green-rgb), 0.5);
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
-.statusLight.disconnected {
-    background-color: rgb(var(--red-rgb));
-    box-shadow: 0 0 10px rgba(var(--red-rgb), 0.5);
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
 }
 
-.statusLight.pulsing {
-    animation: pulse 1.5s ease-in-out infinite;
+.checkbox {
+  margin: 0;
 }
 
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.7;
-        transform: scale(1.1);
-    }
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--gray-alpha-200);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
 }
 
-.statusText {
-    font-size: 1.25rem;
-    font-weight: 600;
+.input:focus {
+  outline: none;
+  border-color: rgb(59, 130, 246);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.lastPing {
-    margin-bottom: 2rem;
-    opacity: 0.8;
-    font-size: 0.9rem;
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.quickActions h2 {
-    color: rgb(var(--green-rgb));
-    margin-bottom: 2rem;
-    text-align: center;
+.label {
+  font-weight: 500;
+  color: var(--foreground);
 }
 
-.actionGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
+.button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 14px;
 }
 
-.actionCard {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 2rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
+.buttonPrimary {
+  background: rgb(59, 130, 246);
+  color: white;
+  border-color: rgb(59, 130, 246);
 }
 
-.actionCard:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    border-color: rgba(var(--blue-rgb), 0.5);
+.buttonPrimary:hover:not(:disabled) {
+  background: rgb(37, 99, 235);
+  border-color: rgb(37, 99, 235);
 }
 
-.actionCard h3 {
-    color: rgb(var(--blue-rgb));
-    margin-bottom: 1rem;
-    font-size: 1.25rem;
+.buttonPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.actionCard p {
-    opacity: 0.8;
-    line-height: 1.5;
+.buttonSecondary {
+  background: transparent;
+  color: var(--foreground);
+  border-color: var(--gray-alpha-200);
 }
 
-.apiInfo h2 {
-    color: rgb(var(--yellow-rgb));
-    margin-bottom: 2rem;
-    text-align: center;
+.buttonSecondary:hover:not(:disabled) {
+  background: var(--gray-alpha-100);
+  border-color: var(--gray-alpha-200);
 }
 
-.infoGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+.connectionStatusRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.infoItem {
-    background: rgba(0, 0, 0, 0.2);
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+.connectionControlsRow {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.infoItem strong {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: rgb(var(--purple-rgb));
+.responseBox {
+  border: 1px solid var(--gray-alpha-200);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.infoItem code {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 0.5rem;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9rem;
-    display: block;
+.responseTitle {
+  background: var(--gray-alpha-100);
+  padding: 1rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--gray-alpha-200);
+}
+
+.responseContent {
+  padding: 1rem;
+}
+
+.responseContent > div {
+  margin-bottom: 0.75rem;
+}
+
+.responseContent > div:last-child {
+  margin-bottom: 0;
+}
+
+.terminalBox {
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 8px;
+  overflow: auto;
+  border: 1px solid #333;
+}
+
+.codeBlock {
+  padding: 1rem;
+  margin: 0;
+  font-family: var(--font-geist-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-x: auto;
+  background: transparent;
+  border-radius: 4px;
+}
+
+.errorBox {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  color: rgb(239, 68, 68);
+}
+
+.errorIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.errorContent {
+  flex: 1;
+}
+
+.errorTitle {
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.errorMessage {
+  margin: 0;
+  line-height: 1.5;
 }
 
 @media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-    }
-    
-    .header h1 {
-        font-size: 2rem;
-    }
-    
-    .main {
-        gap: 2rem;
-    }
-    
-    .connectionCard,
-    .actionCard {
-        padding: 1.5rem;
-    }
-    
-    .actionGrid,
-    .infoGrid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
+  .container {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+  
+  .section {
+    padding: 1rem;
+  }
+  
+  .connectionStatusRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .connectionControlsRow {
+    justify-content: center;
+  }
+  
+  .buttonGroup {
+    flex-direction: column;
+  }
 }
