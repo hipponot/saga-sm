@@ -18,7 +18,7 @@ async function bootstrap() {
 
         // Initialize servers
         const expressServer = container.get(ExpressServer)
-        const trpcServer = container.get(TRPCServer)  
+        const trpcServer = container.get(TRPCServer)
         const pubsubServer = container.get(PubSubServer)
 
         // Start servers
@@ -37,10 +37,10 @@ async function bootstrap() {
 process.on('SIGINT', async () => {
     const logger = container.get<ILogger>('ILogger')
     logger.info('Shutting down saga-sm service...')
-    
+
     const mongoConnMgr = container.get<IMongoConnMgr>('IMongoConnMgr')
     await mongoConnMgr.disconnect()
-    
+
     process.exit(0)
 })
 
