@@ -1,16 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     transpilePackages: [],
-    experimental: {
-        turbo: {
-            rules: {
-                '*.svg': {
-                    loaders: ['@svgr/webpack'],
-                    as: '*.js',
-                },
-            },
-        },
+    // Enable static export for Amplify hosting
+    output: 'export',
+    trailingSlash: true,
+    images: {
+        unoptimized: true,
     },
+    // Set workspace root to silence the warning
+    outputFileTracingRoot: '~/dev/saga-sm',
 }
 
 module.exports = nextConfig

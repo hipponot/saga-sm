@@ -3,39 +3,39 @@ import styles from './page.module.css'
 
 export default function Home() {
     return (
-        &lt;div className={styles.container}&gt;
-            &lt;header className={styles.header}&gt;
-                &lt;h1&gt;Schedule Manager&lt;/h1&gt;
-                &lt;p&gt;Test client for saga-sm API&lt;/p&gt;
-            &lt;/header&gt;
+        <div className={styles.container}>
+            <header className={styles.header}>
+                <h1>Schedule Manager</h1>
+                <p>Test client for saga-sm API</p>
+            </header>
 
-            &lt;main className={styles.main}&gt;
-                &lt;div className={styles.grid}&gt;
-                    &lt;Link href="/api-test" className={styles.card}&gt;
-                        &lt;h2&gt;API Testing &lt;span&gt;→&lt;/span&gt;&lt;/h2&gt;
-                        &lt;p&gt;Interactive tRPC endpoint testing with form validation and response inspection.&lt;/p&gt;
-                    &lt;/Link&gt;
+            <main className={styles.main}>
+                <div className={styles.grid}>
+                    <Link href="/api-test" className={styles.card}>
+                        <h2>API Testing <span>→</span></h2>
+                        <p>Interactive tRPC endpoint testing with form validation and response inspection.</p>
+                    </Link>
 
-                    &lt;Link href="/schedule-demo" className={styles.card}&gt;
-                        &lt;h2&gt;Schedule Demo &lt;span&gt;→&lt;/span&gt;&lt;/h2&gt;
-                        &lt;p&gt;Live demonstration of schedule management with real-time updates via PubSub.&lt;/p&gt;
-                    &lt;/Link&gt;
+                    <Link href="/schedule-demo" className={styles.card}>
+                        <h2>Schedule Demo <span>→</span></h2>
+                        <p>Live demonstration of schedule management with real-time updates via PubSub.</p>
+                    </Link>
 
-                    &lt;Link href="/endpoints" className={styles.card}&gt;
-                        &lt;h2&gt;Endpoint Explorer &lt;span&gt;→&lt;/span&gt;&lt;/h2&gt;
-                        &lt;p&gt;Browse and test all available schedule management endpoints.&lt;/p&gt;
-                    &lt;/Link&gt;
+                    <Link href="/endpoints" className={styles.card}>
+                        <h2>Endpoint Explorer <span>→</span></h2>
+                        <p>Browse and test all available schedule management endpoints.</p>
+                    </Link>
 
-                    &lt;div className={styles.card}&gt;
-                        &lt;h2&gt;Documentation &lt;span&gt;📖&lt;/span&gt;&lt;/h2&gt;
-                        &lt;p&gt;API reference, schemas, and integration examples.&lt;/p&gt;
-                    &lt;/div&gt;
-                &lt;/div&gt;
-            &lt;/main&gt;
+                    <div className={styles.card}>
+                        <h2>Documentation <span>📖</span></h2>
+                        <p>API reference, schemas, and integration examples.</p>
+                    </div>
+                </div>
+            </main>
 
-            &lt;footer className={styles.footer}&gt;
-                &lt;p&gt;Built with saga-soa infrastructure&lt;/p&gt;
-            &lt;/footer&gt;
-        &lt;/div&gt;
+            <footer className={styles.footer}>
+                <p>Built with saga-soa infrastructure</p>
+            </footer>
+        </div>
     )
 }
