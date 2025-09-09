@@ -2,7 +2,7 @@ import { ServiceInterface, Endpoint, ApiResponse } from './types'
 import { TRPC_ENDPOINT } from './endpoints'
 
 export class TrpcCurlService implements ServiceInterface {
-    async executeEndpoint(endpoint: Endpoint, input: string): Promise&lt;ApiResponse&gt; {
+    async executeEndpoint(endpoint: Endpoint, input: string): Promise<ApiResponse> {
         const startTime = Date.now()
 
         try {

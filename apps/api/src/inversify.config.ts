@@ -7,8 +7,11 @@ import { MongoProvider, MongoProviderSchema } from '@saga-soa/db'
 import type { IMongoConnMgr, MongoProviderConfig } from '@saga-soa/db'
 import { ExpressServer, ExpressServerSchema } from '@saga-soa/api-core/express-server'
 import { TRPCServer, TRPCServerSchema } from '@saga-soa/api-core/trpc-server'
+import { ControllerLoader } from '@saga-soa/api-core/utils/controller-loader'
 import type { ExpressServerConfig, TRPCServerConfig } from '@saga-soa/api-core'
 // import { ConfigProvider, IConfigProvider } from '@saga-soa/config'
+
+import { PubSubService } from './services/pubsub.service.js'
 
 const container = new Container()
 
@@ -55,6 +58,10 @@ container.bind('IMongoConnMgr').to(MongoProvider).inSingletonScope()
 container.bind(ExpressServer).toSelf().inSingletonScope()
 container.bind(TRPCServer).toSelf().inSingletonScope()
 
-// Schedule management services will be added here
+// Bind ControllerLoader
+container.bind(ControllerLoader).toSelf().inSingletonScope()
+
+// Bind PubSub Service
+container.bind('PubSubService').to(PubSubService).inSingletonScope()
 
 export { container }

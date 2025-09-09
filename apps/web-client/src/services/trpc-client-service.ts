@@ -6,10 +6,10 @@ import { TRPC_ENDPOINT } from './endpoints'
 type AppRouter = any // Placeholder - will be replaced with proper types
 
 export class TrpcClientService implements ServiceInterface {
-    private client: ReturnType&lt;typeof createTRPCClient&lt;AppRouter&gt;&gt;
+    private client: ReturnType<typeof createTRPCClient<AppRouter>>
 
     constructor() {
-        this.client = createTRPCClient&lt;AppRouter&gt;({
+        this.client = createTRPCClient<AppRouter>({
             links: [
                 httpBatchLink({
                     url: TRPC_ENDPOINT,
@@ -21,7 +21,7 @@ export class TrpcClientService implements ServiceInterface {
         })
     }
 
-    async executeEndpoint(endpoint: Endpoint, input: string): Promise&lt;ApiResponse&gt; {
+    async executeEndpoint(endpoint: Endpoint, input: string): Promise<ApiResponse> {
         const startTime = Date.now()
 
         try {
@@ -82,7 +82,7 @@ export class TrpcClientService implements ServiceInterface {
         code += `import { createTRPCClient, httpBatchLink } from '@trpc/client'\n`
         code += `import type { AppRouter } from '@saga-sm/api-types'\n\n`
         
-        code += `const client = createTRPCClient&lt;AppRouter&gt;({\n`
+        code += `const client = createTRPCClient<AppRouter>({\n`
         code += `    links: [\n`
         code += `        httpBatchLink({\n`
         code += `            url: '${TRPC_ENDPOINT}',\n`

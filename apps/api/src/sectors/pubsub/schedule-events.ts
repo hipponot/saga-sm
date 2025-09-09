@@ -20,7 +20,7 @@ export interface ScheduleCreatedPayload {
 
 export interface ScheduleUpdatedPayload {
     scheduleId: string
-    changes: Record&lt;string, any&gt;
+    changes: Record<string, any>
     updatedBy: string
 }
 

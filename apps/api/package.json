@@ -11,7 +11,7 @@
         }
     },
     "scripts": {
-        "dev": "tsup --watch",
+        "dev": "tsup --watch --onSuccess \"node dist/main.js\"",
         "build": "tsup",
         "start": "node dist/main.js",
         "test": "vitest run",
