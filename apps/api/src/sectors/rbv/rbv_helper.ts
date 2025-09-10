@@ -1,97 +1,120 @@
-import { Collection, Db } from 'mongodb';
-import { DataResponse, ID, StatusResponse } from '../base.types';
-import { BellSchedule, BellScheduleDB, BellScheduleVariant, CreateBellScheduleVariantInput, DeleteBellScheduleInput, UpsertBellScheduleInput } from './rbv.types';
+import { DataResponse, ID, StatusResponse } from './base.types';
+import { inject, injectable } from 'inversify'
+import {
+  BellSchedule,
+  BellScheduleVariant,
+  UpsertBellScheduleVariantInput,
+  DeleteBellScheduleInput,
+  UpsertBellScheduleInput,
+} from './rbv.types';
 import { Guid } from 'guid-typescript';
-import { log } from '../../core/helpers/logger_helper';
-import { remove_null_undefined } from '../../core/helpers/object_helper';
+import { type ILogger } from '@saga-soa/logger';
 
-import { PrismaClient } from './generated/prisma';
+import { prisma } from "@repo/db";
 
 export const BELL_SCHEDULE_COLLECTION = 'bell_schedules';
 export const BELL_SCHEDULE_VARIANT_COLLECTION = 'bell_schedule_variants';
 export const PERIOD_COLLECTION = 'periods';
 
+@injectable()
 export class RBVHelper {
-  private compass_db: Db;
-  private bell_schedule_coll: Collection<BellScheduleDB>;
+  private log: ILogger;
 
-  constructor(compass_db: Db) {
-    this.compass_db = compass_db;
-    this.bell_schedule_coll = this.compass_db.collection<BellScheduleDB>(BELL_SCHEDULE_COLLECTION);
-  }
-
-  public async get_schedule(id: ID): Promise<DataResponse<BellSchedule>> {
-    const schedule = await this.bell_schedule_coll.aggregate<BellSchedule>([
-      { $match: { id } },
-      { $lookup: { from: BELL_SCHEDULE_VARIANT_COLLECTION, localField: 'variant_ids', foreignField: 'id', as: 'variants' } },
-      { $unwind: '$variants' },
-      { $lookup: { from: PERIOD_COLLECTION, localField: 'variants.period_ids', foreignField: 'id', as: 'variants.periods' } },
-      { $unwind: '$variants.periods' },
-    ]).toArray();
-    if (schedule.length !== 1) {
-      const msg = schedule.length === 0 ? 'Requested bell schedule not found' : 'Multiple bell schedules found for id';
-      log.error(msg);
-      return { success: false, message: msg };
-    }
-    return { success: true, data: schedule[0] };
+  constructor(@inject('ILogger') log: ILogger) {
+    this.log = log;
   }
 
   public async upsert_schedule(input: UpsertBellScheduleInput): Promise<DataResponse<BellSchedule>> {
-    let existing_schedule: BellSchedule | null = null;
-    if (input.id) {
-      existing_schedule = await this.bell_schedule_coll.findOne({ id: input.id });
-    }
-
-    // Form the bell schedule with empty variants
-    const schedule: BellSchedule = {
-      id: Guid.raw(),
-      variants: [],
-      ...existing_schedule,
-      ...remove_null_undefined<UpsertBellScheduleInput>(input),
-    };
-
-    const schedule_res = await this.bell_schedule_coll.updateOne(
-      { id: schedule.id },
-      { $set: schedule },
-      { upsert: true },
-    );
+    const schedule = await prisma.bellSchedule.upsert({
+      where: { id: input.id ?? Guid.raw() },
+      update: input,
+      create: input,
+      include: {
+        variants: {
+          include: {
+            periods: true,
+          },
+        },
+      },
+    });
     /* istanbul ignore if */
-    if (!schedule_res.acknowledged) {
-      log.error(`Failed to upsert bell schedule: ${JSON.stringify(schedule_res)}`);
-      return { success: false, message: 'Failed to upsert bell schedule' };
+    if (!schedule) {
+      const msg = 'Failed to upsert bell schedule';
+      this.log.error(msg);
+      return { success: false, message: msg };
+    }
+    return { success: true, data: schedule };
+  }
+
+  public async get_schedule(id: ID): Promise<DataResponse<BellSchedule>> {
+    const schedule = await prisma.bellSchedule.findUnique({
+      where: { id },
+      include: {
+        variants: {
+          include: {
+            periods: true,
+          },
+        },
+      },
+    });
+    if (!schedule) {
+      const msg = 'Requested bell schedule not found';
+      this.log.error(msg);
+      return { success: false, message: msg };
     }
     return { success: true, data: schedule };
   }
 
   public async delete_schedule(input: DeleteBellScheduleInput): Promise<StatusResponse> {
-    const res = await this.bell_schedule_coll.deleteOne({ id: input.id });
+    const res = await prisma.bellSchedule.delete({ where: { id: input.id } });
     /* istanbul ignore if */
-    if (!res.acknowledged) {
-      log.error(`Failed to delete bell schedule: ${JSON.stringify(res)}`);
+    if (!res) {
+      this.log.error(`Failed to delete bell schedule`);
       return { success: false, message: 'Failed to delete bell schedule' };
     }
     return { success: true };
   }
 
-  public async create_variant(input: CreateBellScheduleVariantInput): Promise<DataResponse<BellScheduleVariant>> {
-    const { schedule_id, ...variant_input } = input;
-
-    const variant: BellScheduleVariant = {
-      id: Guid.raw(),
-      ...variant_input,
-      periods: [],
-    };
-
-    const res = await this.bell_schedule_coll.updateOne(
-      { id: schedule_id },
-      { $push: { variants: variant } },
-    );
+  public async upsert_variant(input: UpsertBellScheduleVariantInput): Promise<DataResponse<BellScheduleVariant>> {
+    const variant = await prisma.bellScheduleVariant.upsert({
+      where: { id: input.id ?? Guid.raw() },
+      update: input,
+      create: input,
+      include: {
+        periods: true,
+      },
+    });
     /* istanbul ignore if */
-    if (!res.acknowledged) {
-      log.error(`Failed to create bell schedule variant: ${JSON.stringify(res)}`);
-      return { success: false, message: 'Failed to create bell schedule variant' };
+    if (!variant) {
+      const msg = 'Failed to upsert bell schedule variant';
+      this.log.error(msg);
+      return { success: false, message: msg };
     }
 
     return { success: true, data: variant };
   }
+}
+
+
+// ToDo - move to saga-soa helpers
+/**
+ * Removes keys with null or undefined values from an object
+ * @param obj The object to clean
+ * @returns A new object with null/undefined values removed
+ */
+function remove_null_undefined<T extends Record<string, unknown>>(
+  obj: T,
+): T {
+  const cleaned: T = {} as T;
+
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const value = obj[key];
+      if (value !== null && value !== undefined) {
+        cleaned[key] = value;
+      }
+    }
+  }
+
+  return cleaned;
 }

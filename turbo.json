@@ -25,6 +25,16 @@
         },
         "check": {
             "dependsOn": ["build", "test", "lint", "typecheck"]
+        },
+        "db:generate": {
+            "cache": false
+        },
+        "db:migrate": {
+            "cache": false,
+            "persistent": true
+        },
+        "db:deploy": {
+            "cache": false
         }
     }
 }

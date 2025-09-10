@@ -1,0 +1,43 @@
+// This is your Prisma schema file for RBV sector
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model BellSchedule {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+
+  variants      BellScheduleVariant[]
+}
+
+model BellScheduleVariant {
+  id                String   @id @default(uuid())
+  name              String
+  description       String?
+  isDefault         Boolean? @default(false)
+  recurrenceRuleSet String
+
+  scheduleId  String
+  schedule    BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  periods Period[]
+}
+
+model Period {
+  id        String   @id @default(uuid())
+  name      String
+  start     String   // HH:MM format (e.g., "08:00")
+  end       String   // HH:MM format (e.g., "09:00")
+
+  variantId String
+  variant   BellScheduleVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+}

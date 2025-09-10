@@ -21,22 +21,26 @@
         "check": "pnpm run build && pnpm run test && pnpm run lint && pnpm run typecheck",
         "lint": "prettier --check .",
         "lint:fix": "prettier --write .",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "prisma:generate": "prisma generate --schema ./src/sectors/rbv/prisma/schema.prisma"
     },
     "dependencies": {
         "@prisma/client": "^6.16.0",
+        "@repo/db": "workspace:*",
         "@saga-soa/api-core": "file:../../../saga-soa/packages/api-core",
         "@saga-soa/config": "file:../../../saga-soa/packages/config",
         "@saga-soa/db": "file:../../../saga-soa/packages/db",
         "@saga-soa/logger": "file:../../../saga-soa/packages/logger",
         "@saga-soa/pubsub-core": "file:../../../saga-soa/packages/pubsub-core",
+        "guid-typescript": "^1.0.9",
         "inversify": "^6.0.2",
         "reflect-metadata": "^0.2.2",
-        "zod": "^3.22.4",
-        "@saga-soa/config": "file:../../../saga-soa/packages/config"
+        "zod": "^3.22.4"
     },
     "devDependencies": {
+        "@faker-js/faker": "^10.0.0",
         "@types/node": "^18.19.31",
+        "fishery": "^2.3.1",
         "prettier": "^3.2.5",
         "prisma": "^6.16.0",
         "tsup": "^8.0.2",

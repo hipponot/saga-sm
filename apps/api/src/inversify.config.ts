@@ -13,6 +13,7 @@ import type { ExpressServerConfig, TRPCServerConfig } from '@saga-soa/api-core'
 
 import { PubSubService } from './services/pubsub.service.js'
 import { ExampleHelper, type IExampleHelper } from './sectors/example/helpers/example_helper.js'
+import { RBVHelper } from './sectors/rbv/rbv_helper.js'
 
 const container = new Container()
 
@@ -67,5 +68,8 @@ container.bind('PubSubService').to(PubSubService).inSingletonScope()
 
 // Bind Example Helper
 container.bind<IExampleHelper>('IExampleHelper').to(ExampleHelper).inSingletonScope()
+
+// Bind RBV Helper
+container.bind<RBVHelper>('RBVHelper').to(RBVHelper).inSingletonScope()
 
 export { container }
