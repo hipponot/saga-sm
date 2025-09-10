@@ -260,12 +260,10 @@ function RealPingPongSection() {
 
 export default function TRPCAPIPage() {
   // Use dynamic API URL context
-  const { apiUrl, trpcBasePath, setApiUrl, setTrpcBasePath } = useApiUrl();
+  const { apiUrl, trpcBasePath } = useApiUrl();
 
   // Enhanced testing state
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
-  const [tempServerUrl, setTempServerUrl] = useState(apiUrl); // Temporary input field value
-  const [tempBasePath, setTempBasePath] = useState(trpcBasePath); // Temporary base path value
   const [eventHistory, setEventHistory] = useState<EventHistory[]>([]);
   const [performanceStats, setPerformanceStats] = useState<PerformanceStats>({
     totalEvents: 0,
@@ -275,12 +273,6 @@ export default function TRPCAPIPage() {
     successRate: 100,
     lastActivity: new Date().toISOString()
   });
-
-  // Update temp values when context changes
-  useEffect(() => {
-    setTempServerUrl(apiUrl);
-    setTempBasePath(trpcBasePath);
-  }, [apiUrl, trpcBasePath]);
 
   useEffect(() => {
     // Check connection status on mount
@@ -301,18 +293,11 @@ export default function TRPCAPIPage() {
     }
   };
 
-  const connectToServer = async () => {
-    // Apply the temporary values to the global context
-    if (tempServerUrl !== apiUrl) {
-      setApiUrl(tempServerUrl);
-    }
-    if (tempBasePath !== trpcBasePath) {
-      setTrpcBasePath(tempBasePath);
-    }
+  const testConnection = async () => {
     await checkConnectionStatus();
   };
 
-  const disconnectFromServer = () => {
+  const clearConnectionStatus = () => {
     setConnectionStatus('disconnected');
   };
 
@@ -368,6 +353,21 @@ export default function TRPCAPIPage() {
           </div>
         </div>
 
+        {/* API Configuration Info */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>🔗 Current API Configuration</h2>
+          <div className={styles.infoBox}>
+            <div style={{ fontFamily: 'var(--font-geist-mono, monospace)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+              <div><strong>API URL:</strong> <span style={{ color: '#3b82f6' }}>{apiUrl}</span></div>
+              <div><strong>tRPC Path:</strong> <span style={{ color: '#10b981' }}>{trpcBasePath}</span></div>
+              <div><strong>Full tRPC URL:</strong> <span style={{ color: '#6b7280' }}>{apiUrl}{trpcBasePath}</span></div>
+            </div>
+            <p className={styles.infoText}>
+              💡 <strong>Tip:</strong> Use the <strong>🔗</strong> button in the top-right corner to edit API configuration.
+            </p>
+          </div>
+        </div>
+
         {/* Connection Status */}
         <div className={styles.section}>
           <div className={styles.connectionStatus}>
@@ -381,62 +381,20 @@ export default function TRPCAPIPage() {
                 </span>
               </div>
               <div className={styles.connectionControls}>
-                <div
-                  className={styles.urlInputRow}
-                  style={{
-                    display: 'flex',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem'
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={tempServerUrl}
-                    onChange={(e) => setTempServerUrl(e.target.value)}
-                    placeholder="API Base URL (e.g., https://api.example.com)"
-                    className={styles.input}
-                    style={{ flex: 2 }}
-                  />
-                  <input
-                    type="text"
-                    value={tempBasePath}
-                    onChange={(e) => setTempBasePath(e.target.value)}
-                    placeholder="tRPC Path (e.g., /trpc)"
-                    className={styles.input}
-                    style={{ flex: 1 }}
-                  />
-                </div>
-                <div
-                  className={styles.urlPreview}
-                  style={{
-                    padding: '0.75rem',
-                    backgroundColor: '#1f2937',
-                    borderRadius: '0.5rem',
-                    marginBottom: '0.5rem',
-                    fontSize: '0.875rem',
-                    fontFamily: 'var(--font-geist-mono, monospace)',
-                    border: '2px solid #374151',
-                    color: '#f9fafb'
-                  }}
-                >
-                  <span style={{ color: '#9ca3af', fontWeight: '600' }}>Full tRPC URL:</span>{' '}
-                  <span style={{ color: '#60a5fa' }}>{tempServerUrl}</span>
-                  <span style={{ color: '#34d399' }}>{tempBasePath}</span>
-                </div>
                 <div className={styles.connectionControlsRow}>
                   <button
-                    onClick={connectToServer}
-                    disabled={connectionStatus === 'connected'}
+                    onClick={testConnection}
+                    disabled={connectionStatus === 'connecting'}
                     className={`${styles.button} ${styles.buttonPrimary}`}
                   >
-                    Connect
+                    {connectionStatus === 'connecting' ? 'Testing...' : 'Test Connection'}
                   </button>
                   <button
-                    onClick={disconnectFromServer}
+                    onClick={clearConnectionStatus}
                     disabled={connectionStatus === 'disconnected'}
-                    className={`${styles.button} ${styles.buttonDanger}`}
+                    className={`${styles.button} ${styles.buttonSecondary}`}
                   >
-                    Disconnect
+                    Clear Status
                   </button>
                 </div>
               </div>
