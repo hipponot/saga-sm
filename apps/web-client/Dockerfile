@@ -7,13 +7,13 @@ WORKDIR /app
 RUN npm install -g pnpm@9.0.0
 
 # Copy workspace configuration and dependencies
-COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 
 # Copy saga-soa packages
 COPY saga-soa/ ./saga-soa/
 
 # Copy web client package files
-COPY saga-sm/apps/web-client/package.json ./apps/web-client/
+COPY apps/web-client/package.json ./apps/web-client/
 
 # Fix package.json paths for Docker build environment (if any saga-soa deps exist)
 RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/web-client/package.json || true
@@ -22,12 +22,12 @@ RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/web-client/
 RUN pnpm install --no-frozen-lockfile
 
 # Copy web client source code (excluding node_modules) 
-COPY saga-sm/apps/web-client/app/ ./apps/web-client/app/
-COPY saga-sm/apps/web-client/src/ ./apps/web-client/src/
-COPY saga-sm/apps/web-client/*.json ./apps/web-client/
-COPY saga-sm/apps/web-client/*.ts ./apps/web-client/
-COPY saga-sm/apps/web-client/eslint.config.js ./apps/web-client/
-COPY saga-sm/apps/web-client/next.config.js ./apps/web-client/
+COPY apps/web-client/app/ ./apps/web-client/app/
+COPY apps/web-client/src/ ./apps/web-client/src/
+COPY apps/web-client/*.json ./apps/web-client/
+COPY apps/web-client/*.ts ./apps/web-client/
+COPY apps/web-client/eslint.config.js ./apps/web-client/
+COPY apps/web-client/next.config.js ./apps/web-client/
 
 # Set Docker environment variable to disable static export
 ENV DOCKER_ENV=true
@@ -45,13 +45,13 @@ WORKDIR /app
 RUN npm install -g pnpm@9.0.0
 
 # Copy workspace configuration
-COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 
 # Copy saga-soa packages
 COPY saga-soa/ ./saga-soa/
 
 # Copy web client package.json
-COPY saga-sm/apps/web-client/package.json ./apps/web-client/
+COPY apps/web-client/package.json ./apps/web-client/
 
 # Fix package.json paths for Docker build environment (if any saga-soa deps exist)
 RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/web-client/package.json || true

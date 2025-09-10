@@ -7,13 +7,13 @@ WORKDIR /app
 RUN npm install -g pnpm@9.0.0
 
 # Copy workspace configuration and dependencies
-COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 
 # Copy saga-soa packages
 COPY saga-soa/ ./saga-soa/
 
 # Copy API package files
-COPY saga-sm/apps/api/package.json ./apps/api/
+COPY apps/api/package.json ./apps/api/
 
 # Fix package.json paths for Docker build environment
 RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json
@@ -22,8 +22,8 @@ RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package
 RUN pnpm install --no-frozen-lockfile
 
 # Copy API source code
-COPY saga-sm/apps/api/src/ ./apps/api/src/
-COPY saga-sm/apps/api/tsconfig.json saga-sm/apps/api/tsup.config.ts ./apps/api/
+COPY apps/api/src/ ./apps/api/src/
+COPY apps/api/tsconfig.json apps/api/tsup.config.ts ./apps/api/
 
 # Build the application
 WORKDIR /app/apps/api
@@ -38,13 +38,13 @@ WORKDIR /app
 RUN apk add --no-cache curl && npm install -g pnpm@9.0.0
 
 # Copy workspace configuration
-COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 
 # Copy saga-soa packages
 COPY saga-soa/ ./saga-soa/
 
 # Copy API package.json
-COPY saga-sm/apps/api/package.json ./apps/api/
+COPY apps/api/package.json ./apps/api/
 
 # Fix package.json paths for Docker build environment
 RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json
