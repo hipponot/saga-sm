@@ -41,5 +41,4 @@ export const UpsertBellScheduleVariantInputFactory = Factory.define<UpsertBellSc
   isDefault: faker.datatype.boolean(),
   recurrenceRuleSet: faker.string.uuid(), // ToDo - real RRULE
   scheduleId: faker.string.uuid(),
-  periods: [],
 }));

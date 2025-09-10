@@ -40,7 +40,12 @@ describe('RBVHelper', () => {
         // ARRANGE
         const schedule = BellScheduleFactory.build();
         await prisma.bellSchedule.create({
-          data: schedule,
+          data: {
+            ...schedule,
+            variants: {
+              create: [],
+            },
+          },
         });
 
         // ACT
@@ -113,7 +118,12 @@ describe('RBVHelper', () => {
         // ARRANGE
         const schedule = BellScheduleFactory.build();
         await prisma.bellSchedule.create({
-          data: schedule,
+          data: {
+            ...schedule,
+            variants: {
+              create: [],
+            },
+          },
         });
 
         // ACT
@@ -141,7 +151,12 @@ describe('RBVHelper', () => {
         // ARRANGE
         const schedule = BellScheduleFactory.build();
         await prisma.bellSchedule.create({
-          data: schedule,
+          data: {
+            ...schedule,
+            variants: {
+              create: [],
+            },
+          },
         });
 
         // ACT
