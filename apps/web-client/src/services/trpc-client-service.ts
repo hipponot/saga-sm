@@ -6,7 +6,7 @@ import { TRPC_ENDPOINT } from './endpoints'
 type AppRouter = any // Placeholder - will be replaced with proper types
 
 export class TrpcClientService implements ServiceInterface {
-    private client: ReturnType<typeof createTRPCClient<AppRouter>>
+    private client: any // Temporarily using any to bypass typing issues
 
     constructor() {
         this.client = createTRPCClient<AppRouter>({
@@ -41,20 +41,20 @@ export class TrpcClientService implements ServiceInterface {
             const [namespace, procedure] = endpoint.id.split('.')
 
             switch (endpoint.id) {
-                case 'schedule.getSchedules':
-                    result = await this.client.schedule.getSchedules.query()
+                case 'example.queryExamples':
+                    result = await this.client.example.queryExamples.query(parsedInput || {})
                     break
-                case 'schedule.getScheduleById':
-                    result = await this.client.schedule.getScheduleById.query(parsedInput)
+                case 'example.getExampleById':
+                    result = await this.client.example.getExampleById.query(parsedInput)
                     break
-                case 'schedule.createSchedule':
-                    result = await this.client.schedule.createSchedule.mutate(parsedInput)
+                case 'example.createExample':
+                    result = await this.client.example.createExample.mutate(parsedInput)
                     break
-                case 'schedule.updateSchedule':
-                    result = await this.client.schedule.updateSchedule.mutate(parsedInput)
+                case 'example.updateExample':
+                    result = await this.client.example.updateExample.mutate(parsedInput)
                     break
-                case 'schedule.deleteSchedule':
-                    result = await this.client.schedule.deleteSchedule.mutate(parsedInput)
+                case 'example.deleteExample':
+                    result = await this.client.example.deleteExample.mutate(parsedInput)
                     break
                 default:
                     throw new Error(`Unknown endpoint: ${endpoint.id}`)
@@ -94,7 +94,7 @@ export class TrpcClientService implements ServiceInterface {
             code += `const input = ${input}\n\n`
         }
 
-        const isQuery = ['getSchedules', 'getScheduleById'].some(method => endpoint.id.includes(method))
+        const isQuery = ['queryExamples', 'getExampleById'].some(method => endpoint.id.includes(method))
         const methodType = isQuery ? 'query' : 'mutate'
         const inputParam = hasInput ? '(input)' : '()'
 

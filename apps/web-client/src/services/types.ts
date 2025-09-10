@@ -1,5 +1,5 @@
 export interface ServiceInterface {
-    executeEndpoint(endpoint: Endpoint, input: string): Promise&lt;ApiResponse&gt;
+    executeEndpoint(endpoint: Endpoint, input: string): Promise<ApiResponse>
     generateCode(endpoint: Endpoint, input: string): string
 }
 

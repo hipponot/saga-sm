@@ -20,7 +20,7 @@ export default function Home() {
             height: '100vh',
             fontFamily: 'var(--font-geist-sans)'
         }}>
-            <div>Redirecting to Schedule API Test Center...</div>
+            <div>Redirecting to Example API Test Center...</div>
         </div>
     );
 }

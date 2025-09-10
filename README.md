@@ -17,8 +17,8 @@
 
 This project provides:
 
-- **Schedule CRUD operations**: Create, read, update, delete schedules
-- **Real-time updates**: PubSub events for schedule changes
+- **Example API operations**: Demonstrates CRUD operations with example entities
+- **Real-time updates**: PubSub events for entity changes
 - **Type-safe API**: Full TypeScript support from API to client
 - **Interactive testing**: Web client for endpoint exploration and testing
 
@@ -30,7 +30,7 @@ saga-sm/
 │   ├── api/                    # tRPC API service (port 3000)
 │   │   ├── src/
 │   │   │   ├── sectors/        # Business logic by domain
-│   │   │   │   ├── schedule/   # Schedule management
+│   │   │   │   ├── example/    # Example sector (formerly schedule)
 │   │   │   │   └── pubsub/     # Event definitions
 │   │   │   ├── main.ts         # API bootstrap
 │   │   │   └── inversify.config.ts
@@ -39,7 +39,7 @@ saga-sm/
 │       ├── app/                # Testing interfaces
 │       │   ├── endpoints/      # Interactive endpoint testing
 │       │   ├── api-test/       # Connection testing
-│       │   ├── schedule-demo/  # Live demo interface
+│       │   ├── example-demo/   # Live demo interface
 │       │   └── page.tsx        # Home page
 │       ├── src/services/       # tRPC client integration
 │       └── package.json
@@ -152,7 +152,7 @@ Following saga-soa patterns:
 Next.js 15 application with App Router providing:
 
 - **Interactive Endpoint Testing** - Full tRPC and HTTP testing interface
-- **Live Demo Interface** - Schedule management with real-time updates
+- **Live Demo Interface** - Example management with real-time updates
 - **Connection Diagnostics** - API health monitoring
 - **Code Generation** - Both tRPC client and cURL examples
 - **Dual Service Support** - tRPC client and HTTP-based access
@@ -161,27 +161,27 @@ Next.js 15 application with App Router providing:
 - `/` - Navigation hub with application overview
 - `/endpoints` - Interactive API endpoint explorer
 - `/api-test` - Connection testing and diagnostics
-- `/schedule-demo` - Live schedule management interface
+- `/example-demo` - Live example management interface
 
 ## 📡 Available Endpoints
 
-The tRPC API provides these schedule management endpoints:
+The tRPC API provides these example endpoints:
 
-- `schedule.getSchedules` - Retrieve all schedules
-- `schedule.getScheduleById` - Get specific schedule by ID
-- `schedule.createSchedule` - Create new schedule
-- `schedule.updateSchedule` - Update existing schedule
-- `schedule.deleteSchedule` - Remove schedule
+- `example.getExamples` - Retrieve all examples
+- `example.getExampleById` - Get specific example by ID
+- `example.createExample` - Create new example
+- `example.updateExample` - Update existing example
+- `example.deleteExample` - Remove example
 
 ## 📻 PubSub Events
 
-Real-time events for schedule changes:
+Real-time events for example entity changes:
 
-- `schedule:created` - New schedule created
-- `schedule:updated` - Schedule modified
-- `schedule:deleted` - Schedule removed
-- `schedule:started` - Schedule execution began
-- `schedule:completed` - Schedule execution finished
+- `example:created` - New example created
+- `example:updated` - Example modified
+- `example:deleted` - Example removed
+- `example:started` - Example execution began
+- `example:completed` - Example execution finished
 
 ## 🧪 Testing
 
@@ -196,6 +196,13 @@ pnpm --filter @saga-sm/web-client test # Client tests only
 - **Unit tests**: Individual function/class testing
 - **Integration tests**: API endpoint and database testing
 - **Type checking**: TypeScript validation across codebase
+
+### Testing Documentation
+For detailed testing conventions and strategies, see our [Testing Documentation](./memory-bank/testing/README.md). This includes:
+- Unit testing patterns and best practices
+- Test organization using `__tests__/` directory structure
+- Framework choices (Vitest preferred, Jest for legacy)
+- Integration with saga-soa testing standards
 
 ## 🔧 Development Features
 
@@ -249,7 +256,7 @@ When ready for production:
 
 ## 📚 Next Steps
 
-1. **Explore the codebase**: Start with `apps/api/src/sectors/schedule/`
+1. **Explore the codebase**: Start with `apps/api/src/sectors/example/`
 2. **Test the API**: Use the web client to understand available endpoints
 3. **Read saga-soa docs**: Understand the underlying infrastructure patterns
 4. **Make your first change**: Add a new endpoint or modify existing logic

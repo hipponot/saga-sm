@@ -1,61 +1,73 @@
 import { Endpoint } from './types'
 
-export const SCHEDULE_ENDPOINTS: Endpoint[] = [
+export const EXAMPLE_ENDPOINTS: Endpoint[] = [
     {
-        id: 'schedule.getSchedules',
-        name: 'Get All Schedules',
+        id: 'example.queryExamples',
+        name: 'Query Examples',
         method: 'GET',
-        description: 'Retrieve all schedules with pagination support',
-        inputType: null,
-        sampleInput: null,
-        url: '/trpc/schedule.getSchedules'
+        description: 'Query examples with filters, pagination and sorting',
+        inputType: 'object',
+        sampleInput: JSON.stringify({
+            status: 'published',
+            priority: 'high',
+            limit: 10,
+            offset: 0,
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
+        }, null, 2),
+        url: '/trpc/example.queryExamples'
     },
     {
-        id: 'schedule.getScheduleById',
-        name: 'Get Schedule by ID',
+        id: 'example.getExampleById',
+        name: 'Get Example by ID',
         method: 'GET', 
-        description: 'Retrieve a specific schedule by its unique identifier',
+        description: 'Retrieve a specific example by its unique identifier',
         inputType: 'object',
-        sampleInput: JSON.stringify({ id: 'schedule-123' }, null, 2),
-        url: '/trpc/schedule.getScheduleById'
+        sampleInput: JSON.stringify({ id: 'example-123' }, null, 2),
+        url: '/trpc/example.getExampleById'
     },
     {
-        id: 'schedule.createSchedule',
-        name: 'Create Schedule',
+        id: 'example.createExample',
+        name: 'Create Example',
         method: 'POST',
-        description: 'Create a new schedule with specified parameters',
+        description: 'Create a new example with specified parameters',
         inputType: 'object',
         sampleInput: JSON.stringify({
-            name: 'Daily Standup',
-            description: 'Team synchronization meeting',
-            startTime: '2024-01-15T09:00:00Z',
-            endTime: '2024-01-15T09:30:00Z',
-            recurring: true
+            title: 'Sample Example',
+            description: 'This is a sample example item',
+            status: 'draft',
+            priority: 'medium',
+            tags: ['sample', 'demo'],
+            metadata: {
+                author: 'John Doe',
+                category: 'tutorial'
+            }
         }, null, 2),
-        url: '/trpc/schedule.createSchedule'
+        url: '/trpc/example.createExample'
     },
     {
-        id: 'schedule.updateSchedule',
-        name: 'Update Schedule',
+        id: 'example.updateExample',
+        name: 'Update Example',
         method: 'POST',
-        description: 'Update an existing schedule with new parameters',
+        description: 'Update an existing example with new parameters',
         inputType: 'object',
         sampleInput: JSON.stringify({
-            id: 'schedule-123',
-            name: 'Updated Meeting Name',
-            startTime: '2024-01-15T10:00:00Z',
-            endTime: '2024-01-15T11:00:00Z'
+            id: 'example-123',
+            title: 'Updated Example Title',
+            status: 'published',
+            priority: 'high',
+            tags: ['updated', 'important']
         }, null, 2),
-        url: '/trpc/schedule.updateSchedule'
+        url: '/trpc/example.updateExample'
     },
     {
-        id: 'schedule.deleteSchedule',
-        name: 'Delete Schedule',
+        id: 'example.deleteExample',
+        name: 'Delete Example',
         method: 'POST',
-        description: 'Delete a schedule by its unique identifier',
+        description: 'Delete an example by its unique identifier',
         inputType: 'object',
-        sampleInput: JSON.stringify({ id: 'schedule-123' }, null, 2),
-        url: '/trpc/schedule.deleteSchedule'
+        sampleInput: JSON.stringify({ id: 'example-123' }, null, 2),
+        url: '/trpc/example.deleteExample'
     }
 ]
 

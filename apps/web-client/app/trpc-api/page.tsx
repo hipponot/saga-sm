@@ -302,7 +302,7 @@ export default function TRPCAPIPage() {
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `schedule-events-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `example-events-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -312,10 +312,10 @@ export default function TRPCAPIPage() {
       <div className={styles.container}>
         <div>
           <h1 className={styles.title}>
-            🎯 Schedule API Test Center
+            🎯 Example API Test Center
           </h1>
           <p className={styles.subtitle}>
-            Comprehensive testing interface for the Schedule Management tRPC API
+            Comprehensive testing interface for the Example Management tRPC API
           </p>
           
           {/* Navigation */}
@@ -340,8 +340,8 @@ export default function TRPCAPIPage() {
             <div className={styles.infoBox}>
               <p className={styles.infoText}>
                 <strong className={styles.infoTextStrong}>Endpoint Tester:</strong> Use the endpoint tester 
-                to try all Schedule Management tRPC API endpoints with dropdown selection, code generation, and response inspection. 
-                Perfect for testing schedule endpoints with both cURL and tRPC client modes.
+                to try all Example Management tRPC API endpoints with dropdown selection, code generation, and response inspection. 
+                Perfect for testing example endpoints with both cURL and tRPC client modes.
               </p>
             </div>
           </div>
@@ -392,11 +392,11 @@ export default function TRPCAPIPage() {
         {/* tRPC API Testing Demo */}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>
-            🎯 Schedule API Testing Demo
+            🎯 Example API Testing Demo
           </h2>
           <div className={styles.infoBox}>
             <p className={styles.infoText}>
-              <strong className={styles.infoTextStrong}>Schedule API Demo:</strong> This section demonstrates the Schedule Management API connectivity. 
+              <strong className={styles.infoTextStrong}>Example API Demo:</strong> This section demonstrates the Example Management API connectivity. 
               When you test the API, it checks the health endpoint and shows the connection status 
               that gets displayed in the events section below.
             </p>
