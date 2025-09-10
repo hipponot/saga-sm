@@ -84,6 +84,9 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.1.1(react@19.1.1)
+      zod:
+        specifier: ^3.22.4
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
@@ -4796,7 +4799,7 @@ snapshots:
       - class-validator
       - supports-color
 
-  '@saga-soa/db@file:../saga-soa/packages/db(socks@2.8.7)(typescript@5.9.2)':
+  '@saga-soa/db@file:../saga-soa/packages/db(socks@2.8.7)':
     dependencies:
       inversify: 6.2.2(reflect-metadata@0.2.2)
       mongodb: 5.9.2

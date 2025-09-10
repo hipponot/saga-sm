@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getApiUrl } from '../../src/config/client-config';
 import styles from './page.module.css';
 
 interface PingEvent {
@@ -80,7 +81,7 @@ function RealPingPongSection() {
 
     try {
       // Call the real tRPC pubsub ping endpoint
-      const response = await fetch('http://localhost:3000/trpc/pubsub.ping', {
+      const response = await fetch(`${getApiUrl()}/trpc/pubsub.ping`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -258,7 +259,7 @@ function RealPingPongSection() {
 export default function TRPCAPIPage() {
   // Enhanced testing state
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
-  const [serverUrl, setServerUrl] = useState('http://localhost:3000');
+  const [serverUrl, setServerUrl] = useState(getApiUrl());
   const [eventHistory, setEventHistory] = useState<EventHistory[]>([]);
   const [performanceStats, setPerformanceStats] = useState<PerformanceStats>({
     totalEvents: 0,
