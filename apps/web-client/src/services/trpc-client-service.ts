@@ -1,15 +1,13 @@
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
+import type { ApiRouter } from '@saga-sm/api-types'
 import { ServiceInterface, Endpoint, ApiResponse } from './types'
 import { TRPC_ENDPOINT } from './endpoints'
 
-// This would normally import from @saga-sm/api-types when available
-type AppRouter = any // Placeholder - will be replaced with proper types
-
 export class TrpcClientService implements ServiceInterface {
-    private client: any // Temporarily using any to bypass typing issues
+    private client: ReturnType<typeof createTRPCClient<ApiRouter>>
 
     constructor() {
-        this.client = createTRPCClient<AppRouter>({
+        this.client = createTRPCClient<ApiRouter>({
             links: [
                 httpBatchLink({
                     url: TRPC_ENDPOINT,
@@ -80,9 +78,9 @@ export class TrpcClientService implements ServiceInterface {
         const hasInput = input.trim().length > 0
         let code = `// tRPC Client Implementation\n`
         code += `import { createTRPCClient, httpBatchLink } from '@trpc/client'\n`
-        code += `import type { AppRouter } from '@saga-sm/api-types'\n\n`
+        code += `import type { ApiRouter } from '@saga-sm/api-types'\n\n`
         
-        code += `const client = createTRPCClient<AppRouter>({\n`
+        code += `const client = createTRPCClient<ApiRouter>({\n`
         code += `    links: [\n`
         code += `        httpBatchLink({\n`
         code += `            url: '${TRPC_ENDPOINT}',\n`

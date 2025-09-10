@@ -1,0 +1,46 @@
+{
+    "name": "@saga-sm/api-types",
+    "version": "1.0.0",
+    "type": "module",
+    "private": true,
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./schemas": {
+            "types": "./dist/schemas/index.d.ts",
+            "default": "./dist/schemas/index.js"
+        },
+        "./generated": {
+            "types": "./dist/generated/index.d.ts",
+            "default": "./dist/generated/index.js"
+        }
+    },
+    "scripts": {
+        "dev": "trpc-codegen watch -c codegen.config.js",
+        "build": "pnpm generate && tsup",
+        "generate": "trpc-codegen generate -c codegen.config.js",
+        "clean": "rm -rf dist generated",
+        "check-types": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage"
+    },
+    "dependencies": {
+        "zod": "^3.25.67"
+    },
+    "devDependencies": {
+        "@saga-soa/trpc-codegen": "file:../../../../saga-soa/packages/trpc-codegen",
+        "@saga-soa/zod2ts": "file:../../../../saga-soa/build-tools/zod2ts",
+        "@trpc/client": "^11.5.1",
+        "@trpc/server": "^11.5.1",
+        "@types/node": "^22.10.1",
+        "@vitest/coverage-v8": "^1.5.0",
+        "tsup": "^8.5.0",
+        "typescript": "5.8.2",
+        "vitest": "^1.5.0"
+    }
+}

@@ -8,12 +8,12 @@ import {
     GetExampleSchema,
     QueryExamplesSchema,
     DeleteExampleSchema,
-    type CreateExampleInput,
-    type UpdateExampleInput,
-    type GetExampleInput,
-    type QueryExamplesInput,
-    type DeleteExampleInput,
-    type ExampleData
+    type CreateExampleZ,
+    type UpdateExampleZ,
+    type GetExampleZ,
+    type QueryExamplesZ,
+    type DeleteExampleZ,
+    type ExampleDataZZ
 } from './schema/example-schemas'
 
 @injectable()
@@ -34,9 +34,9 @@ export class ExampleController extends AbstractTRPCController {
             // Query all examples with filters
             queryExamples: t
                 .input(QueryExamplesSchema)
-                .query(async ({ input }: { input: QueryExamplesInput }) => {
+                .query(async ({ input }: { input: QueryExamplesZ }) => {
                     // TODO: Implement example querying logic with filters
-                    const mockData: ExampleData[] = []
+                    const mockData: ExampleDataZ[] = []
                     return {
                         data: mockData,
                         total: 0,
@@ -48,8 +48,8 @@ export class ExampleController extends AbstractTRPCController {
             // Get example by ID
             getExampleById: t
                 .input(GetExampleSchema)
-                .query(async ({ input }: { input: GetExampleInput }) => {
-                    const mockExample: ExampleData = {
+                .query(async ({ input }: { input: GetExampleZ }) => {
+                    const mockExample: ExampleDataZ = {
                         id: input.id,
                         title: this.exampleHelper.formatTitle('Sample Example'),
                         description: 'Sample example description',
@@ -66,12 +66,12 @@ export class ExampleController extends AbstractTRPCController {
             // Create new example
             createExample: t
                 .input(CreateExampleSchema)
-                .mutation(async ({ input }: { input: CreateExampleInput }) => {
+                .mutation(async ({ input }: { input: CreateExampleZ }) => {
                     if (!this.exampleHelper.validateStatus(input.status)) {
                         throw new Error(`Invalid status: ${input.status}`)
                     }
                     
-                    const newExample: ExampleData = {
+                    const newExample: ExampleDataZ = {
                         id: this.exampleHelper.generateId(),
                         ...input,
                         title: this.exampleHelper.formatTitle(input.title),
@@ -85,12 +85,12 @@ export class ExampleController extends AbstractTRPCController {
             // Update example
             updateExample: t
                 .input(UpdateExampleSchema)
-                .mutation(async ({ input }: { input: UpdateExampleInput }) => {
+                .mutation(async ({ input }: { input: UpdateExampleZ }) => {
                     if (input.status && !this.exampleHelper.validateStatus(input.status)) {
                         throw new Error(`Invalid status: ${input.status}`)
                     }
 
-                    const updatedExample: Partial<ExampleData> = {
+                    const updatedExample: Partial<ExampleDataZ> = {
                         ...input,
                         ...(input.title && { title: this.exampleHelper.formatTitle(input.title) }),
                         ...(input.tags && { priority: this.exampleHelper.calculatePriority(input.tags) }),
@@ -102,7 +102,7 @@ export class ExampleController extends AbstractTRPCController {
             // Delete example
             deleteExample: t
                 .input(DeleteExampleSchema)
-                .mutation(async ({ input }: { input: DeleteExampleInput }) => {
+                .mutation(async ({ input }: { input: DeleteExampleZ }) => {
                     // TODO: Implement example deletion logic
                     return {
                         success: true,
