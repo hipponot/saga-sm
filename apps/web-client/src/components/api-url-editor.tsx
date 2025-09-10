@@ -295,3 +295,6 @@ export function ApiUrlEditor({
   )
 }
 
+// Export as GlobalUrlEditor for backward compatibility
+export const GlobalUrlEditor = ApiUrlEditor
+
