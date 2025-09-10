@@ -5,6 +5,8 @@ import { Guid } from 'guid-typescript';
 import { log } from '../../core/helpers/logger_helper';
 import { remove_null_undefined } from '../../core/helpers/object_helper';
 
+import { PrismaClient } from './generated/prisma';
+
 export const BELL_SCHEDULE_COLLECTION = 'bell_schedules';
 export const BELL_SCHEDULE_VARIANT_COLLECTION = 'bell_schedule_variants';
 export const PERIOD_COLLECTION = 'periods';

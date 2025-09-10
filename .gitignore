@@ -127,3 +127,6 @@ blob-report/
 # Local development overrides
 apps/*/.env.local
 apps/*/.env.development.local
+
+# Prisma
+**/generated/prisma
