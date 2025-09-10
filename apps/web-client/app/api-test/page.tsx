@@ -1,24 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import styles from './page.module.css'
 import { EXAMPLE_ENDPOINTS } from '../../src/services/endpoints'
 import { TrpcCurlService } from '../../src/services/trpc-curl-service'
 import { TrpcClientService } from '../../src/services/trpc-client-service'
+import { useApiUrl } from '../../src/context/api-url-context'
+import { ApiUrlEditor } from '../../src/components/api-url-editor'
 import type { Endpoint, ApiResponse } from '../../src/services/types'
 
 export default function ApiTestPage() {
+    const { apiUrl, trpcBasePath } = useApiUrl()
     const [selectedEndpoint, setSelectedEndpoint] = useState<Endpoint | null>(null)
     const [inputData, setInputData] = useState<string>('')
     const [response, setResponse] = useState<string>('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string>('')
     const [useTrpcClient, setUseTrpcClient] = useState(true)
+    const [curlService, setCurlService] = useState<TrpcCurlService>(() => new TrpcCurlService(apiUrl, trpcBasePath))
+    const [trpcService, setTrpcService] = useState<TrpcClientService>(() => new TrpcClientService(apiUrl, trpcBasePath))
 
-    // Initialize services
-    const curlService = new TrpcCurlService()
-    const trpcService = new TrpcClientService()
+    // Update services when API URL or base path changes
+    useEffect(() => {
+        setCurlService(new TrpcCurlService(apiUrl, trpcBasePath))
+        setTrpcService(new TrpcClientService(apiUrl, trpcBasePath))
+    }, [apiUrl, trpcBasePath])
 
     const handleEndpointChange = (endpointId: string) => {
         const endpoint = EXAMPLE_ENDPOINTS.find(ep => ep.id === endpointId)
@@ -43,7 +50,7 @@ export default function ApiTestPage() {
         try {
             const service = useTrpcClient ? trpcService : curlService
             const result: ApiResponse = await service.executeEndpoint(selectedEndpoint, inputData)
-            
+
             if (result.success) {
                 setResponse(JSON.stringify(result.data, null, 2))
             } else {
@@ -66,6 +73,21 @@ export default function ApiTestPage() {
                         Interactive endpoint testing with dropdown selection, code generation, and response inspection
                     </p>
                 </header>
+
+                {/* API URL Configuration */}
+                <div className={styles.section}>
+                    <h2 className={styles.sectionTitle}>🔗 API Configuration</h2>
+                    <ApiUrlEditor />
+                    <div className={styles.infoBox} style={{ marginTop: '1rem' }}>
+                        <p className={styles.infoText}>
+                            <strong className={styles.infoTextStrong}>Note:</strong> This editor only changes the API base URL.
+                            To also edit the tRPC base path (currently: <code>{trpcBasePath}</code>), visit the{' '}
+                            <a href="/trpc-api" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                                tRPC API page
+                            </a> which has full URL configuration controls.
+                        </p>
+                    </div>
+                </div>
 
                 {/* API Mode Selection */}
                 <div className={styles.section}>
@@ -188,7 +210,7 @@ export default function ApiTestPage() {
                             </button>
                         )}
                     </div>
-                    
+
                     {selectedEndpoint ? (
                         <div className={styles.terminalBox}>
                             <pre className={styles.codeBlock}>

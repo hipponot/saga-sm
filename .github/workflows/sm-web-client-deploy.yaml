@@ -1,0 +1,474 @@
+name: SM2 Web Client - Amplify Deployment
+
+on:
+  pull_request:
+    paths:
+      - "apps/web-client/**"
+      - ".github/workflows/sm-web-client-deploy.yaml"
+    types: [opened, synchronize, reopened, closed]
+  push:
+    branches:
+      - main
+      - for_deploy
+    paths:
+      - "apps/web-client/**"
+      - ".github/workflows/sm-web-client-deploy.yaml"
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-west-2
+  SERVICE_PATH: apps/web-client
+  NODE_VERSION: 18
+  AWS_ACCOUNT_ID: 531314149529
+  AMPLIFY_APP_ID: "" # To be filled after Amplify app creation
+
+permissions:
+  id-token: write # Required for OIDC authentication
+  contents: read # Required for checkout
+  pull-requests: write # Required for PR comments
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: "deploy sm2-web-client - ${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}"
+      cancel-in-progress: true
+    timeout-minutes: 10
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should_deploy }}
+      branch-name: ${{ steps.branch.outputs.name }}
+      environment: ${{ steps.env.outputs.environment }}
+      cache-key: ${{ steps.cache.outputs.key }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Check deployment conditions
+        id: check
+        run: |
+          # Deploy if:
+          # - Manual trigger (workflow_dispatch)
+          # - Push to main/for_deploy
+          # - PR opened/updated (not closed)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
+             [[ "${{ github.event_name }}" == "push" ]] || \
+             [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.action }}" != "closed" ]]; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine branch name
+        id: branch
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # Use PR number for consistent branch naming
+            echo "name=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            # Use actual branch name
+            BRANCH=${GITHUB_REF#refs/heads/}
+            # Sanitize branch name for Amplify (replace / with -)
+            BRANCH=$(echo "$BRANCH" | sed 's/\//-/g')
+            echo "name=$BRANCH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine environment
+        id: env
+        run: |
+          # Manual override takes precedence
+          if [[ "${{ steps.branch.outputs.name }}" == "main" ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate cache key
+        id: cache
+        run: |
+          # Create cache key based on dependencies and source files
+          DEPS_HASH=${{ hashFiles(format('{0}/package.json', env.SERVICE_PATH)) }}
+          SRC_HASH=${{ hashFiles(format('{0}/app/**', env.SERVICE_PATH), format('{0}/src/**', env.SERVICE_PATH)) }}
+          echo "key=build-${{ steps.env.outputs.environment }}-${DEPS_HASH:0:8}-${SRC_HASH:0:8}" >> $GITHUB_OUTPUT
+
+  build:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.should-deploy == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      build-artifact-id: ${{ steps.artifact.outputs.id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout saga-soa dependency
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/saga-soa
+          path: saga-soa
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
+      # Cache node_modules
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.SERVICE_PATH }}/node_modules
+            ~/.pnpm-store
+          key: deps-${{ runner.os }}-${{ hashFiles(format('{0}/package.json', env.SERVICE_PATH)) }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
+
+      # Cache build output
+      - name: Cache build artifacts
+        id: cache-build
+        if: github.event.inputs.skip_cache != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SERVICE_PATH }}/.next
+          key: ${{ needs.detect-changes.outputs.cache-key }}
+          restore-keys: |
+            build-${{ needs.detect-changes.outputs.environment }}-
+
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: |
+          # Install workspace dependencies
+          pnpm install --no-frozen-lockfile
+
+      - name: Build application
+        if: steps.cache-build.outputs.cache-hit != 'true' || github.event.inputs.skip_cache == 'true'
+        working-directory: ${{ env.SERVICE_PATH }}
+        env:
+          BUILD_ENV: ${{ needs.detect-changes.outputs.environment }}
+          NODE_ENV: production
+        run: |
+          echo "🔨 Building for environment: $BUILD_ENV"
+          pnpm run build
+
+          # Create build info
+          mkdir -p public
+          echo "{\"buildTime\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"commit\":\"${{ github.sha }}\",\"branch\":\"${{ needs.detect-changes.outputs.branch-name }}\",\"env\":\"$BUILD_ENV\"}" > public/build-info.json
+
+      - name: Display cache status
+        run: |
+          echo "📦 Cache Status:"
+          echo "  Dependencies: ${{ steps.cache-deps.outputs.cache-hit == 'true' && 'HIT ✅' || 'MISS ❌' }}"
+          echo "  Build: ${{ steps.cache-build.outputs.cache-hit == 'true' && 'HIT ✅' || 'MISS ❌' }}"
+
+      - name: Create deployment package
+        working-directory: ${{ env.SERVICE_PATH }}
+        run: |
+          # Create a deployment package with Next.js build output
+          mkdir -p deployment-package
+
+          # Copy Next.js build output
+          cp -r .next deployment-package/
+          cp -r public deployment-package/ || true
+          cp next.config.js deployment-package/
+          cp package.json deployment-package/
+
+          # Create a simple package.json for production
+          cat > deployment-package/package.json << EOF
+          {
+            "name": "@sm2/web-client",
+            "version": "1.0.0",
+            "scripts": {
+              "start": "next start"
+            },
+            "dependencies": {
+              "next": "^15.4.0",
+              "react": "^19.1.0",
+              "react-dom": "^19.1.0"
+            }
+          }
+          EOF
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        id: artifact
+        with:
+          name: build-${{ needs.detect-changes.outputs.environment }}-${{ github.sha }}
+          path: ${{ env.SERVICE_PATH }}/deployment-package/
+          retention-days: 7
+
+  deploy:
+    needs: [detect-changes, build]
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            ${{ env.SERVICE_PATH }}/template.yaml
+            ${{ env.SERVICE_PATH }}/samconfig.yaml
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ needs.detect-changes.outputs.environment }}-${{ github.sha }}
+          path: ${{ env.SERVICE_PATH }}/deployment-package/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/aws-github-actions-access-microservices-Role-11KE1BB99FYGU
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to Amplify
+        id: deploy
+        working-directory: ${{ env.SERVICE_PATH }}
+        env:
+          BUILD_ENV: ${{ needs.detect-changes.outputs.environment }}
+          BRANCH_NAME: ${{ needs.detect-changes.outputs.branch-name }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "🚀 Deploying to Amplify"
+
+          # Create deployment zip
+          cd deployment-package
+          zip -r ../deployment.zip .
+          cd ..
+
+          # Get or create Amplify app
+          APP_ID=$(aws ssm get-parameter --name "/sm2/amplify/app-id" --query "Parameter.Value" --output text 2>/dev/null || echo "")
+
+          if [[ -z "$APP_ID" ]]; then
+            echo "Creating new Amplify app..."
+            # Deploy SAM template to create Amplify app
+            sam build
+            sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+            
+            # Get the created app ID
+            APP_ID=$(aws cloudformation describe-stacks --stack-name sm2-web-client-infrastructure --query "Stacks[0].Outputs[?OutputKey=='AmplifyAppId'].OutputValue" --output text)
+            
+            # Store in SSM for future use
+            aws ssm put-parameter --name "/sm2/amplify/app-id" --value "$APP_ID" --type "String" --overwrite || true
+          fi
+
+          echo "Using Amplify App ID: $APP_ID"
+
+          # Create or update branch
+          AMPLIFY_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/\//-/g' | cut -c1-63)
+
+          # Get environment-specific API URL from SSM
+          API_URL=""
+          case "$BUILD_ENV" in
+            "prod")
+              API_URL=$(aws ssm get-parameter --name "/saga-sm/web-client/api-url/prod" --query "Parameter.Value" --output text 2>/dev/null || echo "https://api.example.com")
+              ;;
+            "qa")
+              API_URL=$(aws ssm get-parameter --name "/saga-sm/web-client/api-url/qa" --query "Parameter.Value" --output text 2>/dev/null || echo "https://api-qa.example.com")
+              ;;
+            "dev"|*)
+              API_URL=$(aws ssm get-parameter --name "/saga-sm/web-client/api-url/dev" --query "Parameter.Value" --output text 2>/dev/null || echo "http://localhost:3000")
+              ;;
+          esac
+
+          echo "Using API URL for $BUILD_ENV: $API_URL"
+
+          # Check if branch exists
+          aws amplify get-branch --app-id "$APP_ID" --branch-name "$AMPLIFY_BRANCH_NAME" >/dev/null 2>&1 || {
+            echo "Creating branch: $AMPLIFY_BRANCH_NAME"
+            aws amplify create-branch \
+              --app-id "$APP_ID" \
+              --branch-name "$AMPLIFY_BRANCH_NAME" \
+              --description "Automated deployment from GitHub Actions"
+          }
+
+          # Update branch environment variables
+          echo "Setting environment variables for branch: $AMPLIFY_BRANCH_NAME"
+          aws amplify update-branch \
+            --app-id "$APP_ID" \
+            --branch-name "$AMPLIFY_BRANCH_NAME" \
+            --environment-variables "{
+              \"NEXT_PUBLIC_SAGA_SM_API_URL\": \"$API_URL\",
+              \"NEXT_PUBLIC_TRPC_BASE_PATH\": \"/trpc\",
+              \"NEXT_TELEMETRY_DISABLED\": \"1\",
+              \"NODE_ENV\": \"production\",
+              \"BUILD_ENV\": \"$BUILD_ENV\"
+            }"
+
+          # Deploy to branch
+          JOB_ID=$(aws amplify start-deployment \
+            --app-id "$APP_ID" \
+            --branch-name "$AMPLIFY_BRANCH_NAME" \
+            --source-url "deployment.zip" \
+            --query "jobSummary.jobId" \
+            --output text)
+
+          echo "Deployment job started: $JOB_ID"
+
+          # Wait for deployment to complete
+          while true; do
+            STATUS=$(aws amplify get-job \
+              --app-id "$APP_ID" \
+              --branch-name "$AMPLIFY_BRANCH_NAME" \
+              --job-id "$JOB_ID" \
+              --query "job.summary.status" \
+              --output text)
+            
+            echo "Deployment status: $STATUS"
+            
+            if [[ "$STATUS" == "SUCCEED" ]]; then
+              break
+            elif [[ "$STATUS" == "FAILED" || "$STATUS" == "CANCELLED" ]]; then
+              echo "Deployment failed with status: $STATUS"
+              exit 1
+            fi
+            
+            sleep 30
+          done
+
+          # Get the deployment URL
+          DOMAIN=$(aws amplify get-app --app-id "$APP_ID" --query "app.defaultDomain" --output text)
+          URL="https://${AMPLIFY_BRANCH_NAME}.${DOMAIN}"
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+          echo "✅ Deployment successful: $URL"
+
+      - name: Comment PR with deployment URL
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.url }}';
+            const environment = '${{ needs.detect-changes.outputs.environment }}';
+            const commitSha = '${{ github.sha }}';
+            const branchName = '${{ needs.detect-changes.outputs.branch-name }}';
+
+            const comment = `### 🚀 Amplify Preview Deployment - SM2 Web Client
+
+            | Status | Details |
+            |--------|---------|
+            | **Preview URL** | ${url} |
+            | **Environment** | \`${environment}\` |
+            | **Branch** | \`${branchName}\` |
+            | **Commit** | \`${commitSha.slice(0, 7)}\` |
+
+            ---
+
+            📝 **Notes:**
+            - This preview updates automatically on new commits
+            - Preview will be deleted when PR is closed
+            - Built with Next.js and deployed to AWS Amplify
+
+            ⏱️ **Deployed at:** ${new Date().toISOString()}`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Amplify Preview Deployment - SM2 Web Client')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+
+  cleanup:
+    needs: detect-changes
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/aws-github-actions-access-microservices-Role-11KE1BB99FYGU
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Delete Amplify branch
+        run: |
+          BRANCH_NAME="pr-${{ github.event.pull_request.number }}"
+
+          # Get app ID
+          APP_ID=$(aws ssm get-parameter --name "/sm2/amplify/app-id" --query "Parameter.Value" --output text 2>/dev/null || echo "")
+
+          if [[ -n "$APP_ID" ]]; then
+            echo "🗑️ Deleting Amplify branch: $BRANCH_NAME"
+            aws amplify delete-branch \
+              --app-id "$APP_ID" \
+              --branch-name "${BRANCH_NAME}" \
+              2>/dev/null || echo "Branch already deleted or doesn't exist"
+          else
+            echo "No Amplify app found, skipping cleanup"
+          fi
+
+      - name: Update PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Amplify Preview Deployment - SM2 Web Client')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: `### 🗑️ Preview Deployment Removed - SM2 Web Client
+
+                The preview environment for this PR has been deleted.
+
+                - **Branch:** \`pr-${{ github.event.pull_request.number }}\`
+                - **Deleted at:** ${new Date().toISOString()}
+
+                Thank you for your contribution! 🙏`
+              });
+            }
+
+  # Summary job for required status checks
+  deployment-status:
+    if: always()
+    needs: [detect-changes, build, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "### 📊 SM2 Web Client Deployment Summary"
+          echo ""
+          if [[ "${{ needs.deploy.result }}" == "success" ]]; then
+            echo "✅ **Deployment Successful**"
+            echo "🔗 URL: ${{ needs.deploy.outputs.deploy-url }}"
+          elif [[ "${{ needs.detect-changes.outputs.should-deploy }}" != "true" ]]; then
+            echo "⏭️ **Deployment Skipped** (no changes or PR closed)"
+          else
+            echo "❌ **Deployment Failed**"
+            echo "Check the logs above for details"
+          fi

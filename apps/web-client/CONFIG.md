@@ -43,3 +43,20 @@ The configuration follows Next.js best practices:
 - Public environment variables (prefixed with `NEXT_PUBLIC_`) are embedded at build time and available in the browser
 - Server-only variables are only accessible in server-side code
 - Configuration is validated using Zod schemas for type safety
+
+## Production/Amplify Configuration
+
+For AWS Amplify hosted deployments, environment variables are managed differently across environments. See [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md) for comprehensive documentation on:
+
+- Environment-specific API URL management
+- SSM Parameter Store integration
+- Automated GitHub Actions deployment
+- Branch-to-environment mapping
+- Troubleshooting and maintenance
+
+**Quick Reference for Amplify:**
+- **Development/PR branches**: Use dev API URL from SSM parameter `/saga-sm/web-client/api-url/dev`
+- **Main branch (Production)**: Use prod API URL from SSM parameter `/saga-sm/web-client/api-url/prod`
+- **QA/Staging**: Use qa API URL from SSM parameter `/saga-sm/web-client/api-url/qa`
+
+Environment variables are automatically set during deployment based on the target branch.

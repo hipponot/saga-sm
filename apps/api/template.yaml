@@ -1,0 +1,262 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Saga-SM API - Schedule Management tRPC API Service
+
+Parameters:
+  AppName:
+    Type: String
+    Default: saga-sm-api
+    Description: Name for the ECS service and related resources
+
+  Environment:
+    Type: String
+    Default: dev
+    Description: Environment (dev, qa, prod)
+    AllowedValues:
+      - dev
+      - qa
+      - prod
+
+  HealthCheckGracePeriodSeconds:
+    Type: Number
+    Default: "30"
+    Description: Grace period for health check
+
+  # SSM Parameter References
+  VpcIdSSMParameter:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::VPC::Id>
+    Description: The VPC ID from SSM Parameter Store
+    Default: /dev/app/vpc-id
+
+  SubnetsSSMParameter:
+    Type: AWS::SSM::Parameter::Value<CommaDelimitedList>
+    Description: List of subnet IDs from SSM Parameter Store
+    Default: /dev/app/private-subnet-ids
+
+  AppSecurityGroupIdSSMParameter:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::SecurityGroup::Id>
+    Description: Security group ID from SSM Parameter Store
+    Default: /dev/app/app-sg-id
+
+  LoadBalancerArnSSMParameter:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Load balancer ARN from SSM Parameter Store
+    Default: /dev/services/alb-arn
+
+  ListenerArnSSMParameter:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Load balancer listener ARN from SSM Parameter Store
+    Default: /dev/services/alb-listener-arn
+
+  ClusterArnSSMParameter:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: ECS cluster ARN from SSM Parameter Store
+    Default: /dev/app/ecs-cluster-arn
+
+  ImageId:
+    Type: String
+    Default: 531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api:latest
+    Description: Docker image for the API service
+
+Resources:
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RequiresCompatibilities:
+        - "FARGATE"
+      Cpu: "512"
+      Memory: "1024"
+      ContainerDefinitions:
+        - Name: !Ref AppName
+          Image: !Ref ImageId
+          PortMappings:
+            - ContainerPort: 3000
+              HostPort: 3000
+          Essential: true
+          Environment:
+            - Name: NODE_ENV
+              Value: production
+            - Name: PORT
+              Value: "3000"
+            - Name: ENVIRONMENT
+              Value: !Ref Environment
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: us-west-2
+              awslogs-create-group: "true"
+              awslogs-group: !Sub /ecs/${AppName}
+              awslogs-stream-prefix: ecs
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - "curl -f http://localhost:3000/health || exit 1"
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 60
+      NetworkMode: awsvpc
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+
+  ECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ClusterArnSSMParameter
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DesiredCount: 1
+      LaunchType: FARGATE
+      HealthCheckGracePeriodSeconds: !Ref HealthCheckGracePeriodSeconds
+      LoadBalancers:
+        - ContainerName: !Ref AppName
+          ContainerPort: 3000
+          TargetGroupArn: !GetAtt TargetGroup.TargetGroupArn
+      TaskDefinition: !Ref TaskDefinition
+      ServiceName: !Ref AppName
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - !Ref AppSecurityGroupIdSSMParameter
+          Subnets: !Ref SubnetsSSMParameter
+      Tags:
+        - Key: Name
+          Value: !Ref AppName
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Service
+          Value: API
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Port: 3000
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VpcIdSSMParameter
+      TargetType: ip
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: "60"
+      Tags:
+        - Key: Name
+          Value: !Sub ${AppName}-tg
+        - Key: Environment
+          Value: !Ref Environment
+
+  ListenerRule:
+    Type: "AWS::ElasticLoadBalancingV2::ListenerRule"
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - "/sm*"
+              - "/trpc*"
+              - "/health*"
+              - "/api*"
+      ListenerArn: !Ref ListenerArnSSMParameter
+      Priority: 10
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AppName}-task-role
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: APITaskPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}*
+      Tags:
+        - Key: Name
+          Value: !Sub ${AppName}-task-role
+        - Key: Environment
+          Value: !Ref Environment
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AppName}-execution-role
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: LogsAccess
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}*
+        - PolicyName: ECRAccess
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:GetAuthorizationToken
+                Resource: "*"
+      Tags:
+        - Key: Name
+          Value: !Sub ${AppName}-execution-role
+        - Key: Environment
+          Value: !Ref Environment
+
+Outputs:
+  ServiceName:
+    Description: Name of the ECS service
+    Value: !Ref ECSService
+    Export:
+      Name: !Sub ${AWS::StackName}-ServiceName
+
+  TaskDefinitionArn:
+    Description: ARN of the task definition
+    Value: !Ref TaskDefinition
+    Export:
+      Name: !Sub ${AWS::StackName}-TaskDefinition
+
+  TargetGroupArn:
+    Description: ARN of the target group
+    Value: !Ref TargetGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-TargetGroup
+
+  ServiceEndpoint:
+    Description: Endpoint for the API service
+    Value: !Sub "https://${LoadBalancerArnSSMParameter}/trpc"
+    Export:
+      Name: !Sub ${AWS::StackName}-Endpoint

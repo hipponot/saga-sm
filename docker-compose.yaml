@@ -1,0 +1,101 @@
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:8.0
+    container_name: saga-sm-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: saga_sm
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - saga-sm-network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: saga-sm-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword123
+      MYSQL_DATABASE: saga_sm
+      MYSQL_USER: saga_user
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - saga-sm-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # API Service
+  api:
+    build:
+      context: ../
+      dockerfile: saga-sm/apps/api/Dockerfile
+    container_name: saga-sm-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      PUBSUB_PORT: 3002
+      # MongoDB connection
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/saga_sm?authSource=admin
+      # MySQL connection  
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: saga_sm
+      MYSQL_USER: saga_user
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3000:3000"
+      - "3002:3002"
+    depends_on:
+      - mongodb
+      - mysql
+    networks:
+      - saga-sm-network
+    volumes:
+      # Mount source for development (optional)
+      - ./apps/api/src:/app/apps/api/src:ro
+
+  # Web Client
+  web-client:
+    build:
+      context: ../
+      dockerfile: saga-sm/apps/web-client/Dockerfile
+    container_name: saga-sm-web-client
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      # API connection
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_TRPC_URL: http://localhost:3000/trpc
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api
+    networks:
+      - saga-sm-network
+    volumes:
+      # Mount source for development (optional)
+      - ./apps/web-client/app:/app/apps/web-client/app:ro
+      - ./apps/web-client/src:/app/apps/web-client/src:ro
+
+networks:
+  saga-sm-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  mysql_data:
+    driver: local
