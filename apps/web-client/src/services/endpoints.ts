@@ -1,4 +1,5 @@
 import { Endpoint } from './types'
+import { getClientConfig } from '../config/client-config'
 
 export const EXAMPLE_ENDPOINTS: Endpoint[] = [
     {
@@ -71,5 +72,6 @@ export const EXAMPLE_ENDPOINTS: Endpoint[] = [
     }
 ]
 
-export const API_BASE_URL = 'http://localhost:3000'
-export const TRPC_ENDPOINT = `${API_BASE_URL}/trpc`
+const config = getClientConfig()
+export const API_BASE_URL = config.sagaSmApiUrl
+export const TRPC_ENDPOINT = `${API_BASE_URL}${config.trpcBasePath}`
