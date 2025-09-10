@@ -9,8 +9,8 @@ export class TrpcClientService implements ServiceInterface {
     private client: any // Temporarily using any to bypass typing issues
     private currentUrl: string
 
-    constructor(customApiUrl?: string) {
-        this.currentUrl = getTrpcEndpoint(customApiUrl)
+    constructor(customApiUrl?: string, customBasePath?: string) {
+        this.currentUrl = getTrpcEndpoint(customApiUrl, customBasePath)
         this.client = this.createClient(this.currentUrl)
     }
 
@@ -28,8 +28,8 @@ export class TrpcClientService implements ServiceInterface {
     }
 
     // Method to update the API URL at runtime
-    public updateApiUrl(customApiUrl: string) {
-        const newUrl = getTrpcEndpoint(customApiUrl)
+    public updateApiUrl(customApiUrl: string, customBasePath?: string) {
+        const newUrl = getTrpcEndpoint(customApiUrl, customBasePath)
         if (newUrl !== this.currentUrl) {
             this.currentUrl = newUrl
             this.client = this.createClient(this.currentUrl)
@@ -46,7 +46,7 @@ export class TrpcClientService implements ServiceInterface {
 
         try {
             let parsedInput: any = null
-            
+
             if (input.trim()) {
                 try {
                     parsedInput = JSON.parse(input)
@@ -101,7 +101,7 @@ export class TrpcClientService implements ServiceInterface {
         let code = `// tRPC Client Implementation\n`
         code += `import { createTRPCClient, httpBatchLink } from '@trpc/client'\n`
         code += `import type { AppRouter } from '@saga-sm/api-types'\n\n`
-        
+
         code += `const client = createTRPCClient<AppRouter>({\n`
         code += `    links: [\n`
         code += `        httpBatchLink({\n`

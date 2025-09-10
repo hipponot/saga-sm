@@ -4,13 +4,13 @@ import { TRPC_ENDPOINT, getTrpcEndpoint } from './endpoints'
 export class TrpcCurlService implements ServiceInterface {
     private currentUrl: string
 
-    constructor(customApiUrl?: string) {
-        this.currentUrl = getTrpcEndpoint(customApiUrl)
+    constructor(customApiUrl?: string, customBasePath?: string) {
+        this.currentUrl = getTrpcEndpoint(customApiUrl, customBasePath)
     }
 
     // Method to update the API URL at runtime
-    public updateApiUrl(customApiUrl: string) {
-        this.currentUrl = getTrpcEndpoint(customApiUrl)
+    public updateApiUrl(customApiUrl: string, customBasePath?: string) {
+        this.currentUrl = getTrpcEndpoint(customApiUrl, customBasePath)
     }
 
     // Get current URL being used

@@ -21,7 +21,7 @@ export const EXAMPLE_ENDPOINTS: Endpoint[] = [
     {
         id: 'example.getExampleById',
         name: 'Get Example by ID',
-        method: 'GET', 
+        method: 'GET',
         description: 'Retrieve a specific example by its unique identifier',
         inputType: 'object',
         sampleInput: JSON.stringify({ id: 'example-123' }, null, 2),
@@ -81,7 +81,8 @@ export function getApiBaseUrl(customUrl?: string): string {
     return customUrl || config.sagaSmApiUrl
 }
 
-export function getTrpcEndpoint(customUrl?: string): string {
+export function getTrpcEndpoint(customUrl?: string, customBasePath?: string): string {
     const baseUrl = customUrl || config.sagaSmApiUrl
-    return `${baseUrl}${config.trpcBasePath}`
+    const basePath = customBasePath || config.trpcBasePath
+    return `${baseUrl}${basePath}`
 }
