@@ -31,14 +31,16 @@
         "inversify": "^6.0.2",
         "reflect-metadata": "^0.2.2",
         "zod": "^3.22.4",
-        "@saga-soa/config": "file:../../../saga-soa/packages/config"
+        "@saga-soa/config": "file:../../../saga-soa/packages/config",
+        "@saga-sm/api-types": "file:./types"
     },
     "devDependencies": {
         "@types/node": "^18.19.31",
         "tsup": "^8.0.2",
         "typescript": "^5.8.2",
         "vitest": "^1.6.0",
-        "prettier": "^3.2.5"
+        "prettier": "^3.2.5",
+        "@saga-soa/trpc-codegen": "file:../../../saga-soa/packages/trpc-codegen"
     },
     "engines": {
         "node": ">=18"

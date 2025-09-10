@@ -1,24 +1,18 @@
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
+import type { ApiRouter } from '@saga-sm/api-types'
 import { ServiceInterface, Endpoint, ApiResponse } from './types'
-import { TRPC_ENDPOINT, getTrpcEndpoint } from './endpoints'
-
-// This would normally import from @saga-sm/api-types when available
-type AppRouter = any // Placeholder - will be replaced with proper types
+import { getTrpcEndpoint } from './endpoints'
 
 export class TrpcClientService implements ServiceInterface {
-    private client: any // Temporarily using any to bypass typing issues
+    private client: ReturnType<typeof createTRPCClient<ApiRouter>>
     private currentUrl: string
 
     constructor(customApiUrl?: string, customBasePath?: string) {
         this.currentUrl = getTrpcEndpoint(customApiUrl, customBasePath)
-        this.client = this.createClient(this.currentUrl)
-    }
-
-    private createClient(url: string) {
-        return createTRPCClient<AppRouter>({
+        this.client = createTRPCClient<ApiRouter>({
             links: [
                 httpBatchLink({
-                    url,
+                    url: this.currentUrl,
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -29,11 +23,17 @@ export class TrpcClientService implements ServiceInterface {
 
     // Method to update the API URL at runtime
     public updateApiUrl(customApiUrl: string, customBasePath?: string) {
-        const newUrl = getTrpcEndpoint(customApiUrl, customBasePath)
-        if (newUrl !== this.currentUrl) {
-            this.currentUrl = newUrl
-            this.client = this.createClient(this.currentUrl)
-        }
+        this.currentUrl = getTrpcEndpoint(customApiUrl, customBasePath)
+        this.client = createTRPCClient<ApiRouter>({
+            links: [
+                httpBatchLink({
+                    url: this.currentUrl,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }),
+            ],
+        })
     }
 
     // Get current URL being used
@@ -46,7 +46,7 @@ export class TrpcClientService implements ServiceInterface {
 
         try {
             let parsedInput: any = null
-
+            
             if (input.trim()) {
                 try {
                     parsedInput = JSON.parse(input)
@@ -100,9 +100,9 @@ export class TrpcClientService implements ServiceInterface {
         const hasInput = input.trim().length > 0
         let code = `// tRPC Client Implementation\n`
         code += `import { createTRPCClient, httpBatchLink } from '@trpc/client'\n`
-        code += `import type { AppRouter } from '@saga-sm/api-types'\n\n`
-
-        code += `const client = createTRPCClient<AppRouter>({\n`
+        code += `import type { ApiRouter } from '@saga-sm/api-types'\n\n`
+        
+        code += `const client = createTRPCClient<ApiRouter>({\n`
         code += `    links: [\n`
         code += `        httpBatchLink({\n`
         code += `            url: '${this.currentUrl}',\n`
