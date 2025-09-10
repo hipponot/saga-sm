@@ -7,7 +7,6 @@ import { EXAMPLE_ENDPOINTS } from '../../src/services/endpoints'
 import { TrpcCurlService } from '../../src/services/trpc-curl-service'
 import { TrpcClientService } from '../../src/services/trpc-client-service'
 import { useApiUrl } from '../../src/context/api-url-context'
-import { ApiUrlEditor } from '../../src/components/api-url-editor'
 import type { Endpoint, ApiResponse } from '../../src/services/types'
 
 export default function ApiTestPage() {
@@ -74,17 +73,20 @@ export default function ApiTestPage() {
                     </p>
                 </header>
 
-                {/* API URL Configuration */}
+                {/* API Configuration Info */}
                 <div className={styles.section}>
                     <h2 className={styles.sectionTitle}>🔗 API Configuration</h2>
-                    <ApiUrlEditor />
-                    <div className={styles.infoBox} style={{ marginTop: '1rem' }}>
+                    <div className={styles.infoBox}>
                         <p className={styles.infoText}>
-                            <strong className={styles.infoTextStrong}>Note:</strong> This editor only changes the API base URL.
-                            To also edit the tRPC base path (currently: <code>{trpcBasePath}</code>), visit the{' '}
-                            <a href="/trpc-api" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                                tRPC API page
-                            </a> which has full URL configuration controls.
+                            <strong className={styles.infoTextStrong}>Current API Configuration:</strong>
+                        </p>
+                        <div style={{ fontFamily: 'var(--font-geist-mono, monospace)', fontSize: '0.875rem', margin: '0.5rem 0' }}>
+                            <div><strong>API URL:</strong> <span style={{ color: '#3b82f6' }}>{apiUrl}</span></div>
+                            <div><strong>tRPC Path:</strong> <span style={{ color: '#10b981' }}>{trpcBasePath}</span></div>
+                            <div><strong>Full tRPC URL:</strong> <span style={{ color: '#6b7280' }}>{apiUrl}{trpcBasePath}</span></div>
+                        </div>
+                        <p className={styles.infoText} style={{ marginTop: '0.75rem' }}>
+                            💡 <strong>Tip:</strong> Use the <strong>🔗</strong> button in the top-right corner to edit API configuration from any page.
                         </p>
                     </div>
                 </div>
