@@ -1,32 +1,33 @@
 {
-    "name": "@saga-sm/web-client",
-    "version": "1.0.0",
-    "description": "Web client for testing saga-sm API",
-    "private": true,
-    "scripts": {
-        "dev": "next dev --turbopack --port 3001",
-        "build": "next build",
-        "start": "next start",
-        "lint": "next lint --max-warnings 0",
-        "typecheck": "tsc --noEmit",
-        "check": "pnpm run build && pnpm run lint && pnpm run typecheck",
-        "clean": "rm -rf .next"
-    },
-    "dependencies": {
-        "next": "^15.4.0",
-        "react": "^19.1.0",
-        "react-dom": "^19.1.0",
-        "@trpc/client": "^11.0.0",
-        "zod": "^3.22.4",
-        "@saga-sm/api-types": "file:../api/types"
-    },
-    "devDependencies": {
-        "@types/node": "^22.0.0",
-        "@types/react": "^19.1.0",
-        "@types/react-dom": "^19.1.0",
-        "eslint": "^8.57.0",
-        "eslint-config-next": "^15.4.0",
-        "typescript": "^5.8.2",
-        "prettier": "^3.2.5"
-    }
+  "name": "@saga-sm/web-client",
+  "version": "1.0.0",
+  "description": "Web client for testing saga-sm API",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --port 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint --max-warnings 0 .",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm run build && pnpm run lint && pnpm run typecheck",
+    "clean": "rm -rf .next"
+  },
+  "dependencies": {
+    "@saga-sm/api-types": "file:../api/types",
+    "@trpc/client": "^11.0.0",
+    "next": "^15.4.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.4.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.8.2"
+  }
 }
