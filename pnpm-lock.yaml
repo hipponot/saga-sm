@@ -26,6 +26,9 @@ importers:
       '@saga-soa/api-core':
         specifier: file:../../../saga-soa/packages/api-core
         version: file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2(graphql@16.11.0))(typescript@5.9.2)
+      '@saga-soa/config':
+        specifier: file:../../../saga-soa/packages/config
+        version: file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)
       '@saga-soa/db':
         specifier: file:../../../saga-soa/packages/db
         version: file:../saga-soa/packages/db(socks@2.8.7)
@@ -1084,6 +1087,9 @@ packages:
   '@saga-soa/api-core@file:../saga-soa/packages/api-core':
     resolution: {directory: ../saga-soa/packages/api-core, type: directory}
 
+  '@saga-soa/config@file:../saga-soa/packages/config':
+    resolution: {directory: ../saga-soa/packages/config, type: directory}
+
   '@saga-soa/db@file:../saga-soa/packages/db':
     resolution: {directory: ../saga-soa/packages/db, type: directory}
 
@@ -1797,6 +1803,18 @@ packages:
   doctrine@3.0.0:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}
     engines: {node: '>=6.0.0'}
+
+  dotenv-flow@4.1.0:
+    resolution: {integrity: sha512-0cwP9jpQBQfyHwvE0cRhraZMkdV45TQedA8AAUZMsFzvmLcQyc1HPv+oX0OOYwLFjIlvgVepQ+WuQHbqDaHJZg==}
+    engines: {node: '>= 12.0.0'}
+
+  dotenv@16.6.1:
+    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+
+  dotenv@17.2.0:
+    resolution: {integrity: sha512-Q4sgBT60gzd0BB0lSyYD3xM4YxrXA9y4uBDof1JNYGzOXrQdQ6yX+7XIAqoFOGQFOTK1D3Hts5OllpxMDZFONQ==}
+    engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -4607,6 +4625,19 @@ snapshots:
       - terser
       - typescript
 
+  '@saga-soa/config@file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)':
+    dependencies:
+      dotenv: 17.2.0
+      dotenv-flow: 4.1.0
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      reflect-metadata: 0.2.2
+      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - class-transformer
+      - class-validator
+      - supports-color
+
   '@saga-soa/db@file:../saga-soa/packages/db(socks@2.8.7)':
     dependencies:
       inversify: 6.2.2(reflect-metadata@0.2.2)
@@ -5391,6 +5422,14 @@ snapshots:
   doctrine@3.0.0:
     dependencies:
       esutils: 2.0.3
+
+  dotenv-flow@4.1.0:
+    dependencies:
+      dotenv: 16.6.1
+
+  dotenv@16.6.1: {}
+
+  dotenv@17.2.0: {}
 
   dunder-proto@1.0.1:
     dependencies:

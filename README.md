@@ -76,12 +76,7 @@ git clone [saga-sm-repo-url] saga-sm
 **2. Link saga-sm to saga-soa for concurrent development:**
 ```bash
 cd saga-sm
-
-# Option A: pnpm link (recommended for active saga-soa development)
 ./scripts/setup-local-dev.sh
-
-# Option B: file protocol (simpler, automatic updates)
-./scripts/setup-file-protocol.sh
 ```
 
 **3. Configure environment:**
