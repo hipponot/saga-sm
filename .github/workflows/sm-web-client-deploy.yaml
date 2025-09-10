@@ -262,6 +262,22 @@ jobs:
           # Create or update branch
           AMPLIFY_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/\//-/g' | cut -c1-63)
 
+          # Get environment-specific API URL from SSM
+          API_URL=""
+          case "$BUILD_ENV" in
+            "prod")
+              API_URL=$(aws ssm get-parameter --name "/saga-sm/web-client/api-url/prod" --query "Parameter.Value" --output text 2>/dev/null || echo "https://api.example.com")
+              ;;
+            "qa")
+              API_URL=$(aws ssm get-parameter --name "/saga-sm/web-client/api-url/qa" --query "Parameter.Value" --output text 2>/dev/null || echo "https://api-qa.example.com")
+              ;;
+            "dev"|*)
+              API_URL=$(aws ssm get-parameter --name "/saga-sm/web-client/api-url/dev" --query "Parameter.Value" --output text 2>/dev/null || echo "http://localhost:3000")
+              ;;
+          esac
+
+          echo "Using API URL for $BUILD_ENV: $API_URL"
+
           # Check if branch exists
           aws amplify get-branch --app-id "$APP_ID" --branch-name "$AMPLIFY_BRANCH_NAME" >/dev/null 2>&1 || {
             echo "Creating branch: $AMPLIFY_BRANCH_NAME"
@@ -270,6 +286,19 @@ jobs:
               --branch-name "$AMPLIFY_BRANCH_NAME" \
               --description "Automated deployment from GitHub Actions"
           }
+
+          # Update branch environment variables
+          echo "Setting environment variables for branch: $AMPLIFY_BRANCH_NAME"
+          aws amplify update-branch \
+            --app-id "$APP_ID" \
+            --branch-name "$AMPLIFY_BRANCH_NAME" \
+            --environment-variables "{
+              \"NEXT_PUBLIC_SAGA_SM_API_URL\": \"$API_URL\",
+              \"NEXT_PUBLIC_TRPC_BASE_PATH\": \"/trpc\",
+              \"NEXT_TELEMETRY_DISABLED\": \"1\",
+              \"NODE_ENV\": \"production\",
+              \"BUILD_ENV\": \"$BUILD_ENV\"
+            }"
 
           # Deploy to branch
           JOB_ID=$(aws amplify start-deployment \

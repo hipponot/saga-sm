@@ -75,3 +75,13 @@ export const EXAMPLE_ENDPOINTS: Endpoint[] = [
 const config = getClientConfig()
 export const API_BASE_URL = config.sagaSmApiUrl
 export const TRPC_ENDPOINT = `${API_BASE_URL}${config.trpcBasePath}`
+
+// Dynamic URL functions for runtime API URL changes
+export function getApiBaseUrl(customUrl?: string): string {
+    return customUrl || config.sagaSmApiUrl
+}
+
+export function getTrpcEndpoint(customUrl?: string): string {
+    const baseUrl = customUrl || config.sagaSmApiUrl
+    return `${baseUrl}${config.trpcBasePath}`
+}

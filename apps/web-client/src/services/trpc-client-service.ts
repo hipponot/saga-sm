@@ -1,24 +1,44 @@
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
 import { ServiceInterface, Endpoint, ApiResponse } from './types'
-import { TRPC_ENDPOINT } from './endpoints'
+import { TRPC_ENDPOINT, getTrpcEndpoint } from './endpoints'
 
 // This would normally import from @saga-sm/api-types when available
 type AppRouter = any // Placeholder - will be replaced with proper types
 
 export class TrpcClientService implements ServiceInterface {
     private client: any // Temporarily using any to bypass typing issues
+    private currentUrl: string
 
-    constructor() {
-        this.client = createTRPCClient<AppRouter>({
+    constructor(customApiUrl?: string) {
+        this.currentUrl = getTrpcEndpoint(customApiUrl)
+        this.client = this.createClient(this.currentUrl)
+    }
+
+    private createClient(url: string) {
+        return createTRPCClient<AppRouter>({
             links: [
                 httpBatchLink({
-                    url: TRPC_ENDPOINT,
+                    url,
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 }),
             ],
         })
+    }
+
+    // Method to update the API URL at runtime
+    public updateApiUrl(customApiUrl: string) {
+        const newUrl = getTrpcEndpoint(customApiUrl)
+        if (newUrl !== this.currentUrl) {
+            this.currentUrl = newUrl
+            this.client = this.createClient(this.currentUrl)
+        }
+    }
+
+    // Get current URL being used
+    public getCurrentUrl(): string {
+        return this.currentUrl
     }
 
     async executeEndpoint(endpoint: Endpoint, input: string): Promise<ApiResponse> {
@@ -85,7 +105,7 @@ export class TrpcClientService implements ServiceInterface {
         code += `const client = createTRPCClient<AppRouter>({\n`
         code += `    links: [\n`
         code += `        httpBatchLink({\n`
-        code += `            url: '${TRPC_ENDPOINT}',\n`
+        code += `            url: '${this.currentUrl}',\n`
         code += `        }),\n`
         code += `    ],\n`
         code += `})\n\n`

@@ -28,26 +28,7 @@ Resources:
       Description: !Sub "Saga-SM Web Client Frontend"
       Platform: WEB
       # No Repository specified - enables manual deployments
-      BuildSpec: |
-        version: 1
-        frontend:
-          phases:
-            preBuild:
-              commands:
-                - echo "Installing dependencies"
-                - npm ci
-            build:
-              commands:
-                - echo "Building Next.js application"
-                - npm run build
-          artifacts:
-            baseDirectory: out
-            files:
-              - '**/*'
-          cache:
-            paths:
-              - node_modules/**/*
-              - .next/cache/**/*
+      # BuildSpec removed - using CI/CD pre-built artifacts
       CustomRules:
         - Source: "/<*>"
           Target: "/index.html"
@@ -63,6 +44,11 @@ Resources:
           Value: "1"
         - Name: "NODE_ENV"
           Value: "production"
+        # API Configuration - Will be overridden per branch
+        - Name: "NEXT_PUBLIC_SAGA_SM_API_URL"
+          Value: "https://api.example.com" # Default fallback
+        - Name: "NEXT_PUBLIC_TRPC_BASE_PATH"
+          Value: "/trpc"
       EnableBranchAutoDeletion: true
       Tags:
         - Key: Project
@@ -221,6 +207,40 @@ Resources:
       Tags:
         Project: !Ref ProjectName
         Environment: "prod"
+
+  # Environment-specific API URLs
+  DevApiUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/saga-sm/web-client/api-url/dev"
+      Description: "Development environment API URL"
+      Type: String
+      Value: "http://localhost:3000" # Default dev API URL
+      Tags:
+        Project: !Ref ProjectName
+        Environment: "dev"
+
+  ProdApiUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/saga-sm/web-client/api-url/prod"
+      Description: "Production environment API URL"
+      Type: String
+      Value: "https://api.example.com" # Update with actual prod API URL
+      Tags:
+        Project: !Ref ProjectName
+        Environment: "prod"
+
+  QaApiUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: "/saga-sm/web-client/api-url/qa"
+      Description: "QA/Staging environment API URL"
+      Type: String
+      Value: "https://api-qa.example.com" # Update with actual QA API URL
+      Tags:
+        Project: !Ref ProjectName
+        Environment: "qa"
 
 Outputs:
   AmplifyAppId:
