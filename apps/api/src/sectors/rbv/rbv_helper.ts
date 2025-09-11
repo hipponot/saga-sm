@@ -30,11 +30,16 @@ export class RBVHelper {
       update: input,
       create: input,
       include: {
-        variants: {
+        days: {
           include: {
-            periods: true,
+            variants: true,
+            timeSlots: true,
+            dayOfWeekRules: true,
+            patternBasedRules: true,
           },
         },
+        timeSlots: true,
+        recurrenceRuleSet: true,
       },
     });
     /* istanbul ignore if */
@@ -50,11 +55,16 @@ export class RBVHelper {
     const schedule = await prisma.bellSchedule.findUnique({
       where: { id },
       include: {
-        variants: {
+        days: {
           include: {
-            periods: true,
+            variants: true,
+            timeSlots: true,
+            dayOfWeekRules: true,
+            patternBasedRules: true,
           },
         },
+        timeSlots: true,
+        recurrenceRuleSet: true,
       },
     });
     if (!schedule) {
@@ -80,9 +90,6 @@ export class RBVHelper {
       where: { id: input.id ?? Guid.raw() },
       update: input,
       create: input,
-      include: {
-        periods: true,
-      },
     });
     /* istanbul ignore if */
     if (!variant) {
@@ -93,28 +100,4 @@ export class RBVHelper {
 
     return { success: true, data: variant };
   }
-}
-
-
-// ToDo - move to saga-soa helpers
-/**
- * Removes keys with null or undefined values from an object
- * @param obj The object to clean
- * @returns A new object with null/undefined values removed
- */
-function remove_null_undefined<T extends Record<string, unknown>>(
-  obj: T,
-): T {
-  const cleaned: T = {} as T;
-
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      const value = obj[key];
-      if (value !== null && value !== undefined) {
-        cleaned[key] = value;
-      }
-    }
-  }
-
-  return cleaned;
 }

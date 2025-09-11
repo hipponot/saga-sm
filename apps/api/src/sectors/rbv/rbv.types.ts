@@ -1,22 +1,41 @@
 import {
+  DayOfWeekRule,
+  PatternBasedRule,
   BellSchedule as PrismaBellSchedule,
+  BellScheduleDay as PrismaBellScheduleDay,
   BellScheduleVariant as PrismaBellScheduleVariant,
-  Period as PrismaPeriod,
+  DayRecurrenceRuleSet as PrismaDayRecurrenceRuleSet,
+  TimeSlot as PrismaTimeSlot,
 } from '@repo/db'
 
+// Bell Schedule related types
 export type BellSchedule = PrismaBellSchedule & {
-  variants: BellScheduleVariant[];
+  days: BellScheduleDay[];
+  timeSlots: TimeSlot[];
+  recurrenceRuleSet: DayRecurrenceRuleSet | null;
 };
-export type UpsertBellScheduleInput = Omit<PrismaBellSchedule, 'id'> & {
-  id?: BellSchedule['id'];
-};
+export type UpsertBellScheduleInput = Omit<PrismaBellSchedule, 'id'> & { id?: BellSchedule['id'] };
 export interface DeleteBellScheduleInput {
   id: BellSchedule['id'];
 }
 
-export type BellScheduleVariant = PrismaBellScheduleVariant & {
-  periods: Period[];
+// Bell Schedule Day related types
+export type BellScheduleDay = PrismaBellScheduleDay & {
+  variants: BellScheduleVariant[];
+  timeSlots: TimeSlot[];
+
+  dayOfWeekRules: DayOfWeekRule[];
+  patternBasedRules: PatternBasedRule[];
 };
+export type UpsertBellScheduleDayInput = Omit<PrismaBellScheduleDay, 'id'> & {
+  id?: BellScheduleDay['id'];
+};
+export interface DeleteBellScheduleDayInput {
+  id: BellScheduleDay['id'];
+}
+
+// Bell Schedule Variant related types
+export type BellScheduleVariant = PrismaBellScheduleVariant;
 export type UpsertBellScheduleVariantInput = Omit<PrismaBellScheduleVariant, 'id'> & {
   id?: BellScheduleVariant['id'];
 };
@@ -24,10 +43,21 @@ export interface DeleteBellScheduleVariantInput {
   id: BellScheduleVariant['id'];
 }
 
-export type Period = PrismaPeriod;
-export type UpsertPeriodInput = Omit<PrismaPeriod, 'id'> & {
-  id?: Period['id'];
+export type DayRecurrenceRuleSet = PrismaDayRecurrenceRuleSet & {
+  dayOfWeekRules?: DayOfWeekRule[];
+  patternBasedRules?: PatternBasedRule[];
 };
-export interface DeletePeriodInput {
-  id: Period['id'];
+export type UpsertDayRecurrenceRuleSetInput = Omit<PrismaDayRecurrenceRuleSet, 'id'> & {
+  id?: DayRecurrenceRuleSet['id'];
+};
+export interface DeleteDayRecurrenceRuleSetInput {
+  id: DayRecurrenceRuleSet['id'];
+}
+
+export type TimeSlot = PrismaTimeSlot;
+export type UpsertTimeSlotInput = Omit<PrismaTimeSlot, 'id'> & {
+  id?: TimeSlot['id'];
+};
+export interface DeleteTimeSlotInput {
+  id: TimeSlot['id'];
 }

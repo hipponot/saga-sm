@@ -7,8 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = "postgresql://saga:saga@localhost:5432/saga_sm"
 }
 
 model BellSchedule {
@@ -19,7 +19,7 @@ model BellSchedule {
   activeDaysOfWeek Int[] // 0-6 (0 = Sunday, 1 = Monday, etc.)
 
   days          BellScheduleDay[]
-  periods       Period[]
+  timeSlots     TimeSlot[]
 
   // Each schedule has exactly one recurrence rule set
   recurrenceRuleSet DayRecurrenceRuleSet?
@@ -34,7 +34,7 @@ model BellScheduleDay {
   schedule      BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   variants      BellScheduleVariant[]
-  periods       Period[]
+  timeSlots     TimeSlot[]
 
   // Relations to recurrence rules
   dayOfWeekRules     DayOfWeekRule[]
@@ -51,7 +51,7 @@ model BellScheduleVariant {
   scheduleDay       BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
 }
 
-model Period {
+model TimeSlot {
   id        String   @id @default(uuid())
   name      String
   start     String   // HH:MM format (e.g., "08:00")
