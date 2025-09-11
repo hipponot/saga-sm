@@ -102,6 +102,78 @@ aws ssm get-parameter --name "/saga-sm/web-client/amplify/domain"
 
 # Skip build (use existing build)
 ./scripts/deploy.sh --skip-build
+
+# Skip dependencies (use existing node_modules)
+./scripts/deploy.sh --skip-install
+
+# Non-interactive mode (skip all "Proceed?" prompts)
+./scripts/deploy.sh --force
+
+# Clean Turbo cache and force rebuild
+./scripts/deploy.sh --clean-cache
+
+# Combine flags for CI/CD (most common)
+./scripts/deploy.sh --env qa --force
+
+# CI/CD with fresh build (bypass all caching)
+./scripts/deploy.sh --env qa --force --clean-cache
+```
+
+### Command Line Options
+
+| Flag | Description | Use Case |
+|------|-------------|----------|
+| `--env ENV` | Build environment (dev/qa/prod) | Target specific environment |
+| `--branch BRANCH` | Custom branch name | Deploy feature branches |
+| `--skip-build` | Use existing build output | Quick re-deploys |
+| `--skip-install` | Use existing node_modules | When dependencies haven't changed |
+| `--force` | Non-interactive mode + force reinstall | **Essential for CI/CD pipelines** |
+| `--clean-cache` | Clean Turbo cache before building | Force rebuild when caching issues occur |
+
+**CI/CD Usage**: Always use `--force` in automated environments to skip interactive prompts and force dependency reinstalls:
+```bash
+./scripts/deploy.sh --env qa --force
+```
+
+**What `--force` does:**
+- Skips browser opening prompt
+- Forces pnpm to reinstall dependencies without confirmation (`pnpm install --force`)
+- Ensures fully non-interactive operation for CI/CD
+
+### Turborepo Optimizations
+
+The deployment script is optimized for Turborepo with intelligent caching:
+
+**🎯 Smart Caching:**
+- Preserves Turbo cache by default for faster rebuilds
+- Only rebuilds packages that have changed (using `turbo run build --filter`)
+- Automatically detects and skips unchanged dependencies
+
+**⚡ Performance Features:**
+- **Cache hit detection**: Shows when nothing needs rebuilding
+- **Dependency auto-resolution**: Turbo handles `@saga-sm/api-types` dependency automatically
+- **Remote caching support**: Set `TURBO_TOKEN` and `TURBO_TEAM` for team caching
+
+**🧹 Cache Management:**
+```bash
+# Force clean rebuild (troubleshooting)
+./scripts/deploy.sh --clean-cache
+
+# Preserve cache for speed (default)
+./scripts/deploy.sh
+
+# Check if build is needed without building
+turbo run build --filter="@saga-sm/web-client" --dry
+```
+
+**Environment Variables for Remote Caching:**
+```bash
+# Set these for Turbo remote caching (optional)
+export TURBO_TOKEN="your-turbo-token"
+export TURBO_TEAM="your-team-name"
+
+# The script will automatically detect and use remote caching
+./scripts/deploy.sh --env qa --force
 ```
 
 ### Branch Mapping
@@ -253,6 +325,19 @@ aws ssm get-parameters-by-path --path "/saga-sm/web-client/amplify"
 
 ## Troubleshooting
 
+### Silent Deployment Failures
+
+**Symptom**: Script stops at "Step 6: Deploying to Amplify" without error or success message.
+
+**Root Cause**: Missing `amplify:CreateDeployment` permission causes silent AWS CLI failure.
+
+**Solution**:
+1. Run permission verification commands above
+2. Apply the full AWS permissions policy
+3. Re-run deployment with: `./scripts/deploy.sh --env dev --skip-build`
+
+**Prevention**: Always run permission tests before first deployment.
+
 ### Common Issues
 
 1. **"Failed to get Amplify App ID"**
@@ -333,6 +418,8 @@ For GitHub Actions automation (optional):
 - No sensitive data should be included in the static build
 
 ## Required AWS Permissions
+
+⚠️ **Critical**: Insufficient permissions cause silent deployment failures. Always verify permissions before deploying.
 
 To run the deployment scripts successfully, your AWS credentials need these permissions:
 
@@ -438,6 +525,35 @@ To run the deployment scripts successfully, your AWS credentials need these perm
     ]
 }
 ```
+
+### 🔍 Permission Verification (Required Before First Deployment)
+
+**Always test these commands before running deployment scripts** to avoid silent failures:
+
+```bash
+# Test core AWS access
+aws sts get-caller-identity
+
+# Test SSM parameter access
+aws ssm get-parameter --name "/saga-sm/web-client/amplify/app-id" --region us-west-2
+
+# Test Amplify app access
+aws amplify get-app --app-id d2jpp1ywz4pb1c --region us-west-2
+
+# ⚠️ CRITICAL: Test deployment creation (this is where most failures occur)
+aws amplify create-deployment --app-id d2jpp1ywz4pb1c --branch-name test-permissions --region us-west-2
+```
+
+**Expected Results:**
+- ✅ `get-caller-identity`: Shows your AWS account and role
+- ✅ `get-parameter`: Returns the Amplify app ID
+- ✅ `get-app`: Returns app details
+- ✅ `create-deployment`: Returns `zipUploadUrl` and `jobId` (this confirms deployment permissions)
+
+**If any command fails:**
+1. Contact your AWS administrator to apply the permissions policy above
+2. Verify you're using the correct AWS profile: `aws configure list`
+3. Check if your SSO session is expired: `aws sso login`
 
 ### Infrastructure Setup Permissions
 

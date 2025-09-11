@@ -14,6 +14,8 @@ BRANCH_NAME=${BRANCH_NAME:-$(git rev-parse --abbrev-ref HEAD)}
 AWS_REGION=${AWS_REGION:-us-west-2}
 SKIP_BUILD=${SKIP_BUILD:-false}
 SKIP_INSTALL=${SKIP_INSTALL:-false}
+FORCE=${FORCE:-false}
+CLEAN_CACHE=${CLEAN_CACHE:-false}
 
 # Colors for output
 RED='\033[0;31m'
@@ -175,6 +177,14 @@ while [[ $# -gt 0 ]]; do
             SKIP_INSTALL=true
             shift
             ;;
+        --force)
+            FORCE=true
+            shift
+            ;;
+        --clean-cache)
+            CLEAN_CACHE=true
+            shift
+            ;;
         --help)
             echo "Usage: $0 [options]"
             echo ""
@@ -183,6 +193,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --branch BRANCH     Amplify branch name [default: current git branch]"
             echo "  --skip-build        Skip the build step (use existing build)"
             echo "  --skip-install      Skip npm install (use existing node_modules)"
+            echo "  --force             Skip interactive prompts (non-interactive mode)"
+            echo "  --clean-cache       Clean Turbo cache before building"
             echo "  --help              Show this help message"
             echo ""
             echo "Examples:"
@@ -190,6 +202,9 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 --env qa                           # Deploy to qa environment"
             echo "  $0 --branch feature/user-auth        # Deploy feature branch (becomes feature-user-auth)"
             echo "  $0 --skip-build                      # Deploy existing build"
+            echo "  $0 --force                           # Skip all interactive prompts"
+            echo "  $0 --clean-cache                     # Force rebuild by cleaning Turbo cache"
+            echo "  $0 --env qa --force --clean-cache    # CI/CD with fresh build"
             echo ""
             echo "Branch Mapping:"
             echo "  • main branch               → Uses 'main' Amplify branch (prod)"
@@ -241,6 +256,8 @@ echo "  AWS Region:      $AWS_REGION"
 echo "  Project Root:    $PROJECT_ROOT"
 echo "  Skip Build:      $SKIP_BUILD"
 echo "  Skip Install:    $SKIP_INSTALL"
+echo "  Force Mode:      $FORCE"
+echo "  Clean Cache:     $CLEAN_CACHE"
 echo ""
 
 # Check prerequisites
@@ -282,7 +299,11 @@ if [ "$SKIP_INSTALL" != "true" ]; then
     cd "$WORKSPACE_ROOT"
     if command -v pnpm >/dev/null 2>&1 && [ -f "pnpm-workspace.yaml" ]; then
         log_info "📦 Installing workspace dependencies with pnpm..."
-        pnpm install
+        if [ "$FORCE" = "true" ]; then
+            pnpm install --force
+        else
+            pnpm install
+        fi
     else
         # Fallback to npm in web-client directory
         log_warning "pnpm workspace not detected, falling back to npm"
@@ -315,30 +336,80 @@ if [ "$SKIP_BUILD" != "true" ]; then
     export NEXT_PUBLIC_SAGA_SM_API_URL="$API_URL"
     export NEXT_PUBLIC_TRPC_BASE_PATH="/trpc"
 
-    # Clean previous build artifacts
+    # Clean previous build artifacts (only if requested or no Turbo cache)
     cd "$PROJECT_ROOT"
-    log_info "🧹 Cleaning previous build artifacts..."
-    rm -rf .next out
+    if [ "$CLEAN_CACHE" = "true" ] || [ "$FORCE" = "true" ] || [ ! -d ".turbo" ]; then
+        log_info "🧹 Cleaning previous build artifacts..."
+        rm -rf .next out
+        if [ -d "$WORKSPACE_ROOT/.turbo" ]; then
+            log_info "🗑️  Cleaning Turbo workspace cache..."
+            rm -rf "$WORKSPACE_ROOT/.turbo"
+        fi
+    else
+        log_info "🎯 Preserving build cache for Turbo optimization..."
+    fi
 
     # Build with workspace dependency resolution
     cd "$WORKSPACE_ROOT"
     
     if command -v turbo >/dev/null 2>&1 && [ -f "turbo.json" ]; then
-        log_info "🏗️  Building with Turbo (includes API types dependency)..."
-        turbo run build --filter="@saga-sm/web-client"
-        log_info "🔗 Refreshing workspace dependencies..."
-        pnpm install --ignore-scripts
+        log_info "🏗️  Building with Turbo (leveraging cache and dependencies)..."
+        
+        # Clean cache if requested
+        if [ "$CLEAN_CACHE" = "true" ]; then
+            log_info "🧹 Cleaning Turbo cache..."
+            turbo prune --filter="@saga-sm/web-client"
+        fi
+        
+        # Check if build is needed (dry run)
+        log_info "🔍 Checking if build is needed..."
+        TURBO_ARGS="--filter=@saga-sm/web-client"
+        
+        # Check if we can use remote caching
+        if [ -n "$TURBO_TOKEN" ] && [ -n "$TURBO_TEAM" ]; then
+            log_info "📡 Using Turbo remote caching..."
+            TURBO_ARGS="$TURBO_ARGS --remote-only"
+        fi
+        
+        # Check what would be built
+        TURBO_DRY=$(turbo run build $TURBO_ARGS --dry 2>/dev/null || echo "build-needed")
+        if echo "$TURBO_DRY" | grep -q "0 successful, 0 total"; then
+            log_info "✨ Build cache hit! Nothing needs to be rebuilt."
+        else
+            log_info "🔨 Changes detected, building..."
+        fi
+        
+        # Build with dependency auto-resolution
+        turbo run build $TURBO_ARGS
+        
+        # Turbo handles dependencies, so no need to reinstall unless there's a specific issue
+        if [ ! -f "$PROJECT_ROOT/node_modules/.pnpm/lock.yaml" ] || [ ! -d "$PROJECT_ROOT/node_modules/@saga-sm/api-types" ]; then
+            log_info "🔗 Refreshing workspace dependencies (dependency resolution issue detected)..."
+            if [ "$FORCE" = "true" ]; then
+                pnpm install --ignore-scripts --force
+            else
+                pnpm install --ignore-scripts
+            fi
+        else
+            log_info "✅ Turbo managed dependencies successfully - no refresh needed"
+        fi
     elif command -v pnpm >/dev/null 2>&1 && [ -f "pnpm-workspace.yaml" ]; then
+        log_warning "🔄 Falling back to pnpm workspace (consider using Turbo for better caching)"
         log_info "🏗️  Building with pnpm workspace..."
         log_info "🔧 Building API types package..."
         pnpm --filter="@saga-sm/api-types" run build
         log_info "🔗 Refreshing workspace dependencies..."
-        pnpm install --ignore-scripts
+        if [ "$FORCE" = "true" ]; then
+            pnpm install --ignore-scripts --force
+        else
+            pnpm install --ignore-scripts
+        fi
         log_info "🌐 Building web client..."
         pnpm --filter="@saga-sm/web-client" run build
     else
         log_error "Neither turbo nor pnpm workspace detected"
         log_error "This monorepo requires either turbo or pnpm for proper builds"
+        log_error "💡 Install turbo: pnpm add -g turbo"
         exit 1
     fi
 
@@ -417,6 +488,7 @@ log_info "✅ Deployment package created: $PACKAGE_SIZE"
 log_step "Step 6: Deploying to Amplify"
 
 # Create deployment and get upload URL
+log_info "📋 Creating Amplify deployment..."
 DEPLOYMENT=$(aws amplify create-deployment \
     --app-id "$AMPLIFY_APP_ID" \
     --branch-name "$AMPLIFY_BRANCH_NAME" \
@@ -426,6 +498,10 @@ DEPLOYMENT=$(aws amplify create-deployment \
 if [ $? -ne 0 ]; then
     diagnose_aws_error "$DEPLOYMENT" "create-deployment"
     log_error "Failed to create Amplify deployment"
+    echo ""
+    log_error "🔍 Common cause: Missing amplify:CreateDeployment permission"
+    log_error "   Test with: aws amplify create-deployment --app-id $AMPLIFY_APP_ID --branch-name test-permissions --region $AWS_REGION"
+    log_error "   See DEPLOYMENT_GUIDE.md for permission verification steps"
     exit 1
 fi
 
@@ -440,10 +516,21 @@ fi
 
 # Upload the deployment package
 log_info "📤 Uploading package to Amplify..."
-curl -X PUT "$UPLOAD_URL" \
+UPLOAD_RESPONSE=$(curl -X PUT "$UPLOAD_URL" \
     --data-binary @deploy.zip \
     --header "Content-Type: application/zip" \
-    --silent --show-error
+    --write-out "HTTPSTATUS:%{http_code}" \
+    --silent --show-error 2>&1)
+
+UPLOAD_HTTP_CODE=$(echo "$UPLOAD_RESPONSE" | grep -o 'HTTPSTATUS:[0-9]*' | cut -d: -f2)
+
+if [ "$UPLOAD_HTTP_CODE" != "200" ]; then
+    log_error "Package upload failed with HTTP $UPLOAD_HTTP_CODE"
+    log_error "Upload response: $UPLOAD_RESPONSE"
+    exit 1
+else
+    log_info "✅ Package uploaded successfully"
+fi
 
 # Start the deployment job if needed
 if [ -z "$JOB_ID" ]; then
@@ -561,7 +648,7 @@ else
 fi
 
 # Optional: Open in browser (only in interactive mode)
-if command -v open >/dev/null 2>&1 && [[ -t 0 ]]; then
+if [ "$FORCE" != "true" ] && command -v open >/dev/null 2>&1 && [[ -t 0 ]]; then
     echo ""
     read -p "🌐 Open in browser? (y/n) " -n 1 -r
     echo

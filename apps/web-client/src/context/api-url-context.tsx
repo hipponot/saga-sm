@@ -31,9 +31,17 @@ export function ApiUrlProvider({ children }: ApiUrlProviderProps) {
 
   const [apiUrl, setApiUrlState] = useState<string>(defaultApiUrl)
   const [trpcBasePath, setTrpcBasePathState] = useState<string>(defaultTrpcBasePath)
+  const [isClient, setIsClient] = useState(false)
 
-  // Initialize from localStorage on mount
+  // Initialize client-side flag
   useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Initialize from localStorage on mount (only on client)
+  useEffect(() => {
+    if (!isClient) return
+
     try {
       const savedUrl = localStorage.getItem(API_URL_STORAGE_KEY)
       if (savedUrl && savedUrl !== defaultApiUrl) {
@@ -47,10 +55,12 @@ export function ApiUrlProvider({ children }: ApiUrlProviderProps) {
     } catch (error) {
       console.warn('Failed to load custom API settings from localStorage:', error)
     }
-  }, [defaultApiUrl, defaultTrpcBasePath])
+  }, [defaultApiUrl, defaultTrpcBasePath, isClient])
 
-  // Save API URL to localStorage when it changes
+  // Save API URL to localStorage when it changes (only on client)
   useEffect(() => {
+    if (!isClient) return
+
     try {
       if (apiUrl !== defaultApiUrl) {
         localStorage.setItem(API_URL_STORAGE_KEY, apiUrl)
@@ -60,10 +70,12 @@ export function ApiUrlProvider({ children }: ApiUrlProviderProps) {
     } catch (error) {
       console.warn('Failed to save custom API URL to localStorage:', error)
     }
-  }, [apiUrl, defaultApiUrl])
+  }, [apiUrl, defaultApiUrl, isClient])
 
-  // Save TRPC base path to localStorage when it changes
+  // Save TRPC base path to localStorage when it changes (only on client)
   useEffect(() => {
+    if (!isClient) return
+
     try {
       if (trpcBasePath !== defaultTrpcBasePath) {
         localStorage.setItem(TRPC_BASE_PATH_STORAGE_KEY, trpcBasePath)
@@ -73,7 +85,7 @@ export function ApiUrlProvider({ children }: ApiUrlProviderProps) {
     } catch (error) {
       console.warn('Failed to save custom TRPC base path to localStorage:', error)
     }
-  }, [trpcBasePath, defaultTrpcBasePath])
+  }, [trpcBasePath, defaultTrpcBasePath, isClient])
 
   const setApiUrl = (url: string) => {
     // Normalize URL (remove trailing slash)

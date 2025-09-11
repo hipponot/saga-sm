@@ -56,6 +56,12 @@ saga-sm/
 - **MongoDB** (local or remote)
 - **saga-soa repository** (must be cloned alongside this project)
 
+### AWS Deployment Prerequisites
+
+- **AWS CLI** configured with appropriate permissions
+- **Required AWS permissions**: Ensure your credentials include `amplify:CreateDeployment` for web client deployment
+- See [aws-deploy-permissions.json](./aws-deploy-permissions.json) for complete AWS permission requirements
+
 ### Required Directory Structure
 
 ```

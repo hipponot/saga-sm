@@ -1,0 +1,198 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "STSPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "sts:GetCallerIdentity"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "SSMParameterAccess",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParameters",
+                "ssm:DescribeParameters"
+            ],
+            "Resource": [
+                "arn:aws:ssm:*:*:parameter/saga-sm/*",
+                "arn:aws:ssm:*:*:parameter/dev/*",
+                "arn:aws:ssm:*:*:parameter/qa/*",
+                "arn:aws:ssm:*:*:parameter/prod/*"
+            ]
+        },
+        {
+            "Sid": "AmplifyDeployPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "amplify:GetApp",
+                "amplify:GetBranch",
+                "amplify:CreateBranch",
+                "amplify:UpdateBranch",
+                "amplify:DeleteBranch",
+                "amplify:CreateDeployment",
+                "amplify:StartDeployment",
+                "amplify:GetJob",
+                "amplify:ListJobs"
+            ],
+            "Resource": [
+                "arn:aws:amplify:*:*:apps/*/branches/*",
+                "arn:aws:amplify:*:*:apps/*"
+            ]
+        },
+        {
+            "Sid": "ECRRepositoryManagement",
+            "Effect": "Allow",
+            "Action": [
+                "ecr:GetAuthorizationToken",
+                "ecr:DescribeRepositories",
+                "ecr:CreateRepository",
+                "ecr:DescribeImages",
+                "ecr:ListImages"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "ECRImageOperations",
+            "Effect": "Allow",
+            "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload",
+                "ecr:PutImage"
+            ],
+            "Resource": [
+                "arn:aws:ecr:*:*:repository/saga-sm-api"
+            ]
+        },
+        {
+            "Sid": "CloudFormationStackUpdates",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:DescribeStacks",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResources",
+                "cloudformation:GetTemplate",
+                "cloudformation:UpdateStack",
+                "cloudformation:CreateChangeSet",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:ExecuteChangeSet",
+                "cloudformation:DeleteChangeSet",
+                "cloudformation:ListChangeSets",
+                "cloudformation:ValidateTemplate"
+            ],
+            "Resource": [
+                "arn:aws:cloudformation:*:*:stack/saga-sm-api-*/*",
+                "arn:aws:cloudformation:*:*:stack/saga-sm-api-fargate/*",
+                "arn:aws:cloudformation:*:*:stack/saga-sm-api-qa-fargate/*",
+                "arn:aws:cloudformation:*:*:stack/saga-sm-api-prod-fargate/*",
+                "arn:aws:cloudformation:*:*:stack/saga-sm-api-ephemeral-*/*"
+            ]
+        },
+        {
+            "Sid": "S3SAMDeploymentBuckets",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::aws-sam-cli-managed-default-*",
+                "arn:aws:s3:::aws-sam-cli-managed-default-*/*"
+            ]
+        },
+        {
+            "Sid": "ECSServiceUpdates",
+            "Effect": "Allow",
+            "Action": [
+                "ecs:DescribeServices",
+                "ecs:UpdateService",
+                "ecs:DescribeTaskDefinition",
+                "ecs:RegisterTaskDefinition",
+                "ecs:DeregisterTaskDefinition",
+                "ecs:DescribeTasks",
+                "ecs:ListTasks"
+            ],
+            "Resource": [
+                "arn:aws:ecs:*:*:service/*/saga-sm-api*",
+                "arn:aws:ecs:*:*:task-definition/saga-sm-api*:*"
+            ]
+        },
+        {
+            "Sid": "IAMRoleManagement",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetRole",
+                "iam:CreateRole",
+                "iam:UpdateRole",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:GetRolePolicy",
+                "iam:ListRolePolicies",
+                "iam:ListAttachedRolePolicies",
+                "iam:PassRole",
+                "iam:TagRole",
+                "iam:UntagRole"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:role/saga-sm-api*",
+                "arn:aws:iam::*:role/*saga-sm-api*"
+            ]
+        },
+        {
+            "Sid": "LoadBalancerManagement",
+            "Effect": "Allow",
+            "Action": [
+                "elasticloadbalancing:DescribeTargetGroups",
+                "elasticloadbalancing:CreateTargetGroup",
+                "elasticloadbalancing:ModifyTargetGroup",
+                "elasticloadbalancing:DeleteTargetGroup",
+                "elasticloadbalancing:DescribeListeners",
+                "elasticloadbalancing:DescribeListenerRules",
+                "elasticloadbalancing:CreateRule",
+                "elasticloadbalancing:ModifyRule",
+                "elasticloadbalancing:DeleteRule",
+                "elasticloadbalancing:DescribeTargetHealth",
+                "elasticloadbalancing:AddTags",
+                "elasticloadbalancing:RemoveTags"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudWatchLogsManagement",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:DescribeLogGroups",
+                "logs:PutRetentionPolicy",
+                "logs:TagLogGroup",
+                "logs:UntagLogGroup"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:/ecs/saga-sm-api*",
+                "arn:aws:logs:*:*:log-group:/aws/lambda/saga-sm-api*"
+            ]
+        },
+        {
+            "Sid": "EC2NetworkingRead",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeVpcs",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeNetworkInterfaces"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
