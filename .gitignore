@@ -129,4 +129,6 @@ blob-report/
 apps/*/.env.local
 apps/*/.env.development.local
 
+# Prisma
+**/generated/prisma
 .aws-sam

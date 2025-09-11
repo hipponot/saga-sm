@@ -1,22 +1,18 @@
 import { Container } from 'inversify'
 import 'reflect-metadata'
 
-import { PinoLogger, PinoLoggerSchema } from '@hipponot/logger'
-import type { ILogger, PinoLoggerConfig } from '@hipponot/logger'
-import { MongoProvider, MongoProviderSchema } from '@hipponot/db'
-import type { IMongoConnMgr, MongoProviderConfig } from '@hipponot/db'
+import { PinoLogger } from '@hipponot/logger'
+import type { PinoLoggerConfig } from '@hipponot/logger'
+import { MongoProvider } from '@hipponot/db'
+import type { MongoProviderConfig } from '@hipponot/db'
 import { ExpressServer } from '@hipponot/api-core/express-server'
-import {
-    ExpressServerSchema,
-    type ExpressServerConfig,
-} from '@hipponot/api-core/express-server-schema'
 import { TRPCServer } from '@hipponot/api-core/trpc-server'
-import { TRPCServerSchema, type TRPCServerConfig } from '@hipponot/api-core/trpc-server-schema'
 import { ControllerLoader } from '@hipponot/api-core/utils/controller-loader'
 // import { ConfigProvider, IConfigProvider } from '@hipponot/config'
 
 import { PubSubService } from './services/pubsub.service.js'
 import { ExampleHelper, type IExampleHelper } from './sectors/example/helpers/example_helper.js'
+import { RBVHelper } from './sectors/rbv/rbv_helper.js'
 
 const container = new Container()
 
@@ -71,5 +67,8 @@ container.bind('PubSubService').to(PubSubService).inSingletonScope()
 
 // Bind Example Helper
 container.bind<IExampleHelper>('IExampleHelper').to(ExampleHelper).inSingletonScope()
+
+// Bind RBV Helper
+container.bind<RBVHelper>('RBVHelper').to(RBVHelper).inSingletonScope()
 
 export { container }
