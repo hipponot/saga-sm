@@ -4,29 +4,34 @@
   "description": "Web client for testing saga-sm API",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3001",
+    "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint --max-warnings 0 .",
     "typecheck": "tsc --noEmit",
     "check": "pnpm run build && pnpm run lint && pnpm run typecheck",
-    "clean": "rm -rf .next"
+    "clean": "rm -rf .next",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug"
   },
   "dependencies": {
     "@saga-sm/api-types": "file:../api/types",
     "@trpc/client": "^11.0.0",
-    "next": "^15.4.0",
+    "next": "^15.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "zod": "^3.22.4"
+    "zod": "^4.1.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@types/node": "^22.0.0",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.3.1",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^15.4.0",
+    "eslint": "^9.35.0",
+    "eslint-config-next": "^15.5.3",
     "prettier": "^3.2.5",
     "typescript": "^5.8.2"
   }
