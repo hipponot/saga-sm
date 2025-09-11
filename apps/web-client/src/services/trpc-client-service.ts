@@ -46,7 +46,7 @@ export class TrpcClientService implements ServiceInterface {
 
         try {
             let parsedInput: any = null
-            
+
             if (input.trim()) {
                 try {
                     parsedInput = JSON.parse(input)
@@ -101,7 +101,7 @@ export class TrpcClientService implements ServiceInterface {
         let code = `// tRPC Client Implementation\n`
         code += `import { createTRPCClient, httpBatchLink } from '@trpc/client'\n`
         code += `import type { ApiRouter } from '@saga-sm/api-types'\n\n`
-        
+
         code += `const client = createTRPCClient<ApiRouter>({\n`
         code += `    links: [\n`
         code += `        httpBatchLink({\n`
@@ -114,7 +114,7 @@ export class TrpcClientService implements ServiceInterface {
             code += `const input = ${input}\n\n`
         }
 
-        const isQuery = ['queryExamples', 'getExampleById'].some(method => endpoint.id.includes(method))
+        const isQuery = ['queryExamples', 'getExampleById', 'getEventHistory', 'getChannelInfo', 'getServiceStatus', 'getSubscriptionStats'].some(method => endpoint.id.includes(method))
         const methodType = isQuery ? 'query' : 'mutate'
         const inputParam = hasInput ? '(input)' : '()'
 

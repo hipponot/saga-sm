@@ -108,7 +108,7 @@ function RealPingPongSection() {
       const pingResult: RealPingResult = {
         success: result.result?.success || false,
         pingEvent: {
-          id: result.result?.eventId || crypto.randomUUID(),
+          id: result.result?.eventId || globalThis.crypto?.randomUUID() || Math.random().toString(36).substring(2, 15),
           name: 'ping:message',
           channel: 'pingpong',
           payload: {

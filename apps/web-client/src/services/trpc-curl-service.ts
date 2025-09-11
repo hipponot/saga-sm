@@ -32,19 +32,37 @@ export class TrpcCurlService implements ServiceInterface {
                 }
             }
 
-            const isQuery = ['getSchedules', 'getScheduleById'].some(method => endpoint.id.includes(method))
+            const isQuery = ['queryExamples', 'getExampleById', 'getSchedules', 'getScheduleById', 'getEventHistory', 'getChannelInfo', 'getServiceStatus', 'getSubscriptionStats'].some(method => endpoint.id.includes(method))
 
-            // For queries, we need to send input as URL parameters or in a different format
-            // For mutations, we send as POST body
-            const requestConfig: RequestInit = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(isQuery ? { input: body } : body)
+            // For queries, use GET with query parameters
+            // For mutations, use POST with JSON body
+            let requestConfig: RequestInit
+            let finalUrl = url
+
+            if (isQuery) {
+                // For queries, append input as query parameter
+                if (Object.keys(body).length > 0) {
+                    const queryParam = encodeURIComponent(JSON.stringify(body))
+                    finalUrl = `${url}?input=${queryParam}`
+                }
+                requestConfig = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }
+            } else {
+                // For mutations, use POST with JSON body
+                requestConfig = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body)
+                }
             }
 
-            const response = await fetch(url, requestConfig)
+            const response = await fetch(finalUrl, requestConfig)
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -79,17 +97,32 @@ export class TrpcCurlService implements ServiceInterface {
             code += `INPUT='${input}'\n\n`
         }
 
-        const isQuery = ['getSchedules', 'getScheduleById'].some(method => endpoint.id.includes(method))
-        const bodyData = hasInput ? (isQuery ? '{"input": $INPUT}' : '$INPUT') : '{}'
+        const isQuery = ['queryExamples', 'getExampleById', 'getSchedules', 'getScheduleById', 'getEventHistory', 'getChannelInfo', 'getServiceStatus', 'getSubscriptionStats'].some(method => endpoint.id.includes(method))
 
-        code += `curl -X POST \\\n`
-        code += `  '${url}' \\\n`
-        code += `  -H 'Content-Type: application/json' \\\n`
+        if (isQuery) {
+            // Generate GET request with query parameters
+            let finalUrl = url
+            if (hasInput) {
+                const queryParam = `$(echo '$INPUT' | jq -c .)`
+                finalUrl = `${url}?input=\${queryParam}`
+            }
 
-        if (hasInput) {
-            code += `  -d "${bodyData}" \\\n`
+            code += `curl -X GET \\\n`
+            code += `  '${finalUrl}' \\\n`
+            code += `  -H 'Content-Type: application/json' \\\n`
         } else {
-            code += `  -d '{}' \\\n`
+            // Generate POST request with JSON body
+            const bodyData = hasInput ? '$INPUT' : '{}'
+
+            code += `curl -X POST \\\n`
+            code += `  '${url}' \\\n`
+            code += `  -H 'Content-Type: application/json' \\\n`
+
+            if (hasInput) {
+                code += `  -d "${bodyData}" \\\n`
+            } else {
+                code += `  -d '{}' \\\n`
+            }
         }
 
         code += `  | jq '.'`
