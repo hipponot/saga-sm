@@ -32,7 +32,7 @@ export default function EndpointsPage() {
 
     const generateCode = () => {
         if (!selectedEndpoint) return
-        
+
         const service = serviceType === 'trpc' ? trpcService : curlService
         const code = service.generateCode(selectedEndpoint, inputValue)
         setGeneratedCode(code)
@@ -46,7 +46,7 @@ export default function EndpointsPage() {
 
         const service: ServiceInterface = serviceType === 'trpc' ? trpcService : curlService
         const result = await service.executeEndpoint(selectedEndpoint, inputValue)
-        
+
         setResponse(result)
         setLoading(false)
     }
@@ -58,7 +58,9 @@ export default function EndpointsPage() {
     return (
         <div className={styles.container}>
             <header className={styles.header}>
-                <Link href="/" className={styles.backLink}>← Back to Home</Link>
+                <Link href="/" className={styles.backLink}>
+                    ← Back to Home
+                </Link>
                 <h1>Example API Endpoint Explorer</h1>
                 <p>Interactive testing interface for example management endpoints</p>
             </header>
@@ -67,7 +69,7 @@ export default function EndpointsPage() {
                 <div className={styles.sidebar}>
                     <h2>Endpoints</h2>
                     <div className={styles.endpointList}>
-                        {EXAMPLE_ENDPOINTS.map((endpoint) => (
+                        {EXAMPLE_ENDPOINTS.map(endpoint => (
                             <button
                                 key={endpoint.id}
                                 className={`${styles.endpointItem} ${
@@ -97,7 +99,9 @@ export default function EndpointsPage() {
                                         type="radio"
                                         value="trpc"
                                         checked={serviceType === 'trpc'}
-                                        onChange={(e) => setServiceType(e.target.value as 'trpc' | 'curl')}
+                                        onChange={e =>
+                                            setServiceType(e.target.value as 'trpc' | 'curl')
+                                        }
                                     />
                                     tRPC Client
                                 </label>
@@ -106,7 +110,9 @@ export default function EndpointsPage() {
                                         type="radio"
                                         value="curl"
                                         checked={serviceType === 'curl'}
-                                        onChange={(e) => setServiceType(e.target.value as 'trpc' | 'curl')}
+                                        onChange={e =>
+                                            setServiceType(e.target.value as 'trpc' | 'curl')
+                                        }
                                     />
                                     HTTP/cURL
                                 </label>
@@ -118,7 +124,7 @@ export default function EndpointsPage() {
                                     <textarea
                                         className={styles.inputArea}
                                         value={inputValue}
-                                        onChange={(e) => setInputValue(e.target.value)}
+                                        onChange={e => setInputValue(e.target.value)}
                                         placeholder="Enter JSON input parameters..."
                                         rows={6}
                                     />
@@ -126,8 +132,8 @@ export default function EndpointsPage() {
                             )}
 
                             <div className={styles.actions}>
-                                <button 
-                                    className="btn-primary" 
+                                <button
+                                    className="btn-primary"
                                     onClick={executeEndpoint}
                                     disabled={loading}
                                 >
@@ -139,7 +145,7 @@ export default function EndpointsPage() {
                                 <div className={styles.codeSection}>
                                     <div className={styles.codeHeader}>
                                         <h3>Generated Code</h3>
-                                        <button 
+                                        <button
                                             className="btn-secondary"
                                             onClick={() => copyToClipboard(generatedCode)}
                                         >
@@ -155,10 +161,14 @@ export default function EndpointsPage() {
                                     <div className={styles.responseHeader}>
                                         <h3>Response</h3>
                                         <div className={styles.responseStats}>
-                                            <span className={`${styles.status} ${response.success ? styles.success : styles.error}`}>
+                                            <span
+                                                className={`${styles.status} ${response.success ? styles.success : styles.error}`}
+                                            >
                                                 {response.success ? 'SUCCESS' : 'ERROR'}
                                             </span>
-                                            <span className={styles.duration}>{response.duration}ms</span>
+                                            <span className={styles.duration}>
+                                                {response.duration}ms
+                                            </span>
                                         </div>
                                     </div>
                                     <pre className={styles.responseBody}>

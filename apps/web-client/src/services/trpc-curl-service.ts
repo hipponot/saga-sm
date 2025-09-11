@@ -32,7 +32,16 @@ export class TrpcCurlService implements ServiceInterface {
                 }
             }
 
-            const isQuery = ['queryExamples', 'getExampleById', 'getSchedules', 'getScheduleById', 'getEventHistory', 'getChannelInfo', 'getServiceStatus', 'getSubscriptionStats'].some(method => endpoint.id.includes(method))
+            const isQuery = [
+                'queryExamples',
+                'getExampleById',
+                'getSchedules',
+                'getScheduleById',
+                'getEventHistory',
+                'getChannelInfo',
+                'getServiceStatus',
+                'getSubscriptionStats',
+            ].some(method => endpoint.id.includes(method))
 
             // For queries, use GET with query parameters
             // For mutations, use POST with JSON body
@@ -49,7 +58,7 @@ export class TrpcCurlService implements ServiceInterface {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
                 }
             } else {
                 // For mutations, use POST with JSON body
@@ -58,7 +67,7 @@ export class TrpcCurlService implements ServiceInterface {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify(body),
                 }
             }
 
@@ -74,14 +83,14 @@ export class TrpcCurlService implements ServiceInterface {
                 success: true,
                 data: data,
                 timestamp: new Date().toISOString(),
-                duration: Date.now() - startTime
+                duration: Date.now() - startTime,
             }
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred',
                 timestamp: new Date().toISOString(),
-                duration: Date.now() - startTime
+                duration: Date.now() - startTime,
             }
         }
     }
@@ -97,7 +106,16 @@ export class TrpcCurlService implements ServiceInterface {
             code += `INPUT='${input}'\n\n`
         }
 
-        const isQuery = ['queryExamples', 'getExampleById', 'getSchedules', 'getScheduleById', 'getEventHistory', 'getChannelInfo', 'getServiceStatus', 'getSubscriptionStats'].some(method => endpoint.id.includes(method))
+        const isQuery = [
+            'queryExamples',
+            'getExampleById',
+            'getSchedules',
+            'getScheduleById',
+            'getEventHistory',
+            'getChannelInfo',
+            'getServiceStatus',
+            'getSubscriptionStats',
+        ].some(method => endpoint.id.includes(method))
 
         if (isQuery) {
             // Generate GET request with query parameters

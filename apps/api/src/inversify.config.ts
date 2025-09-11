@@ -5,10 +5,14 @@ import { PinoLogger, PinoLoggerSchema } from '@hipponot/logger'
 import type { ILogger, PinoLoggerConfig } from '@hipponot/logger'
 import { MongoProvider, MongoProviderSchema } from '@hipponot/db'
 import type { IMongoConnMgr, MongoProviderConfig } from '@hipponot/db'
-import { ExpressServer, ExpressServerSchema } from '@hipponot/api-core/express-server'
-import { TRPCServer, TRPCServerSchema } from '@hipponot/api-core/trpc-server'
+import { ExpressServer } from '@hipponot/api-core/express-server'
+import {
+    ExpressServerSchema,
+    type ExpressServerConfig,
+} from '@hipponot/api-core/express-server-schema'
+import { TRPCServer } from '@hipponot/api-core/trpc-server'
+import { TRPCServerSchema, type TRPCServerConfig } from '@hipponot/api-core/trpc-server-schema'
 import { ControllerLoader } from '@hipponot/api-core/utils/controller-loader'
-import type { ExpressServerConfig, TRPCServerConfig } from '@hipponot/api-core'
 // import { ConfigProvider, IConfigProvider } from '@hipponot/config'
 
 import { PubSubService } from './services/pubsub.service.js'
@@ -21,7 +25,7 @@ const pinoLoggerConfig: PinoLoggerConfig = {
     configType: 'PINO_LOGGER',
     level: 'info',
     isExpressContext: false,
-    prettyPrint: false
+    prettyPrint: false,
 }
 
 const mongoConfig: MongoProviderConfig = {
@@ -29,20 +33,20 @@ const mongoConfig: MongoProviderConfig = {
     instanceName: 'saga-sm-db',
     host: 'localhost',
     port: 27017,
-    database: 'saga-sm'
+    database: 'saga-sm',
 }
 
 const expressConfig: ExpressServerConfig = {
     configType: 'EXPRESS_SERVER',
     port: 3000,
     logLevel: 'info',
-    name: 'saga-sm-api'
+    name: 'saga-sm-api',
 }
 
 const trpcConfig: TRPCServerConfig = {
     configType: 'TRPC_SERVER',
     name: 'saga-sm-trpc',
-    basePath: '/trpc'
+    basePath: '/trpc',
 }
 
 container.bind('PinoLoggerConfig').toConstantValue(pinoLoggerConfig)

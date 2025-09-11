@@ -21,7 +21,7 @@ describe('ExampleHelper', () => {
         it('should generate unique IDs with correct format', () => {
             const id1 = helper.generateId()
             const id2 = helper.generateId()
-            
+
             expect(id1).toMatch(/^example-\d+-[a-z0-9]{9}$/)
             expect(id2).toMatch(/^example-\d+-[a-z0-9]{9}$/)
             expect(id1).not.toBe(id2)
@@ -36,10 +36,10 @@ describe('ExampleHelper', () => {
             const beforeTime = Date.now()
             const id = helper.generateId()
             const afterTime = Date.now()
-            
+
             const timestampMatch = id.match(/^example-(\d+)-/)
             expect(timestampMatch).toBeTruthy()
-            
+
             const timestamp = parseInt(timestampMatch![1])
             expect(timestamp).toBeGreaterThanOrEqual(beforeTime)
             expect(timestamp).toBeLessThanOrEqual(afterTime)

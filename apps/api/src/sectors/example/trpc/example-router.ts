@@ -13,7 +13,7 @@ import {
     type GetExampleZ,
     type QueryExamplesZ,
     type DeleteExampleZ,
-    type ExampleDataZZ
+    type ExampleDataZ,
 } from './schema/example-schemas'
 
 @injectable()
@@ -27,7 +27,7 @@ export class ExampleController extends AbstractTRPCController {
         super(logger)
     }
 
-    createRouter() {
+    createRouter(): ReturnType<typeof router> {
         const t = this.createProcedure()
 
         return router({
@@ -41,7 +41,7 @@ export class ExampleController extends AbstractTRPCController {
                         data: mockData,
                         total: 0,
                         limit: input.limit,
-                        offset: input.offset
+                        offset: input.offset,
                     }
                 }),
 
@@ -58,7 +58,7 @@ export class ExampleController extends AbstractTRPCController {
                         tags: [],
                         metadata: {},
                         createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
+                        updatedAt: new Date().toISOString(),
                     }
                     return mockExample
                 }),
@@ -77,7 +77,7 @@ export class ExampleController extends AbstractTRPCController {
                         title: this.exampleHelper.formatTitle(input.title),
                         priority: this.exampleHelper.calculatePriority(input.tags || []),
                         createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
+                        updatedAt: new Date().toISOString(),
                     }
                     return newExample
                 }),
@@ -93,8 +93,10 @@ export class ExampleController extends AbstractTRPCController {
                     const updatedExample: Partial<ExampleDataZ> = {
                         ...input,
                         ...(input.title && { title: this.exampleHelper.formatTitle(input.title) }),
-                        ...(input.tags && { priority: this.exampleHelper.calculatePriority(input.tags) }),
-                        updatedAt: new Date().toISOString()
+                        ...(input.tags && {
+                            priority: this.exampleHelper.calculatePriority(input.tags),
+                        }),
+                        updatedAt: new Date().toISOString(),
                     }
                     return updatedExample
                 }),
@@ -107,9 +109,9 @@ export class ExampleController extends AbstractTRPCController {
                     return {
                         success: true,
                         deletedId: input.id,
-                        message: 'Example deleted successfully'
+                        message: 'Example deleted successfully',
                     }
-                })
+                }),
         })
     }
 }

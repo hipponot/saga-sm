@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from 'tsup'
 
 export default defineConfig({
     entry: ['src/index.ts'],
@@ -8,5 +8,5 @@ export default defineConfig({
     sourcemap: true,
     target: 'es2022',
     outDir: 'dist',
-    tsconfig: './tsconfig.json'
-});
+    tsconfig: './tsconfig.json',
+})

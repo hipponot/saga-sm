@@ -95,16 +95,16 @@
     .container {
         padding: 1rem;
     }
-    
+
     .header h1 {
         font-size: 2rem;
     }
-    
+
     .grid {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .card {
         padding: 1.5rem;
     }

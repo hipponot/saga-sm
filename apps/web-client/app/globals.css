@@ -2,7 +2,7 @@
     --foreground-rgb: 0, 0, 0;
     --background-start-rgb: 214, 219, 220;
     --background-end-rgb: 255, 255, 255;
-    
+
     /* Color system matching saga-soa patterns */
     --blue-rgb: 37, 99, 235;
     --green-rgb: 34, 197, 94;
@@ -10,21 +10,17 @@
     --purple-rgb: 147, 51, 234;
     --yellow-rgb: 245, 158, 11;
     --emerald-rgb: 16, 185, 129;
-    
+
     /* Semantic colors */
     --success: rgb(var(--green-rgb));
     --warning: rgb(var(--yellow-rgb));
     --error: rgb(var(--red-rgb));
     --info: rgb(var(--blue-rgb));
-    
+
     /* Background and foreground */
     --foreground: rgb(var(--foreground-rgb));
-    --background: linear-gradient(
-        to bottom,
-        transparent,
-        rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    --background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
+        rgb(var(--background-start-rgb));
 }
 
 @media (prefers-color-scheme: dark) {

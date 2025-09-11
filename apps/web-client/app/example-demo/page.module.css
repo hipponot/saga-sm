@@ -81,7 +81,7 @@
     cursor: pointer;
 }
 
-.checkboxLabel input[type="checkbox"] {
+.checkboxLabel input[type='checkbox'] {
     width: auto !important;
     max-width: auto !important;
 }
@@ -207,34 +207,34 @@
     .container {
         padding: 1rem;
     }
-    
+
     .header h1 {
         font-size: 2rem;
     }
-    
+
     .main {
         gap: 2rem;
     }
-    
+
     .createSection {
         padding: 1.5rem;
     }
-    
+
     .formRow {
         grid-template-columns: 1fr;
     }
-    
+
     .scheduleGrid {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .scheduleHeader {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
-    
+
     .scheduleActions {
         align-self: stretch;
         justify-content: space-between;

@@ -1,7 +1,12 @@
 import { defineConfig, type Options } from 'tsup'
 
 export default defineConfig((options: Options) => ({
-    entry: ['src/main.ts', 'src/inversify.config.ts', 'src/sectors/**/*', 'src/sectors/pubsub/trpc/pubsub-router.ts'],
+    entry: [
+        'src/main.ts',
+        'src/inversify.config.ts',
+        'src/sectors/**/*',
+        'src/sectors/pubsub/trpc/pubsub-router.ts',
+    ],
     clean: true,
     format: ['esm'],
     sourcemap: true,
@@ -12,5 +17,5 @@ export default defineConfig((options: Options) => ({
     target: 'node18',
     minify: false,
     treeshake: true,
-    ...options
+    ...options,
 }))

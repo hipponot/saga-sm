@@ -1,300 +1,300 @@
 .page {
-  --gray-rgb: 0, 0, 0;
-  --gray-alpha-200: rgba(var(--gray-rgb), 0.08);
-  --gray-alpha-100: rgba(var(--gray-rgb), 0.05);
+    --gray-rgb: 0, 0, 0;
+    --gray-alpha-200: rgba(var(--gray-rgb), 0.08);
+    --gray-alpha-100: rgba(var(--gray-rgb), 0.05);
 
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
+    --button-primary-hover: #383838;
+    --button-secondary-hover: #f2f2f2;
 
-  min-height: 100vh;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans);
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-geist-sans);
 }
 
 @media (prefers-color-scheme: dark) {
-  .page {
-    --gray-rgb: 255, 255, 255;
-    --gray-alpha-200: rgba(var(--gray-rgb), 0.145);
-    --gray-alpha-100: rgba(var(--gray-rgb), 0.06);
+    .page {
+        --gray-rgb: 255, 255, 255;
+        --gray-alpha-200: rgba(var(--gray-rgb), 0.145);
+        --gray-alpha-100: rgba(var(--gray-rgb), 0.06);
 
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-  }
+        --button-primary-hover: #ccc;
+        --button-secondary-hover: #1a1a1a;
+    }
 }
 
 .container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
 }
 
 .backLink {
-  color: #666;
-  text-decoration: none;
-  font-size: 14px;
-  margin-bottom: 1rem;
-  display: inline-block;
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 1rem;
+    display: inline-block;
 }
 
 .backLink:hover {
-  color: var(--foreground);
+    color: var(--foreground);
 }
 
 .title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, var(--foreground) 0%, #666 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--foreground) 0%, #666 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .subtitle {
-  color: #666;
-  font-size: 1.1rem;
-  margin-bottom: 2rem;
-  line-height: 1.6;
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
 }
 
 .section {
-  margin-bottom: 2.5rem;
-  padding: 1.5rem;
-  background: var(--gray-alpha-100);
-  border: 1px solid var(--gray-alpha-200);
-  border-radius: 12px;
+    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    background: var(--gray-alpha-100);
+    border: 1px solid var(--gray-alpha-200);
+    border-radius: 12px;
 }
 
 .sectionTitle {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: var(--foreground);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--foreground);
 }
 
 .infoBox {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
 }
 
 .infoText {
-  margin: 0;
-  color: var(--foreground);
-  line-height: 1.5;
+    margin: 0;
+    color: var(--foreground);
+    line-height: 1.5;
 }
 
 .infoTextStrong {
-  font-weight: 600;
-  color: rgb(59, 130, 246);
+    font-weight: 600;
+    color: rgb(59, 130, 246);
 }
 
 .buttonGroup {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
 }
 
 .checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
 }
 
 .checkbox {
-  margin: 0;
+    margin: 0;
 }
 
 .input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--gray-alpha-200);
-  border-radius: 6px;
-  background: var(--background);
-  color: var(--foreground);
-  font-size: 14px;
-  transition: border-color 0.2s ease;
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--gray-alpha-200);
+    border-radius: 6px;
+    background: var(--background);
+    color: var(--foreground);
+    font-size: 14px;
+    transition: border-color 0.2s ease;
 }
 
 .input:focus {
-  outline: none;
-  border-color: rgb(59, 130, 246);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+    border-color: rgb(59, 130, 246);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .label {
-  font-weight: 500;
-  color: var(--foreground);
+    font-weight: 500;
+    color: var(--foreground);
 }
 
 .button {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 14px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 14px;
 }
 
 .buttonPrimary {
-  background: rgb(59, 130, 246);
-  color: white;
-  border-color: rgb(59, 130, 246);
+    background: rgb(59, 130, 246);
+    color: white;
+    border-color: rgb(59, 130, 246);
 }
 
 .buttonPrimary:hover:not(:disabled) {
-  background: rgb(37, 99, 235);
-  border-color: rgb(37, 99, 235);
+    background: rgb(37, 99, 235);
+    border-color: rgb(37, 99, 235);
 }
 
 .buttonPrimary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .buttonSecondary {
-  background: transparent;
-  color: var(--foreground);
-  border-color: var(--gray-alpha-200);
+    background: transparent;
+    color: var(--foreground);
+    border-color: var(--gray-alpha-200);
 }
 
 .buttonSecondary:hover:not(:disabled) {
-  background: var(--gray-alpha-100);
-  border-color: var(--gray-alpha-200);
+    background: var(--gray-alpha-100);
+    border-color: var(--gray-alpha-200);
 }
 
 .connectionStatusRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .connectionControlsRow {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .responseBox {
-  border: 1px solid var(--gray-alpha-200);
-  border-radius: 8px;
-  overflow: hidden;
+    border: 1px solid var(--gray-alpha-200);
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .responseTitle {
-  background: var(--gray-alpha-100);
-  padding: 1rem;
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  border-bottom: 1px solid var(--gray-alpha-200);
+    background: var(--gray-alpha-100);
+    padding: 1rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--gray-alpha-200);
 }
 
 .responseContent {
-  padding: 1rem;
+    padding: 1rem;
 }
 
 .responseContent > div {
-  margin-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 
 .responseContent > div:last-child {
-  margin-bottom: 0;
+    margin-bottom: 0;
 }
 
 .terminalBox {
-  background: #1a1a1a;
-  color: #fff;
-  border-radius: 8px;
-  overflow: auto;
-  border: 1px solid #333;
+    background: #1a1a1a;
+    color: #fff;
+    border-radius: 8px;
+    overflow: auto;
+    border: 1px solid #333;
 }
 
 .codeBlock {
-  padding: 1rem;
-  margin: 0;
-  font-family: var(--font-geist-mono);
-  font-size: 13px;
-  line-height: 1.5;
-  overflow-x: auto;
-  background: transparent;
-  border-radius: 4px;
+    padding: 1rem;
+    margin: 0;
+    font-family: var(--font-geist-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-x: auto;
+    background: transparent;
+    border-radius: 4px;
 }
 
 .errorBox {
-  display: flex;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 8px;
-  color: rgb(239, 68, 68);
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    color: rgb(239, 68, 68);
 }
 
 .errorIcon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  margin-top: 2px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .errorContent {
-  flex: 1;
+    flex: 1;
 }
 
 .errorTitle {
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
 }
 
 .errorMessage {
-  margin: 0;
-  line-height: 1.5;
+    margin: 0;
+    line-height: 1.5;
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
-  
-  .title {
-    font-size: 2rem;
-  }
-  
-  .section {
-    padding: 1rem;
-  }
-  
-  .connectionStatusRow {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .connectionControlsRow {
-    justify-content: center;
-  }
-  
-  .buttonGroup {
-    flex-direction: column;
-  }
+    .container {
+        padding: 1rem;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+
+    .section {
+        padding: 1rem;
+    }
+
+    .connectionStatusRow {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .connectionControlsRow {
+        justify-content: center;
+    }
+
+    .buttonGroup {
+        flex-direction: column;
+    }
 }

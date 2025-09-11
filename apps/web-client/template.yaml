@@ -1,287 +1,287 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Saga-SM Web Client Frontend - Amplify App for Manual Deployments
 
 Parameters:
-  AppName:
-    Type: String
-    Default: saga-sm-web-client
-    Description: Name for the Amplify application
+    AppName:
+        Type: String
+        Default: saga-sm-web-client
+        Description: Name for the Amplify application
 
-  ProjectName:
-    Type: String
-    Default: saga-sm
-    Description: Project name for resource naming
+    ProjectName:
+        Type: String
+        Default: saga-sm
+        Description: Project name for resource naming
 
 Globals:
-  Function:
-    Timeout: 30
-    MemorySize: 128
-    Runtime: python3.11
+    Function:
+        Timeout: 30
+        MemorySize: 128
+        Runtime: python3.11
 
 Resources:
-  # Amplify Application (without GitHub integration)
-  AmplifyApp:
-    Type: AWS::Amplify::App
-    Properties:
-      Name: !Sub "${AppName}"
-      Description: !Sub "Saga-SM Web Client Frontend"
-      Platform: WEB
-      # No Repository specified - enables manual deployments
-      # BuildSpec removed - using CI/CD pre-built artifacts
-      CustomRules:
-        - Source: "/<*>"
-          Target: "/index.html"
-          Status: "404-200"
-        - Source: "/index.html"
-          Target: "/index.html"
-          Status: "200"
-        - Source: "/_next/static/<*>"
-          Target: "/_next/static/<*>"
-          Status: "200"
-      EnvironmentVariables:
-        - Name: "NEXT_TELEMETRY_DISABLED"
-          Value: "1"
-        - Name: "NODE_ENV"
-          Value: "production"
-        # API Configuration - Will be overridden per branch
-        - Name: "NEXT_PUBLIC_SAGA_SM_API_URL"
-          Value: "https://api.example.com" # Default fallback
-        - Name: "NEXT_PUBLIC_TRPC_BASE_PATH"
-          Value: "/trpc"
-      EnableBranchAutoDeletion: true
-      Tags:
-        - Key: Project
-          Value: !Ref ProjectName
-        - Key: ManagedBy
-          Value: CloudFormation
+    # Amplify Application (without GitHub integration)
+    AmplifyApp:
+        Type: AWS::Amplify::App
+        Properties:
+            Name: !Sub '${AppName}'
+            Description: !Sub 'Saga-SM Web Client Frontend'
+            Platform: WEB
+            # No Repository specified - enables manual deployments
+            # BuildSpec removed - using CI/CD pre-built artifacts
+            CustomRules:
+                - Source: '/<*>'
+                  Target: '/index.html'
+                  Status: '404-200'
+                - Source: '/index.html'
+                  Target: '/index.html'
+                  Status: '200'
+                - Source: '/_next/static/<*>'
+                  Target: '/_next/static/<*>'
+                  Status: '200'
+            EnvironmentVariables:
+                - Name: 'NEXT_TELEMETRY_DISABLED'
+                  Value: '1'
+                - Name: 'NODE_ENV'
+                  Value: 'production'
+                # API Configuration - Will be overridden per branch
+                - Name: 'NEXT_PUBLIC_SAGA_SM_API_URL'
+                  Value: 'https://api.example.com' # Default fallback
+                - Name: 'NEXT_PUBLIC_TRPC_BASE_PATH'
+                  Value: '/trpc'
+            EnableBranchAutoDeletion: true
+            Tags:
+                - Key: Project
+                  Value: !Ref ProjectName
+                - Key: ManagedBy
+                  Value: CloudFormation
 
-  # Create main branch for production
-  AmplifyMainBranch:
-    Type: AWS::Amplify::Branch
-    Properties:
-      AppId: !GetAtt AmplifyApp.AppId
-      BranchName: "main"
-      Description: "Production branch"
-      EnableAutoBuild: false
-      EnablePerformanceMode: false
-      EnablePullRequestPreview: false
-      Stage: "PRODUCTION"
-      Tags:
-        - Key: Environment
-          Value: "prod"
-        - Key: Branch
-          Value: "main"
-        - Key: Purpose
-          Value: "production"
+    # Create main branch for production
+    AmplifyMainBranch:
+        Type: AWS::Amplify::Branch
+        Properties:
+            AppId: !GetAtt AmplifyApp.AppId
+            BranchName: 'main'
+            Description: 'Production branch'
+            EnableAutoBuild: false
+            EnablePerformanceMode: false
+            EnablePullRequestPreview: false
+            Stage: 'PRODUCTION'
+            Tags:
+                - Key: Environment
+                  Value: 'prod'
+                - Key: Branch
+                  Value: 'main'
+                - Key: Purpose
+                  Value: 'production'
 
-  # Create develop branch for staging/QA
-  AmplifyDevelopBranch:
-    Type: AWS::Amplify::Branch
-    Properties:
-      AppId: !GetAtt AmplifyApp.AppId
-      BranchName: "develop"
-      Description: "Staging/QA branch"
-      EnableAutoBuild: false
-      EnablePerformanceMode: false
-      EnablePullRequestPreview: false
-      Stage: "BETA"
-      Tags:
-        - Key: Environment
-          Value: "qa"
-        - Key: Branch
-          Value: "develop"
-        - Key: Purpose
-          Value: "staging"
+    # Create develop branch for staging/QA
+    AmplifyDevelopBranch:
+        Type: AWS::Amplify::Branch
+        Properties:
+            AppId: !GetAtt AmplifyApp.AppId
+            BranchName: 'develop'
+            Description: 'Staging/QA branch'
+            EnableAutoBuild: false
+            EnablePerformanceMode: false
+            EnablePullRequestPreview: false
+            Stage: 'BETA'
+            Tags:
+                - Key: Environment
+                  Value: 'qa'
+                - Key: Branch
+                  Value: 'develop'
+                - Key: Purpose
+                  Value: 'staging'
 
-  # Domain for production (optional - can be added later)
-  # AmplifyDomain:
-  #   Type: AWS::Amplify::Domain
-  #   Condition: IsProdWithDomain
-  #   Properties:
-  #     AppId: !GetAtt AmplifyApp.AppId
-  #     DomainName: !Sub "${ProjectName}.yourdomain.com"
-  #     SubDomainSettings:
-  #       - Prefix: ""
-  #         BranchName: !Ref AmplifyMainBranch
-  #     EnableAutoSubDomain: false
+    # Domain for production (optional - can be added later)
+    # AmplifyDomain:
+    #   Type: AWS::Amplify::Domain
+    #   Condition: IsProdWithDomain
+    #   Properties:
+    #     AppId: !GetAtt AmplifyApp.AppId
+    #     DomainName: !Sub "${ProjectName}.yourdomain.com"
+    #     SubDomainSettings:
+    #       - Prefix: ""
+    #         BranchName: !Ref AmplifyMainBranch
+    #     EnableAutoSubDomain: false
 
-  # IAM Role for GitHub Actions to deploy to Amplify
-  AmplifyDeployRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "amplify-deploy-${AppName}"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
-            Action: sts:AssumeRoleWithWebIdentity
-            Condition:
-              StringEquals:
-                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-              StringLike:
-                "token.actions.githubusercontent.com:sub": "repo:YOUR_GITHUB_ORG/saga-sm:*"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/ReadOnlyAccess
-      Policies:
-        - PolicyName: AmplifyDeploymentPolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - amplify:CreateBranch
-                  - amplify:DeleteBranch
-                  - amplify:GetApp
-                  - amplify:GetBranch
-                  - amplify:ListBranches
-                  - amplify:UpdateBranch
-                  - amplify:CreateDeployment
-                  - amplify:StartDeployment
-                  - amplify:StartJob
-                  - amplify:StopJob
-                  - amplify:GetJob
-                  - amplify:ListJobs
-                  - amplify:GetArtifactUrl
-                  - amplify:TagResource
-                Resource:
-                  - !Sub "${AmplifyApp.Arn}"
-                  - !Sub "${AmplifyApp.Arn}/branches/*"
-                  - !Sub "${AmplifyApp.Arn}/jobs/*"
-              - Effect: Allow
-                Action:
-                  - ssm:GetParameter
-                  - ssm:GetParameters
-                Resource:
-                  - "*"
-                  # - !Ref AmplifyAppIdParameter
-                  # - !Ref AmplifyDomainParameter
+    # IAM Role for GitHub Actions to deploy to Amplify
+    AmplifyDeployRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub 'amplify-deploy-${AppName}'
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+                      Action: sts:AssumeRoleWithWebIdentity
+                      Condition:
+                          StringEquals:
+                              'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com'
+                          StringLike:
+                              'token.actions.githubusercontent.com:sub': 'repo:YOUR_GITHUB_ORG/saga-sm:*'
+            ManagedPolicyArns:
+                - arn:aws:iam::aws:policy/ReadOnlyAccess
+            Policies:
+                - PolicyName: AmplifyDeploymentPolicy
+                  PolicyDocument:
+                      Version: '2012-10-17'
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - amplify:CreateBranch
+                                - amplify:DeleteBranch
+                                - amplify:GetApp
+                                - amplify:GetBranch
+                                - amplify:ListBranches
+                                - amplify:UpdateBranch
+                                - amplify:CreateDeployment
+                                - amplify:StartDeployment
+                                - amplify:StartJob
+                                - amplify:StopJob
+                                - amplify:GetJob
+                                - amplify:ListJobs
+                                - amplify:GetArtifactUrl
+                                - amplify:TagResource
+                            Resource:
+                                - !Sub '${AmplifyApp.Arn}'
+                                - !Sub '${AmplifyApp.Arn}/branches/*'
+                                - !Sub '${AmplifyApp.Arn}/jobs/*'
+                          - Effect: Allow
+                            Action:
+                                - ssm:GetParameter
+                                - ssm:GetParameters
+                            Resource:
+                                - '*'
+                                # - !Ref AmplifyAppIdParameter
+                                # - !Ref AmplifyDomainParameter
 
-  # SSM Parameters for storing configuration (shared across environments)
-  AmplifyAppIdParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/saga-sm/web-client/amplify/app-id"
-      Description: "Amplify App ID (shared across all environments)"
-      Type: String
-      Value: !GetAtt AmplifyApp.AppId
-      Tags:
-        Project: !Ref ProjectName
-        Resource: AmplifyApp
-        Purpose: "SharedConfiguration"
+    # SSM Parameters for storing configuration (shared across environments)
+    AmplifyAppIdParameter:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: '/saga-sm/web-client/amplify/app-id'
+            Description: 'Amplify App ID (shared across all environments)'
+            Type: String
+            Value: !GetAtt AmplifyApp.AppId
+            Tags:
+                Project: !Ref ProjectName
+                Resource: AmplifyApp
+                Purpose: 'SharedConfiguration'
 
-  AmplifyDomainParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/saga-sm/web-client/amplify/domain"
-      Description: "Amplify default domain (shared across all environments)"
-      Type: String
-      Value: !GetAtt AmplifyApp.DefaultDomain
-      Tags:
-        Project: !Ref ProjectName
-        Resource: AmplifyDomain
-        Purpose: "SharedConfiguration"
+    AmplifyDomainParameter:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: '/saga-sm/web-client/amplify/domain'
+            Description: 'Amplify default domain (shared across all environments)'
+            Type: String
+            Value: !GetAtt AmplifyApp.DefaultDomain
+            Tags:
+                Project: !Ref ProjectName
+                Resource: AmplifyDomain
+                Purpose: 'SharedConfiguration'
 
-  AmplifyRoleArnParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/saga-sm/web-client/amplify/deploy-role-arn"
-      Description: "IAM Role ARN for Amplify deployments (all environments)"
-      Type: String
-      Value: !GetAtt AmplifyDeployRole.Arn
-      Tags:
-        Project: !Ref ProjectName
-        Resource: IAMRole
-        Purpose: "SharedConfiguration"
+    AmplifyRoleArnParameter:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: '/saga-sm/web-client/amplify/deploy-role-arn'
+            Description: 'IAM Role ARN for Amplify deployments (all environments)'
+            Type: String
+            Value: !GetAtt AmplifyDeployRole.Arn
+            Tags:
+                Project: !Ref ProjectName
+                Resource: IAMRole
+                Purpose: 'SharedConfiguration'
 
-  # Environment-specific parameters for branch mapping
-  ProdBranchParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/saga-sm/web-client/amplify/branches/prod"
-      Description: "Production branch name"
-      Type: String
-      Value: "main"
-      Tags:
-        Project: !Ref ProjectName
-        Environment: "prod"
+    # Environment-specific parameters for branch mapping
+    ProdBranchParameter:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: '/saga-sm/web-client/amplify/branches/prod'
+            Description: 'Production branch name'
+            Type: String
+            Value: 'main'
+            Tags:
+                Project: !Ref ProjectName
+                Environment: 'prod'
 
-  # Environment-specific API URLs
-  DevApiUrlParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/saga-sm/web-client/api-url/dev"
-      Description: "Development environment API URL"
-      Type: String
-      Value: "http://localhost:3000" # Default dev API URL
-      Tags:
-        Project: !Ref ProjectName
-        Environment: "dev"
+    # Environment-specific API URLs
+    DevApiUrlParameter:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: '/saga-sm/web-client/api-url/dev'
+            Description: 'Development environment API URL'
+            Type: String
+            Value: 'http://localhost:3000' # Default dev API URL
+            Tags:
+                Project: !Ref ProjectName
+                Environment: 'dev'
 
-  ProdApiUrlParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/saga-sm/web-client/api-url/prod"
-      Description: "Production environment API URL"
-      Type: String
-      Value: "https://api.example.com" # Update with actual prod API URL
-      Tags:
-        Project: !Ref ProjectName
-        Environment: "prod"
+    ProdApiUrlParameter:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: '/saga-sm/web-client/api-url/prod'
+            Description: 'Production environment API URL'
+            Type: String
+            Value: 'https://api.example.com' # Update with actual prod API URL
+            Tags:
+                Project: !Ref ProjectName
+                Environment: 'prod'
 
-  QaApiUrlParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: "/saga-sm/web-client/api-url/qa"
-      Description: "QA/Staging environment API URL"
-      Type: String
-      Value: "https://api-qa.example.com" # Update with actual QA API URL
-      Tags:
-        Project: !Ref ProjectName
-        Environment: "qa"
+    QaApiUrlParameter:
+        Type: AWS::SSM::Parameter
+        Properties:
+            Name: '/saga-sm/web-client/api-url/qa'
+            Description: 'QA/Staging environment API URL'
+            Type: String
+            Value: 'https://api-qa.example.com' # Update with actual QA API URL
+            Tags:
+                Project: !Ref ProjectName
+                Environment: 'qa'
 
 Outputs:
-  AmplifyAppId:
-    Description: Amplify Application ID
-    Value: !GetAtt AmplifyApp.AppId
-    Export:
-      Name: !Sub "${AWS::StackName}-AmplifyAppId"
+    AmplifyAppId:
+        Description: Amplify Application ID
+        Value: !GetAtt AmplifyApp.AppId
+        Export:
+            Name: !Sub '${AWS::StackName}-AmplifyAppId'
 
-  AmplifyDefaultDomain:
-    Description: Amplify Default Domain
-    Value: !GetAtt AmplifyApp.DefaultDomain
-    Export:
-      Name: !Sub "${AWS::StackName}-AmplifyDomain"
+    AmplifyDefaultDomain:
+        Description: Amplify Default Domain
+        Value: !GetAtt AmplifyApp.DefaultDomain
+        Export:
+            Name: !Sub '${AWS::StackName}-AmplifyDomain'
 
-  AmplifyAppUrl:
-    Description: Amplify Application URL
-    Value: !Sub "https://${AmplifyMainBranch.BranchName}.${AmplifyApp.DefaultDomain}"
-    Export:
-      Name: !Sub "${AWS::StackName}-AmplifyUrl"
+    AmplifyAppUrl:
+        Description: Amplify Application URL
+        Value: !Sub 'https://${AmplifyMainBranch.BranchName}.${AmplifyApp.DefaultDomain}'
+        Export:
+            Name: !Sub '${AWS::StackName}-AmplifyUrl'
 
-  DeployRoleArn:
-    Description: IAM Role ARN for deployments
-    Value: !GetAtt AmplifyDeployRole.Arn
-    Export:
-      Name: !Sub "${AWS::StackName}-DeployRoleArn"
+    DeployRoleArn:
+        Description: IAM Role ARN for deployments
+        Value: !GetAtt AmplifyDeployRole.Arn
+        Export:
+            Name: !Sub '${AWS::StackName}-DeployRoleArn'
 
-  SSMParameterAppId:
-    Description: SSM Parameter name for App ID
-    Value: !Ref AmplifyAppIdParameter
-    Export:
-      Name: !Sub "${AWS::StackName}-SSMAppId"
+    SSMParameterAppId:
+        Description: SSM Parameter name for App ID
+        Value: !Ref AmplifyAppIdParameter
+        Export:
+            Name: !Sub '${AWS::StackName}-SSMAppId'
 
-  GitHubActionsSetup:
-    Description: GitHub Actions secrets to configure
-    Value: !Sub |
-      Add these secrets to your GitHub repository:
-      AMPLIFY_APP_ID: ${AmplifyApp.AppId}
-      AWS_ROLE_ARN: ${AmplifyDeployRole.Arn}
-      AWS_REGION: ${AWS::Region}
+    GitHubActionsSetup:
+        Description: GitHub Actions secrets to configure
+        Value: !Sub |
+            Add these secrets to your GitHub repository:
+            AMPLIFY_APP_ID: ${AmplifyApp.AppId}
+            AWS_ROLE_ARN: ${AmplifyDeployRole.Arn}
+            AWS_REGION: ${AWS::Region}
 
-  QuickDeploy:
-    Description: Quick deployment command
-    Value: !Sub |
-      aws ssm get-parameter --name "/saga-sm/web-client/amplify/app-id" --query "Parameter.Value" --output text
+    QuickDeploy:
+        Description: Quick deployment command
+        Value: !Sub |
+            aws ssm get-parameter --name "/saga-sm/web-client/amplify/app-id" --query "Parameter.Value" --output text
