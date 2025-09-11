@@ -41,69 +41,72 @@ log_step() {
     echo -e "${BLUE}🔵 $1${NC}"
 }
 
-# AWS error diagnosis helper
+# Helper function for pnpm installs with optional force
+run_pnpm_install() {
+    local extra_args="$1"
+    if [ "$FORCE" = "true" ]; then
+        pnpm install $extra_args --force
+    else
+        pnpm install $extra_args
+    fi
+}
+
+# Helper function for cache cleaning
+clean_build_cache() {
+    log_info "🧹 Cleaning build artifacts..."
+    cd "$PROJECT_ROOT"
+    rm -rf .next out
+    
+    if [ -d "$WORKSPACE_ROOT/.turbo" ]; then
+        log_info "🗑️  Cleaning Turbo workspace cache..."
+        rm -rf "$WORKSPACE_ROOT/.turbo"
+    fi
+}
+
+# Check required tools are installed
+check_prerequisites() {
+    local missing_tools=()
+    
+    command -v aws >/dev/null 2>&1 || missing_tools+=("aws")
+    command -v npm >/dev/null 2>&1 || missing_tools+=("npm") 
+    command -v zip >/dev/null 2>&1 || missing_tools+=("zip")
+    command -v jq >/dev/null 2>&1 || missing_tools+=("jq")
+    
+    if [ ${#missing_tools[@]} -gt 0 ]; then
+        log_error "Missing required tools: ${missing_tools[*]}"
+        exit 1
+    fi
+}
+
+# Simplified AWS error diagnosis helper
 diagnose_aws_error() {
     local error_output="$1"
     local command_context="$2"
     
-    echo ""
     log_error "AWS command failed: $command_context"
     
-    # Check for common error patterns
-    if echo "$error_output" | grep -qi "NoCredentialsError\|Unable to locate credentials"; then
-        log_error "🔐 AWS credentials not configured"
-        echo "  💡 Try one of these:"
-        echo "     aws configure"
-        echo "     aws sso login"
-        echo "     export AWS_PROFILE=your-profile"
-        
-    elif echo "$error_output" | grep -qi "TokenRefreshRequired\|SSO session has expired"; then
-        log_error "🔐 SSO session expired"
-        echo "  💡 Try: aws sso login"
-        
-    elif echo "$error_output" | grep -qi "AccessDenied\|UnauthorizedOperation\|Forbidden"; then
-        log_error "🚫 Insufficient permissions"
-        echo "  💡 Check that your AWS user/role has the required permissions:"
-        echo "     - SSM: GetParameter"
-        echo "     - Amplify: GetApp, GetBranch, CreateBranch, CreateDeployment"
-        
-    elif echo "$error_output" | grep -qi "ParameterNotFound"; then
-        log_error "📋 SSM parameter not found"
-        echo "  💡 Possible causes:"
-        echo "     - Parameter doesn't exist (check: sam deploy)"
-        echo "     - Wrong region (current: $AWS_REGION)"
-        echo "     - Wrong parameter path"
-        echo "     - Insufficient SSM permissions"
-        
-    elif echo "$error_output" | grep -qi "InvalidUserID.NotFound\|does not exist"; then
-        log_error "🏗️  Resource not found"
-        echo "  💡 Make sure infrastructure is deployed:"
-        echo "     sam deploy"
-        
-    elif echo "$error_output" | grep -qi "endpoint.*could not be resolved\|gaierror"; then
-        log_error "🌐 Network/DNS error"
-        echo "  💡 Check your internet connection and AWS region"
-        
-    else
-        log_error "❓ Unexpected AWS error"
-        echo "  Raw error: $error_output"
-    fi
-    
-    echo ""
-    echo "  🔍 Debug commands:"
-    echo "     aws sts get-caller-identity  # Check current AWS identity"
-    echo "     aws configure list           # Check AWS configuration"
-    echo "     aws ssm describe-parameters --region $AWS_REGION --query 'Parameters[?starts_with(Name, \`/saga-sm/\`)].Name'  # List saga-sm parameters"
-    if [[ "$command_context" == *"parameter"* ]]; then
-        # Extract parameter name from context if it's a parameter-related error
-        local param_path=$(echo "$command_context" | sed -n 's/.*get-parameter \([^ ]*\).*/\1/p')
-        if [ -n "$param_path" ]; then
-            echo "     aws ssm get-parameter --name '$param_path' --region $AWS_REGION  # Test this specific parameter"
-            echo "     aws ssm describe-parameters --region $AWS_REGION --filters 'Key=Name,Values=$param_path'  # Check if parameter exists"
-        fi
-    fi
-    echo "     aws cloudformation describe-stacks --region $AWS_REGION --query 'Stacks[?contains(StackName, \`saga-sm\`)].StackName'  # List saga-sm stacks"
-    echo ""
+    # Check for common error patterns and provide quick fixes
+    case "$error_output" in
+        *"NoCredentialsError"*|*"Unable to locate credentials"*)
+            log_error "🔐 Missing AWS credentials → Try: aws sso login"
+            ;;
+        *"TokenRefreshRequired"*|*"SSO session has expired"*)
+            log_error "🔐 Expired session → Try: aws sso login"
+            ;;
+        *"AccessDenied"*|*"UnauthorizedOperation"*|*"Forbidden"*)
+            log_error "🚫 Insufficient permissions → Check DEPLOYMENT_GUIDE.md for required permissions"
+            ;;
+        *"ParameterNotFound"*)
+            log_error "📋 SSM parameter not found → Run: sam deploy"
+            ;;
+        *"InvalidUserID.NotFound"*|*"does not exist"*)
+            log_error "🏗️  Infrastructure missing → Run: sam deploy"
+            ;;
+        *)
+            log_error "❓ AWS error: $error_output"
+            log_error "🔍 Debug with: aws sts get-caller-identity"
+            ;;
+    esac
 }
 
 # Get SSM parameter with error handling
@@ -186,39 +189,26 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help)
-            echo "Usage: $0 [options]"
-            echo ""
-            echo "Options:"
-            echo "  --env ENV           Build environment (dev|qa|prod) [default: dev]"
-            echo "  --branch BRANCH     Amplify branch name [default: current git branch]"
-            echo "  --skip-build        Skip the build step (use existing build)"
-            echo "  --skip-install      Skip npm install (use existing node_modules)"
-            echo "  --force             Skip interactive prompts (non-interactive mode)"
-            echo "  --clean-cache       Clean Turbo cache before building"
-            echo "  --help              Show this help message"
-            echo ""
-            echo "Examples:"
-            echo "  $0                                    # Deploy current branch to dev"
-            echo "  $0 --env qa                           # Deploy to qa environment"
-            echo "  $0 --branch feature/user-auth        # Deploy feature branch (becomes feature-user-auth)"
-            echo "  $0 --skip-build                      # Deploy existing build"
-            echo "  $0 --force                           # Skip all interactive prompts"
-            echo "  $0 --clean-cache                     # Force rebuild by cleaning Turbo cache"
-            echo "  $0 --env qa --force --clean-cache    # CI/CD with fresh build"
-            echo ""
-            echo "Branch Mapping:"
-            echo "  • main branch               → Uses 'main' Amplify branch (prod)"
-            echo "  • develop branch            → Uses 'develop' Amplify branch (qa)"
-            echo "  • feature/user-auth         → Creates 'feature-user-auth' ephemeral branch"
-            echo "  • bugfix/api-timeout        → Creates 'bugfix-api-timeout' ephemeral branch"
-            echo "  • PR branches               → Creates 'pr-{number}' branch"
-            echo ""
-            echo "Prerequisites:"
-            echo "  • Infrastructure deployed: sam deploy"
-            echo "  • AWS credentials configured"
-            echo "  • SSM parameters exist from CloudFormation"
-            echo "  • Dependencies installed: pnpm install (from workspace root)"
-            echo "  • For monorepo: pnpm or turbo available for dependency builds"
+            cat << EOF
+Usage: $0 [options]
+
+Options:
+  --env ENV           Build environment (dev|qa|prod) [default: dev]
+  --branch BRANCH     Custom branch name [default: current git branch]
+  --skip-build        Skip build (use existing output)
+  --skip-install      Skip dependency install 
+  --force             Non-interactive mode (essential for CI/CD)
+  --clean-cache       Clean Turbo cache before building
+  --help              Show this help
+
+Common Usage:
+  $0                                    # Deploy current branch to dev
+  $0 --env qa --force                   # CI/CD deployment to qa
+  $0 --clean-cache                     # Force fresh build
+
+Branch Mapping: main→prod, develop→qa, feature/*→ephemeral branches
+Prerequisites: sam deploy, aws credentials, see DEPLOYMENT_GUIDE.md
+EOF
             exit 0
             ;;
         *)
@@ -261,10 +251,7 @@ echo "  Clean Cache:     $CLEAN_CACHE"
 echo ""
 
 # Check prerequisites
-command -v aws >/dev/null 2>&1 || { log_error "AWS CLI is required but not installed."; exit 1; }
-command -v npm >/dev/null 2>&1 || { log_error "npm is required but not installed."; exit 1; }
-command -v zip >/dev/null 2>&1 || { log_error "zip is required but not installed."; exit 1; }
-command -v jq >/dev/null 2>&1 || { log_error "jq is required but not installed."; exit 1; }
+check_prerequisites
 
 # Check AWS configuration
 check_aws_config || exit 1
@@ -297,23 +284,8 @@ if [ "$SKIP_INSTALL" != "true" ]; then
     log_step "Step 2: Installing dependencies"
     
     cd "$WORKSPACE_ROOT"
-    if command -v pnpm >/dev/null 2>&1 && [ -f "pnpm-workspace.yaml" ]; then
-        log_info "📦 Installing workspace dependencies with pnpm..."
-        if [ "$FORCE" = "true" ]; then
-            pnpm install --force
-        else
-            pnpm install
-        fi
-    else
-        # Fallback to npm in web-client directory
-        log_warning "pnpm workspace not detected, falling back to npm"
-        cd "$PROJECT_ROOT"
-        if [ -f "package-lock.json" ]; then
-            npm ci
-        else
-            npm install
-        fi
-    fi
+    log_info "📦 Installing workspace dependencies..."
+    run_pnpm_install
 else
     log_warning "Skipping dependency installation"
 fi
@@ -336,82 +308,32 @@ if [ "$SKIP_BUILD" != "true" ]; then
     export NEXT_PUBLIC_SAGA_SM_API_URL="$API_URL"
     export NEXT_PUBLIC_TRPC_BASE_PATH="/trpc"
 
-    # Clean previous build artifacts (only if requested or no Turbo cache)
-    cd "$PROJECT_ROOT"
-    if [ "$CLEAN_CACHE" = "true" ] || [ "$FORCE" = "true" ] || [ ! -d ".turbo" ]; then
-        log_info "🧹 Cleaning previous build artifacts..."
-        rm -rf .next out
-        if [ -d "$WORKSPACE_ROOT/.turbo" ]; then
-            log_info "🗑️  Cleaning Turbo workspace cache..."
-            rm -rf "$WORKSPACE_ROOT/.turbo"
-        fi
+    # Clean build cache if requested or no existing cache
+    if [ "$CLEAN_CACHE" = "true" ] || [ "$FORCE" = "true" ] || [ ! -d "$PROJECT_ROOT/.turbo" ]; then
+        clean_build_cache
     else
         log_info "🎯 Preserving build cache for Turbo optimization..."
     fi
 
-    # Build with workspace dependency resolution
+    # Use existing build tooling instead of reimplementing
     cd "$WORKSPACE_ROOT"
     
-    if command -v turbo >/dev/null 2>&1 && [ -f "turbo.json" ]; then
-        log_info "🏗️  Building with Turbo (leveraging cache and dependencies)..."
-        
-        # Clean cache if requested
-        if [ "$CLEAN_CACHE" = "true" ]; then
-            log_info "🧹 Cleaning Turbo cache..."
-            turbo prune --filter="@saga-sm/web-client"
-        fi
-        
-        # Check if build is needed (dry run)
-        log_info "🔍 Checking if build is needed..."
-        TURBO_ARGS="--filter=@saga-sm/web-client"
-        
-        # Check if we can use remote caching
-        if [ -n "$TURBO_TOKEN" ] && [ -n "$TURBO_TEAM" ]; then
-            log_info "📡 Using Turbo remote caching..."
-            TURBO_ARGS="$TURBO_ARGS --remote-only"
-        fi
-        
-        # Check what would be built
-        TURBO_DRY=$(turbo run build $TURBO_ARGS --dry 2>/dev/null || echo "build-needed")
-        if echo "$TURBO_DRY" | grep -q "0 successful, 0 total"; then
-            log_info "✨ Build cache hit! Nothing needs to be rebuilt."
-        else
-            log_info "🔨 Changes detected, building..."
-        fi
-        
-        # Build with dependency auto-resolution
-        turbo run build $TURBO_ARGS
-        
-        # Turbo handles dependencies, so no need to reinstall unless there's a specific issue
-        if [ ! -f "$PROJECT_ROOT/node_modules/.pnpm/lock.yaml" ] || [ ! -d "$PROJECT_ROOT/node_modules/@saga-sm/api-types" ]; then
-            log_info "🔗 Refreshing workspace dependencies (dependency resolution issue detected)..."
-            if [ "$FORCE" = "true" ]; then
-                pnpm install --ignore-scripts --force
-            else
-                pnpm install --ignore-scripts
-            fi
-        else
-            log_info "✅ Turbo managed dependencies successfully - no refresh needed"
-        fi
-    elif command -v pnpm >/dev/null 2>&1 && [ -f "pnpm-workspace.yaml" ]; then
-        log_warning "🔄 Falling back to pnpm workspace (consider using Turbo for better caching)"
-        log_info "🏗️  Building with pnpm workspace..."
-        log_info "🔧 Building API types package..."
-        pnpm --filter="@saga-sm/api-types" run build
-        log_info "🔗 Refreshing workspace dependencies..."
-        if [ "$FORCE" = "true" ]; then
-            pnpm install --ignore-scripts --force
-        else
-            pnpm install --ignore-scripts
-        fi
-        log_info "🌐 Building web client..."
-        pnpm --filter="@saga-sm/web-client" run build
-    else
-        log_error "Neither turbo nor pnpm workspace detected"
-        log_error "This monorepo requires either turbo or pnpm for proper builds"
-        log_error "💡 Install turbo: pnpm add -g turbo"
-        exit 1
+    # Set Turbo environment variables if available
+    [ -n "$TURBO_TOKEN" ] && [ -n "$TURBO_TEAM" ] && {
+        log_info "📡 Using Turbo remote caching..."
+        export TURBO_TOKEN TURBO_TEAM
+    }
+    
+    # Use the workspace's build command - it handles everything via Turbo
+    log_info "🏗️  Building with workspace build tooling..."
+    if [ "$CLEAN_CACHE" = "true" ]; then
+        log_info "🧹 Cleaning before build..."
+        pnpm run clean 2>/dev/null || true
     fi
+    
+    # The workspace build script runs "turbo run build" which handles all dependencies
+    pnpm run build --filter="@saga-sm/web-client"
+    log_info "✅ Build completed - Turbo handled dependencies automatically"
 
     # Verify build output
     cd "$PROJECT_ROOT"
