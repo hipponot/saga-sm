@@ -16,20 +16,39 @@ model BellSchedule {
   name          String
   description   String?
 
+  activeDaysOfWeek Int[] // 0-6 (0 = Sunday, 1 = Monday, etc.)
+
+  days          BellScheduleDay[]
+  periods       Period[]
+
+  // Each schedule has exactly one recurrence rule set
+  recurrenceRuleSet DayRecurrenceRuleSet?
+}
+
+model BellScheduleDay {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+
+  scheduleId    String
+  schedule      BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
   variants      BellScheduleVariant[]
+  periods       Period[]
+
+  // Relations to recurrence rules
+  dayOfWeekRules     DayOfWeekRule[]
+  patternBasedRules  PatternBasedRule[]
 }
 
 model BellScheduleVariant {
   id                String   @id @default(uuid())
   name              String
   description       String?
-  isDefault         Boolean? @default(false)
   recurrenceRuleSet String
 
-  scheduleId  String
-  schedule    BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-
-  periods Period[]
+  scheduleDayId     String
+  scheduleDay       BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
 }
 
 model Period {
@@ -38,6 +57,66 @@ model Period {
   start     String   // HH:MM format (e.g., "08:00")
   end       String   // HH:MM format (e.g., "09:00")
 
-  variantId String
-  variant   BellScheduleVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  scheduleDays   BellScheduleDay[]
+
+  scheduleId String
+  schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+}
+
+// Recurrence Rule Set - Each schedule has exactly one
+model DayRecurrenceRuleSet {
+  id          String   @id @default(uuid())
+  type        RecurrenceRuleType
+
+  scheduleId  String   @unique
+  schedule    BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  // Day-of-week rules (only used if type is DAY_OF_WEEK)
+  dayOfWeekRules DayOfWeekRule[]
+
+  // Pattern-based rules (only used if type is PATTERN_BASED)
+  patternBasedRules PatternBasedRule[]
+  seedDate    DateTime? // Starting date for pattern calculation
+}
+
+// Day-of-week based recurrence rules
+model DayOfWeekRule {
+  id          String   @id @default(uuid())
+
+  // Which day of the week (0 = Sunday, 1 = Monday, etc.)
+  dayOfWeek   Int      // 0-6
+
+  // Reference to the schedule day this rule applies
+  scheduleDayId String
+  scheduleDay   BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
+
+  // Reference to the rule set
+  ruleSetId   String
+  ruleSet     DayRecurrenceRuleSet @relation(fields: [ruleSetId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleSetId, dayOfWeek]) // Ensure one rule per day of week per rule set
+}
+
+// Pattern-based recurrence rules - each rule represents one position in the pattern
+model PatternBasedRule {
+  id          String   @id @default(uuid())
+
+  // Position in the pattern sequence (0-based index)
+  // The pattern is constructed by ordering these positions
+  patternPosition Int
+
+  // Reference to the schedule day this rule applies
+  scheduleDayId String
+  scheduleDay   BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
+
+  // Reference to the rule set
+  ruleSetId   String
+  ruleSet     DayRecurrenceRuleSet @relation(fields: [ruleSetId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleSetId, patternPosition]) // Ensure unique positions within a pattern
+}
+
+enum RecurrenceRuleType {
+  DAY_OF_WEEK
+  PATTERN_BASED
 }
