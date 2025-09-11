@@ -1,0 +1,17 @@
+version: 0.1
+
+default:
+  build:
+    parameters:
+      template_file: template.yaml
+  deploy:
+    parameters:
+      template_file: template.yaml
+      stack_name: saga-sm-web-client-infrastructure
+      capabilities:
+        - CAPABILITY_NAMED_IAM
+      on_failure: DELETE
+      parameters:
+        - Environment: dev
+        - AppName: saga-sm-web-client
+        - ProjectName: saga-sm

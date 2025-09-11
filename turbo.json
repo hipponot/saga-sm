@@ -1,9 +1,18 @@
 {
     "tasks": {
         "build": {
-            "dependsOn": ["^build"],
-            "inputs": ["$TURBO_DEFAULT$", ".env*"],
-            "outputs": [".next/**", "dist/**"]
+            "dependsOn": [
+                "^build"
+            ],
+            "inputs": [
+                "$TURBO_DEFAULT$",
+                ".env*"
+            ],
+            "outputs": [
+                ".next/**",
+                "dist/**",
+                "out/**"
+            ]
         },
         "dev": {
             "cache": false,
@@ -14,11 +23,17 @@
             "inputs": ["$TURBO_DEFAULT$", "src/**/*.test.*", "src/**/*.spec.*"]
         },
         "lint": {
-            "inputs": ["$TURBO_DEFAULT$"]
+            "inputs": [
+                "$TURBO_DEFAULT$"
+            ]
         },
         "typecheck": {
-            "dependsOn": ["^build"],
-            "inputs": ["$TURBO_DEFAULT$"]
+            "dependsOn": [
+                "^build"
+            ],
+            "inputs": [
+                "$TURBO_DEFAULT$"
+            ]
         },
         "clean": {
             "cache": false

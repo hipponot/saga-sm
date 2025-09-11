@@ -1,18 +1,18 @@
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
+import type { ApiRouter } from '@saga-sm/api-types'
 import { ServiceInterface, Endpoint, ApiResponse } from './types'
-import { TRPC_ENDPOINT } from './endpoints'
-
-// This would normally import from @saga-sm/api-types when available
-type AppRouter = any // Placeholder - will be replaced with proper types
+import { getTrpcEndpoint } from './endpoints'
 
 export class TrpcClientService implements ServiceInterface {
-    private client: any // Temporarily using any to bypass typing issues
+    private client: ReturnType<typeof createTRPCClient<ApiRouter>>
+    private currentUrl: string
 
-    constructor() {
-        this.client = createTRPCClient<AppRouter>({
+    constructor(customApiUrl?: string, customBasePath?: string) {
+        this.currentUrl = getTrpcEndpoint(customApiUrl, customBasePath)
+        this.client = createTRPCClient<ApiRouter>({
             links: [
                 httpBatchLink({
-                    url: TRPC_ENDPOINT,
+                    url: this.currentUrl,
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -21,12 +21,32 @@ export class TrpcClientService implements ServiceInterface {
         })
     }
 
+    // Method to update the API URL at runtime
+    public updateApiUrl(customApiUrl: string, customBasePath?: string) {
+        this.currentUrl = getTrpcEndpoint(customApiUrl, customBasePath)
+        this.client = createTRPCClient<ApiRouter>({
+            links: [
+                httpBatchLink({
+                    url: this.currentUrl,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }),
+            ],
+        })
+    }
+
+    // Get current URL being used
+    public getCurrentUrl(): string {
+        return this.currentUrl
+    }
+
     async executeEndpoint(endpoint: Endpoint, input: string): Promise<ApiResponse> {
         const startTime = Date.now()
 
         try {
             let parsedInput: any = null
-            
+
             if (input.trim()) {
                 try {
                     parsedInput = JSON.parse(input)
@@ -80,12 +100,12 @@ export class TrpcClientService implements ServiceInterface {
         const hasInput = input.trim().length > 0
         let code = `// tRPC Client Implementation\n`
         code += `import { createTRPCClient, httpBatchLink } from '@trpc/client'\n`
-        code += `import type { AppRouter } from '@saga-sm/api-types'\n\n`
-        
-        code += `const client = createTRPCClient<AppRouter>({\n`
+        code += `import type { ApiRouter } from '@saga-sm/api-types'\n\n`
+
+        code += `const client = createTRPCClient<ApiRouter>({\n`
         code += `    links: [\n`
         code += `        httpBatchLink({\n`
-        code += `            url: '${TRPC_ENDPOINT}',\n`
+        code += `            url: '${this.currentUrl}',\n`
         code += `        }),\n`
         code += `    ],\n`
         code += `})\n\n`
@@ -94,7 +114,7 @@ export class TrpcClientService implements ServiceInterface {
             code += `const input = ${input}\n\n`
         }
 
-        const isQuery = ['queryExamples', 'getExampleById'].some(method => endpoint.id.includes(method))
+        const isQuery = ['queryExamples', 'getExampleById', 'getEventHistory', 'getChannelInfo', 'getServiceStatus', 'getSubscriptionStats'].some(method => endpoint.id.includes(method))
         const methodType = isQuery ? 'query' : 'mutate'
         const inputParam = hasInput ? '(input)' : '()'
 

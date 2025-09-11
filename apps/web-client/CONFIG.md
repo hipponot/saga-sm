@@ -1,5 +1,25 @@
 # Web Client Configuration
 
+## 📋 TLDR
+
+**Local Development:**
+```bash
+# Copy example and customize
+cp .env.example .env.local
+```
+
+**Production/Amplify:**
+```bash
+# Zero config needed - automatic via SSM
+./scripts/deploy.sh --env dev
+```
+
+**Key Variables:**
+- `NEXT_PUBLIC_SAGA_SM_API_URL` - API endpoint (auto-set in production)
+- `NEXT_PUBLIC_TRPC_BASE_PATH` - tRPC path (default: `/trpc`)
+
+---
+
 The web-client application uses environment variables for configuration, following Next.js conventions.
 
 ## Configuration Options
@@ -43,3 +63,26 @@ The configuration follows Next.js best practices:
 - Public environment variables (prefixed with `NEXT_PUBLIC_`) are embedded at build time and available in the browser
 - Server-only variables are only accessible in server-side code
 - Configuration is validated using Zod schemas for type safety
+
+## Production/Amplify Configuration
+
+For AWS Amplify hosted deployments, environment variables are **automatically managed** by the deployment script. The script:
+
+1. 🔍 **Detects environment** from `--env` flag or branch name
+2. 📥 **Retrieves API URL** from SSM Parameter Store  
+3. 🔧 **Injects variables** during build process
+4. 🚀 **Deploys with correct config** to Amplify
+
+See [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md) for comprehensive documentation.
+
+**SSM Parameter Mapping:**
+- **`--env dev`**: `/saga-sm/web-client/api-url/dev`
+- **`--env qa`**: `/saga-sm/web-client/api-url/qa`  
+- **`--env prod`**: `/saga-sm/web-client/api-url/prod`
+
+**Branch Auto-Mapping:**
+- **`main` branch** → `prod` environment (Production)
+- **`develop` branch** → `qa` environment (Staging)
+- **Feature branches** → `dev` environment (Development)
+
+**No manual configuration required** - the deployment script handles everything automatically.

@@ -76,6 +76,7 @@ apps/web-client/.next/
 dist
 
 # Storybook build outputs
+out/
 .out
 .storybook-out
 
@@ -130,3 +131,4 @@ apps/*/.env.development.local
 
 # Prisma
 **/generated/prisma
+.aws-sam

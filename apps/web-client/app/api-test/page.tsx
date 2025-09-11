@@ -1,24 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import styles from './page.module.css'
 import { EXAMPLE_ENDPOINTS } from '../../src/services/endpoints'
 import { TrpcCurlService } from '../../src/services/trpc-curl-service'
 import { TrpcClientService } from '../../src/services/trpc-client-service'
+import { useApiUrl } from '../../src/context/api-url-context'
 import type { Endpoint, ApiResponse } from '../../src/services/types'
 
 export default function ApiTestPage() {
+    const { apiUrl, trpcBasePath } = useApiUrl()
     const [selectedEndpoint, setSelectedEndpoint] = useState<Endpoint | null>(null)
     const [inputData, setInputData] = useState<string>('')
     const [response, setResponse] = useState<string>('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string>('')
     const [useTrpcClient, setUseTrpcClient] = useState(true)
+    const [curlService, setCurlService] = useState<TrpcCurlService>(() => new TrpcCurlService(apiUrl, trpcBasePath))
+    const [trpcService, setTrpcService] = useState<TrpcClientService>(() => new TrpcClientService(apiUrl, trpcBasePath))
 
-    // Initialize services
-    const curlService = new TrpcCurlService()
-    const trpcService = new TrpcClientService()
+    // Update services when API URL or base path changes
+    useEffect(() => {
+        setCurlService(new TrpcCurlService(apiUrl, trpcBasePath))
+        setTrpcService(new TrpcClientService(apiUrl, trpcBasePath))
+    }, [apiUrl, trpcBasePath])
 
     const handleEndpointChange = (endpointId: string) => {
         const endpoint = EXAMPLE_ENDPOINTS.find(ep => ep.id === endpointId)
@@ -43,7 +49,7 @@ export default function ApiTestPage() {
         try {
             const service = useTrpcClient ? trpcService : curlService
             const result: ApiResponse = await service.executeEndpoint(selectedEndpoint, inputData)
-            
+
             if (result.success) {
                 setResponse(JSON.stringify(result.data, null, 2))
             } else {
@@ -66,6 +72,24 @@ export default function ApiTestPage() {
                         Interactive endpoint testing with dropdown selection, code generation, and response inspection
                     </p>
                 </header>
+
+                {/* API Configuration Info */}
+                <div className={styles.section}>
+                    <h2 className={styles.sectionTitle}>🔗 API Configuration</h2>
+                    <div className={styles.infoBox}>
+                        <p className={styles.infoText}>
+                            <strong className={styles.infoTextStrong}>Current API Configuration:</strong>
+                        </p>
+                        <div style={{ fontFamily: 'var(--font-geist-mono, monospace)', fontSize: '0.875rem', margin: '0.5rem 0' }}>
+                            <div><strong>API URL:</strong> <span style={{ color: '#3b82f6' }}>{apiUrl}</span></div>
+                            <div><strong>tRPC Path:</strong> <span style={{ color: '#10b981' }}>{trpcBasePath}</span></div>
+                            <div><strong>Full tRPC URL:</strong> <span style={{ color: '#6b7280' }}>{apiUrl}{trpcBasePath}</span></div>
+                        </div>
+                        <p className={styles.infoText} style={{ marginTop: '0.75rem' }}>
+                            💡 <strong>Tip:</strong> Use the <strong>🔗</strong> button in the top-right corner to edit API configuration from any page.
+                        </p>
+                    </div>
+                </div>
 
                 {/* API Mode Selection */}
                 <div className={styles.section}>
@@ -188,7 +212,7 @@ export default function ApiTestPage() {
                             </button>
                         )}
                     </div>
-                    
+
                     {selectedEndpoint ? (
                         <div className={styles.terminalBox}>
                             <pre className={styles.codeBlock}>

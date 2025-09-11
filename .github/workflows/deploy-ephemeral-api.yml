@@ -1,0 +1,163 @@
+name: Deploy Ephemeral API Environment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "apps/api/**"
+  workflow_dispatch:
+    inputs:
+      branch_identifier:
+        description: "Branch identifier for deployment (e.g., gh-123-feature-branch)"
+        required: false
+        type: string
+      image_tag:
+        description: "Docker image tag to deploy"
+        required: false
+        default: "latest"
+        type: string
+
+env:
+  AWS_REGION: us-west-2
+  ECR_REPOSITORY: 531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api
+
+jobs:
+  deploy-ephemeral-api:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-DeployEphemeral
+
+      - name: Generate branch identifier
+        id: branch-id
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ ! -z "${{ inputs.branch_identifier }}" ]; then
+            BRANCH_ID="${{ inputs.branch_identifier }}"
+          else
+            # Convert branch name to URL-safe identifier
+            BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
+            PR_NUMBER="${{ github.event.pull_request.number || 'manual' }}"
+            BRANCH_ID=$(echo "gh-${PR_NUMBER}-${BRANCH_NAME}" | sed 's/[^a-zA-Z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | tr '[:upper:]' '[:lower:]')
+          fi
+          echo "branch_identifier=${BRANCH_ID}" >> $GITHUB_OUTPUT
+          echo "Branch identifier: ${BRANCH_ID}"
+
+      - name: Set image tag
+        id: image-tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ ! -z "${{ inputs.image_tag }}" ]; then
+            IMAGE_TAG="${{ inputs.image_tag }}"
+          else
+            IMAGE_TAG="${{ github.sha }}"
+          fi
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "Image tag: ${IMAGE_TAG}"
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Deploy with SAM
+        working-directory: apps/api
+        run: |
+          # Replace template placeholders with actual values
+          sed "s/{branch_identifier}/${{ steps.branch-id.outputs.branch_identifier }}/g; s|{image_id}|${{ env.ECR_REPOSITORY }}:${{ steps.image-tag.outputs.image_tag }}|g" samconfig.yaml > samconfig-ephemeral.yaml
+
+          sam deploy \
+            --config-file samconfig-ephemeral.yaml \
+            --config-env ephemeral \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              BranchIdentifier=${{ steps.branch-id.outputs.branch_identifier }} \
+              ImageId=${{ env.ECR_REPOSITORY }}:${{ steps.image-tag.outputs.image_tag }}
+
+      - name: Get stack outputs
+        id: stack-outputs
+        run: |
+          STACK_NAME="saga-sm-api-ephemeral-${{ steps.branch-id.outputs.branch_identifier }}"
+
+          ENDPOINT=$(aws cloudformation describe-stacks \
+            --stack-name "${STACK_NAME}" \
+            --query 'Stacks[0].Outputs[?OutputKey==`ServiceEndpoint`].OutputValue' \
+            --output text)
+
+          echo "endpoint=${ENDPOINT}" >> $GITHUB_OUTPUT
+          echo "Service endpoint: ${ENDPOINT}"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const endpoint = '${{ steps.stack-outputs.outputs.endpoint }}';
+            const branchId = '${{ steps.branch-id.outputs.branch_identifier }}';
+            const imageTag = '${{ steps.image-tag.outputs.image_tag }}';
+
+            const body = `## 🚀 Ephemeral API Environment Deployed
+
+            Your ephemeral API environment has been successfully deployed!
+
+            **Details:**
+            - **Branch Identifier**: \`${branchId}\`
+            - **Image Tag**: \`${imageTag}\`
+            - **Endpoint**: ${endpoint}
+
+            **Quick Test:**
+            \`\`\`bash
+            curl ${endpoint}/health
+            \`\`\`
+
+            This environment will be automatically cleaned up when the PR is closed.
+            `;
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.data.find(
+              comment => comment.body.includes('🚀 Ephemeral API Environment Deployed')
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+      - name: Summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch Identifier**: ${{ steps.branch-id.outputs.branch_identifier }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image Tag**: ${{ steps.image-tag.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stack Name**: saga-sm-api-ephemeral-${{ steps.branch-id.outputs.branch_identifier }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Endpoint**: ${{ steps.stack-outputs.outputs.endpoint }}" >> $GITHUB_STEP_SUMMARY

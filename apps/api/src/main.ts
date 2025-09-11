@@ -1,10 +1,10 @@
 import 'reflect-metadata'
 import { container } from './inversify.config.js'
-import { ExpressServer } from '@saga-soa/api-core/express-server'
-import { TRPCServer } from '@saga-soa/api-core/trpc-server'
-import { ControllerLoader } from '@saga-soa/api-core/utils/controller-loader'
-import { AbstractTRPCController } from '@saga-soa/api-core/abstract-trpc-controller'
-import type { ILogger } from '@saga-soa/logger'
+import { ExpressServer } from '@hipponot/api-core/express-server'
+import { TRPCServer } from '@hipponot/api-core/trpc-server'
+import { ControllerLoader } from '@hipponot/api-core/utils/controller-loader'
+import { AbstractTRPCController } from '@hipponot/api-core/abstract-trpc-controller'
+import type { ILogger } from '@hipponot/logger'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -41,10 +41,10 @@ async function bootstrap() {
 
         // Initialize the tRPC server with tRPC controllers
         await trpcServer.init(container, trpcControllers)
-        
+
         // Mount tRPC middleware
         await trpcServer.mountToApp(app)
-        
+
         // Mount SSE endpoint for real-time pubsub events
         const pubsubService = container.get('PubSubService')
         app.get('/events', async (req, res) => {
@@ -60,7 +60,7 @@ async function bootstrap() {
         app.get('/health', (req, res) => {
             res.json({ status: 'ok', service: 'saga-sm API' })
         })
-        
+
         // Start Express server
         expressServer.start()
 

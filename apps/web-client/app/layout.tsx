@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { ApiUrlProvider } from '../src/context/api-url-context'
+import { GlobalUrlEditor } from '../src/components/global-url-editor'
 
 export const metadata: Metadata = {
     title: 'Schedule Manager',
@@ -13,7 +15,12 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body>
+                <ApiUrlProvider>
+                    {children}
+                    <GlobalUrlEditor />
+                </ApiUrlProvider>
+            </body>
         </html>
     )
 }

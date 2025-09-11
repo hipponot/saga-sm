@@ -11,7 +11,10 @@
         "check": "turbo run check",
         "lint": "turbo run lint",
         "typecheck": "turbo run typecheck",
-        "clean": "turbo run clean"
+        "clean": "turbo run clean",
+        "deploy:web": "cd apps/web-client && ./scripts/deploy.sh",
+        "deploy:api": "cd apps/api && ./scripts/build-push-deploy.sh",
+        "deploy": "npm run build && npm run deploy:api && npm run deploy:web"
     },
     "devDependencies": {
         "@types/node": "^18.19.31",

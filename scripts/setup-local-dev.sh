@@ -47,12 +47,19 @@ if [ -f "apps/api/package.json" ]; then
     
     // Update dependencies to use file: protocol
     if (pkg.dependencies) {
-        pkg.dependencies['@saga-soa/api-core'] = 'file:../../../saga-soa/packages/api-core';
-        pkg.dependencies['@saga-soa/db'] = 'file:../../../saga-soa/packages/db';
-        pkg.dependencies['@saga-soa/logger'] = 'file:../../../saga-soa/packages/logger';
-        pkg.dependencies['@saga-soa/pubsub-core'] = 'file:../../../saga-soa/packages/pubsub-core';
-        pkg.dependencies['@saga-soa/config'] = 'file:../../../saga-soa/packages/config';
+        pkg.dependencies['@hipponot/api-core'] = 'file:../../../saga-soa/packages/api-core';
+        pkg.dependencies['@hipponot/db'] = 'file:../../../saga-soa/packages/db';
+        pkg.dependencies['@hipponot/logger'] = 'file:../../../saga-soa/packages/logger';
+        pkg.dependencies['@hipponot/pubsub-core'] = 'file:../../../saga-soa/packages/pubsub-core';
+        pkg.dependencies['@hipponot/config'] = 'file:../../../saga-soa/packages/config';
+        pkg.dependencies['@saga-sm/api-types'] = 'file:./types';
     }
+    
+    // Add trpc-codegen as dev dependency
+    if (!pkg.devDependencies) {
+        pkg.devDependencies = {};
+    }
+    pkg.devDependencies['@hipponot/trpc-codegen'] = 'file:../../../saga-soa/packages/trpc-codegen';
     
     fs.writeFileSync('apps/api/package.json', JSON.stringify(pkg, null, 4));
     "
@@ -61,13 +68,33 @@ else
     echo "⚠️  Warning: apps/api/package.json not found"
 fi
 
+echo "🔗 Setting up API types package..."
+
+# Update API types package.json to use file: protocol dependencies
+if [ -f "apps/api/types/package.json" ]; then
+    node -e "
+    const fs = require('fs');
+    const pkg = JSON.parse(fs.readFileSync('apps/api/types/package.json', 'utf8'));
+    
+    // Update devDependencies to use file: protocol
+    if (pkg.devDependencies) {
+        pkg.devDependencies['@hipponot/trpc-codegen'] = 'file:../../../../saga-soa/packages/trpc-codegen';
+    }
+    
+    fs.writeFileSync('apps/api/types/package.json', JSON.stringify(pkg, null, 4));
+    "
+    echo "✅ Updated API types package.json with file: protocol dependencies"
+else
+    echo "⚠️  Warning: apps/api/types/package.json not found"
+fi
+
 echo "📥 Installing dependencies..."
 pnpm install
 
 echo "✅ Local development setup complete!"
 echo ""
 echo "🚀 To start development:"
-echo "  Terminal 1: cd ../saga-soa && turbo run dev --filter='@saga-soa/*' --concurrency 12"  
+echo "  Terminal 1: cd ../saga-soa && turbo run dev --filter='@hipponot/*' --concurrency 12"  
 echo "  Terminal 2: cd saga-sm && pnpm dev"
 echo ""
 echo "📱 Applications will be available at:"

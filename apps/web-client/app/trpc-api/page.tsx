@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getApiUrl } from '../../src/config/client-config';
+import { useApiUrl } from '../../src/context/api-url-context';
 import styles from './page.module.css';
 
 interface PingEvent {
@@ -66,6 +67,7 @@ interface RealPongEvent {
 
 // Real tRPC Ping/Pong Section Component
 function RealPingPongSection() {
+  const { apiUrl } = useApiUrl();
   const [realPingMessage, setRealPingMessage] = useState('Hello from real tRPC client!');
   const [realPingResponse, setRealPingResponse] = useState<RealPingResult | null>(null);
   const [realPongEvents, setRealPongEvents] = useState<RealPongEvent[]>([]);
@@ -81,7 +83,7 @@ function RealPingPongSection() {
 
     try {
       // Call the real tRPC pubsub ping endpoint
-      const response = await fetch(`${getApiUrl()}/trpc/pubsub.ping`, {
+      const response = await fetch(`${apiUrl}/trpc/pubsub.ping`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +99,7 @@ function RealPingPongSection() {
       }
 
       const result = await response.json();
-      
+
       if (result.error) {
         throw new Error(result.error.message || 'Failed to send ping');
       }
@@ -106,7 +108,7 @@ function RealPingPongSection() {
       const pingResult: RealPingResult = {
         success: result.result?.success || false,
         pingEvent: {
-          id: result.result?.eventId || crypto.randomUUID(),
+          id: result.result?.eventId || globalThis.crypto?.randomUUID() || Math.random().toString(36).substring(2, 15),
           name: 'ping:message',
           channel: 'pingpong',
           payload: {
@@ -123,7 +125,7 @@ function RealPingPongSection() {
 
       // Check if we got emitted events (including automatic pong response)
       const emittedEvents = result.result?.emittedEvents || [];
-      
+
       if (emittedEvents.length > 0) {
         // Add any pong responses from the emitted events
         const pongEvents = emittedEvents
@@ -257,9 +259,11 @@ function RealPingPongSection() {
 }
 
 export default function TRPCAPIPage() {
+  // Use dynamic API URL context
+  const { apiUrl, trpcBasePath } = useApiUrl();
+
   // Enhanced testing state
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
-  const [serverUrl, setServerUrl] = useState(getApiUrl());
   const [eventHistory, setEventHistory] = useState<EventHistory[]>([]);
   const [performanceStats, setPerformanceStats] = useState<PerformanceStats>({
     totalEvents: 0,
@@ -278,7 +282,7 @@ export default function TRPCAPIPage() {
   const checkConnectionStatus = async () => {
     try {
       setConnectionStatus('connecting');
-      const response = await fetch(`${serverUrl}/trpc/pubsub.getServiceStatus`);
+      const response = await fetch(`${apiUrl}/trpc/pubsub.getServiceStatus`);
       if (response.ok) {
         setConnectionStatus('connected');
       } else {
@@ -289,11 +293,11 @@ export default function TRPCAPIPage() {
     }
   };
 
-  const connectToServer = async () => {
+  const testConnection = async () => {
     await checkConnectionStatus();
   };
 
-  const disconnectFromServer = () => {
+  const clearConnectionStatus = () => {
     setConnectionStatus('disconnected');
   };
 
@@ -318,7 +322,8 @@ export default function TRPCAPIPage() {
           <p className={styles.subtitle}>
             Comprehensive testing interface for the Example Management tRPC API
           </p>
-          
+
+
           {/* Navigation */}
           <div className={styles.section}>
             <div className={styles.connectionStatusRow}>
@@ -327,7 +332,7 @@ export default function TRPCAPIPage() {
                 <a
                   href="/trpc-api/endpoints"
                   className={`${styles.button} ${styles.buttonPrimary}`}
-                  style={{ 
+                  style={{
                     textDecoration: 'none',
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -340,11 +345,26 @@ export default function TRPCAPIPage() {
             </div>
             <div className={styles.infoBox}>
               <p className={styles.infoText}>
-                <strong className={styles.infoTextStrong}>Endpoint Tester:</strong> Use the endpoint tester 
-                to try all Example Management tRPC API endpoints with dropdown selection, code generation, and response inspection. 
+                <strong className={styles.infoTextStrong}>Endpoint Tester:</strong> Use the endpoint tester
+                to try all Example Management tRPC API endpoints with dropdown selection, code generation, and response inspection.
                 Perfect for testing example endpoints with both cURL and tRPC client modes.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* API Configuration Info */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>🔗 Current API Configuration</h2>
+          <div className={styles.infoBox}>
+            <div style={{ fontFamily: 'var(--font-geist-mono, monospace)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+              <div><strong>API URL:</strong> <span style={{ color: '#3b82f6' }}>{apiUrl}</span></div>
+              <div><strong>tRPC Path:</strong> <span style={{ color: '#10b981' }}>{trpcBasePath}</span></div>
+              <div><strong>Full tRPC URL:</strong> <span style={{ color: '#6b7280' }}>{apiUrl}{trpcBasePath}</span></div>
+            </div>
+            <p className={styles.infoText}>
+              💡 <strong>Tip:</strong> Use the <strong>🔗</strong> button in the top-right corner to edit API configuration.
+            </p>
           </div>
         </div>
 
@@ -353,36 +373,28 @@ export default function TRPCAPIPage() {
           <div className={styles.connectionStatus}>
             <div className={styles.connectionStatusRow}>
               <div className={styles.connectionInfo}>
-                <div className={`${styles.statusIndicator} ${
-                  connectionStatus === 'connected' ? styles.statusConnected :
+                <div className={`${styles.statusIndicator} ${connectionStatus === 'connected' ? styles.statusConnected :
                   connectionStatus === 'connecting' ? styles.statusConnecting : styles.statusDisconnected
-                }`} />
+                  }`} />
                 <span className={styles.statusText}>
                   📡 Connection Status: {connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1)}
                 </span>
               </div>
               <div className={styles.connectionControls}>
-                <input
-                  type="text"
-                  value={serverUrl}
-                  onChange={(e) => setServerUrl(e.target.value)}
-                  placeholder="Server URL"
-                  className={styles.input}
-                />
                 <div className={styles.connectionControlsRow}>
                   <button
-                    onClick={connectToServer}
-                    disabled={connectionStatus === 'connected'}
+                    onClick={testConnection}
+                    disabled={connectionStatus === 'connecting'}
                     className={`${styles.button} ${styles.buttonPrimary}`}
                   >
-                    Connect
+                    {connectionStatus === 'connecting' ? 'Testing...' : 'Test Connection'}
                   </button>
                   <button
-                    onClick={disconnectFromServer}
+                    onClick={clearConnectionStatus}
                     disabled={connectionStatus === 'disconnected'}
-                    className={`${styles.button} ${styles.buttonDanger}`}
+                    className={`${styles.button} ${styles.buttonSecondary}`}
                   >
-                    Disconnect
+                    Clear Status
                   </button>
                 </div>
               </div>
@@ -397,8 +409,8 @@ export default function TRPCAPIPage() {
           </h2>
           <div className={styles.infoBox}>
             <p className={styles.infoText}>
-              <strong className={styles.infoTextStrong}>Example API Demo:</strong> This section demonstrates the Example Management API connectivity. 
-              When you test the API, it checks the health endpoint and shows the connection status 
+              <strong className={styles.infoTextStrong}>Example API Demo:</strong> This section demonstrates the Example Management API connectivity.
+              When you test the API, it checks the health endpoint and shows the connection status
               that gets displayed in the events section below.
             </p>
           </div>
@@ -438,7 +450,7 @@ export default function TRPCAPIPage() {
               Export Events
             </button>
           </div>
-          
+
           <div className={styles.statsGrid}>
             <div className={`${styles.statCard} ${styles.statCardBlue}`}>
               <div className={`${styles.statValue} ${styles.statValueBlue}`}>{performanceStats.totalEvents}</div>

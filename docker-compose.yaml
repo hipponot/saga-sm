@@ -1,0 +1,122 @@
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:8.0
+    container_name: saga-sm-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: saga_sm
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - saga-sm-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: saga-sm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: saga_sm
+      POSTGRES_USER: saga_user
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - saga-sm-network
+
+  # Redis Cache
+  redis:
+    image: redis:7.0-alpine
+    container_name: saga-sm-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - saga-sm-network
+    command: redis-server --appendonly yes
+
+  # API Service
+  api:
+    build:
+      context: ../
+      dockerfile: saga-sm/apps/api/Dockerfile
+    container_name: saga-sm-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      PUBSUB_PORT: 3002
+      # MongoDB connection
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/saga_sm?authSource=admin
+      # PostgreSQL connection  
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: saga_sm
+      POSTGRES_USER: saga_user
+      POSTGRES_PASSWORD: password123
+      # Redis connection
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3000:3000"
+      - "3002:3002"
+    depends_on:
+      - mongodb
+      - postgres
+      - redis
+    networks:
+      - saga-sm-network
+    volumes:
+      # Mount source for development (optional)
+      - ./apps/api/src:/app/apps/api/src:ro
+
+  # Web Client
+  web-client:
+    build:
+      context: ../
+      dockerfile: saga-sm/apps/web-client/Dockerfile
+    container_name: saga-sm-web-client
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      # API connection
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_TRPC_URL: http://localhost:3000/trpc
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api
+    networks:
+      - saga-sm-network
+    volumes:
+      # Mount source for development (optional)
+      - ./apps/web-client/app:/app/apps/web-client/app:ro
+      - ./apps/web-client/src:/app/apps/web-client/src:ro
+
+networks:
+  saga-sm-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/16
+          gateway: 172.16.0.1
+
+volumes:
+  mongodb_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

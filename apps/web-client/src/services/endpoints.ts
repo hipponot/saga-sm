@@ -21,7 +21,7 @@ export const EXAMPLE_ENDPOINTS: Endpoint[] = [
     {
         id: 'example.getExampleById',
         name: 'Get Example by ID',
-        method: 'GET', 
+        method: 'GET',
         description: 'Retrieve a specific example by its unique identifier',
         inputType: 'object',
         sampleInput: JSON.stringify({ id: 'example-123' }, null, 2),
@@ -75,3 +75,14 @@ export const EXAMPLE_ENDPOINTS: Endpoint[] = [
 const config = getClientConfig()
 export const API_BASE_URL = config.sagaSmApiUrl
 export const TRPC_ENDPOINT = `${API_BASE_URL}${config.trpcBasePath}`
+
+// Dynamic URL functions for runtime API URL changes
+export function getApiBaseUrl(customUrl?: string): string {
+    return customUrl || config.sagaSmApiUrl
+}
+
+export function getTrpcEndpoint(customUrl?: string, customBasePath?: string): string {
+    const baseUrl = customUrl || config.sagaSmApiUrl
+    const basePath = customBasePath || config.trpcBasePath
+    return `${baseUrl}${basePath}`
+}

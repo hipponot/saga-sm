@@ -1,8 +1,8 @@
 import { injectable, inject } from 'inversify'
-import { AbstractTRPCController, router } from '@saga-soa/api-core/abstract-trpc-controller'
-import type { ILogger } from '@saga-soa/logger'
+import { AbstractTRPCController, router } from '@hipponot/api-core/abstract-trpc-controller'
+import type { ILogger } from '@hipponot/logger'
 import { z } from 'zod'
-import { PingMessageSchema, type PingMessageInput } from './schema/pubsub-schemas.js'
+import { PingMessageSchema, type PingMessageZ } from './schema/pubsub-schemas.js'
 import type { PubSubService } from '../../../services/pubsub.service.js'
 
 @injectable()
@@ -25,7 +25,7 @@ export class PubSubController extends AbstractTRPCController {
             // Send a ping message and get automatic pong response via pubsub
             ping: t
                 .input(PingMessageSchema)
-                .mutation(async ({ input }: { input: PingMessageInput }) => {
+                .mutation(async ({ input }: { input: PingMessageZ }) => {
                     try {
                         // Send the ping event via pubsub service
                         const result = await this.pubsubService.sendEvent({
@@ -66,7 +66,7 @@ export class PubSubController extends AbstractTRPCController {
                 .mutation(async ({ input }) => {
                     try {
                         const channel = input.channel || 'default'
-                        
+
                         const result = await this.pubsubService.sendEvent({
                             name: input.name,
                             payload: input.payload,
@@ -137,7 +137,7 @@ export class PubSubController extends AbstractTRPCController {
                         // This would typically set up a WebSocket or SSE connection
                         // For now, we'll return subscription info
                         const subscriptionId = crypto.randomUUID()
-                        
+
                         this.logger.info('Subscription request received', {
                             channel: input.channel,
                             subscriptionId,
@@ -169,7 +169,7 @@ export class PubSubController extends AbstractTRPCController {
                 .mutation(async ({ input }) => {
                     try {
                         const success = this.pubsubService.unsubscribe(input.subscriptionId)
-                        
+
                         return {
                             success,
                             subscriptionId: input.subscriptionId,
