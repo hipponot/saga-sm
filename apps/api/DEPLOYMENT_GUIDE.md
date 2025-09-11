@@ -1,23 +1,50 @@
 # Saga-SM API - AWS ECS Deployment Guide
 
-This guide covers deploying the Saga-SM API to AWS ECS using SAM templates with SSM Parameter Store integration, based on the session_resource_page reference architecture.
+## 📋 TLDR
+
+**Quick Start:**
+```bash
+# One-time setup per environment
+./scripts/setup-ssm-parameters.sh dev
+
+# Build, push, and deploy
+./scripts/build-push-deploy.sh v1.0.0 dev
+```
+
+**Key Points:**
+- 🐳 **Containerized API:** Node.js tRPC API in Docker deployed to ECS Fargate  
+- 🏗️ **Monorepo Build:** Script builds with saga-soa dependencies from workspace
+- 🌐 **Multi-Environment:** dev/qa/prod with separate stacks and SSM parameters
+- ⚡ **Auto ECR Management:** Creates ECR repository if needed, handles authentication
+- 🔄 **Timestamped Deployments:** Forces CloudFormation updates with unique tags
+- 📊 **Load Balancer Integration:** Path-based routing through shared ALB
+
+---
 
 ## Overview
 
+This guide covers deploying the Saga-SM API to AWS ECS using SAM templates with SSM Parameter Store integration.
+
 The deployment setup includes:
-- **Dockerfile** for containerizing the Node.js tRPC API
+- **Dockerfile** for containerizing the Node.js tRPC API with monorepo dependencies
 - **CloudFormation template** (`template.yaml`) for ECS Fargate infrastructure with SSM parameter integration
 - **SAM configuration** (`samconfig.yaml`) for multi-environment deployments
-- **Build and push scripts** for Docker image management
+- **Build and push scripts** for Docker image management with workspace support
 - **SSM parameter setup scripts** for infrastructure configuration
 
 ## Prerequisites
 
-- AWS CLI configured with appropriate credentials
-- SAM CLI installed
-- Docker installed and running
-- Node.js 18+ and npm/pnpm
-- Access to ECR repository (531314149529.dkr.ecr.us-west-2.amazonaws.com)
+### Required Tools
+- **AWS CLI** configured with appropriate credentials
+- **SAM CLI** installed for infrastructure deployment
+- **Docker** installed and running for container builds
+- **Node.js** (v18+) and **pnpm** for monorepo builds
+- **Access to ECR** repository (auto-created: `531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api`)
+
+### Workspace Requirements  
+- This is a **monorepo** that depends on **saga-soa** packages
+- Build requires **workspace structure**: `dev/saga-sm` and `dev/saga-soa` as siblings
+- API types must be built first (handled automatically by build script)
 
 ## Architecture
 
@@ -55,22 +82,36 @@ The template now uses SSM Parameter Store for infrastructure configuration, maki
 ./scripts/setup-ssm-parameters.sh prod
 ```
 
-### 2. Build and Push Docker Image
+### 2. Build and Deploy
+
+The build script handles the complete process: build, push to ECR, and deploy to ECS.
 
 ```bash
-# Build and push to ECR (automatically creates repository if needed)
-./scripts/build-and-push.sh [TAG] [ENVIRONMENT]
+# Build, push, and deploy (full process)
+./scripts/build-push-deploy.sh [TAG] [ENVIRONMENT] [DEPLOY]
 
 # Examples:
-./scripts/build-and-push.sh latest dev
-./scripts/build-and-push.sh v1.0.0 prod
+./scripts/build-push-deploy.sh                    # latest → dev (default)
+./scripts/build-push-deploy.sh v1.2.3            # v1.2.3 → dev
+./scripts/build-push-deploy.sh v1.2.3 qa         # v1.2.3 → qa environment
+./scripts/build-push-deploy.sh v1.2.3 qa false   # build + push only, skip deploy
 ```
 
-### 3. Deploy Infrastructure
+#### Deployment Process Details
+The script performs these steps:
+1. **Workspace Build** - Builds from monorepo root with saga-soa dependencies
+2. **Docker Build** - Creates container with API and dependencies
+3. **ECR Management** - Auto-creates repository, handles authentication  
+4. **Timestamped Tagging** - Creates unique deploy tags to force CloudFormation updates
+5. **SAM Deployment** - Deploys infrastructure and updates ECS service
+
+### 3. Manual Infrastructure-Only Deployment (Optional)
+
+If you need to deploy infrastructure changes without rebuilding the container:
 
 #### Development Environment
 ```bash
-sam deploy --config-env default
+sam deploy --config-env default    # Maps to 'dev' environment
 # or explicitly:
 sam deploy --config-env dev
 ```
@@ -84,6 +125,8 @@ sam deploy --config-env qa
 ```bash
 sam deploy --config-env prod
 ```
+
+**Note**: The build script typically handles both image builds and infrastructure deployment automatically.
 
 ### 4. Verify Deployment
 
@@ -101,16 +144,24 @@ aws logs describe-log-groups --log-group-name-prefix "/ecs/saga-sm-api"
 
 ## API Endpoints
 
-The API will be available through the load balancer with the following routes:
+The API will be available through the shared load balancer with path-based routing:
 
 - **Health Check**: `GET /health`
-- **tRPC Endpoints**: `POST /trpc/*`
+- **tRPC Endpoints**: `POST /trpc/*`  
 - **General API**: `/api/*`
 
-Example endpoint:
+### Environment URLs
+- **Development**: `https://sm-api.services.dev.wootmath.com/trpc/schedule.getSchedules`
+- **QA**: `https://sm-api.services.qa.wootmath.com/trpc/schedule.getSchedules`  
+- **Production**: `https://sm-api.services.prod.wootmath.com/trpc/schedule.getSchedules`
+
+### Ephemeral Branch URLs
+For PR environments, the pattern is:
 ```
-https://<load-balancer-dns>/trpc/schedule.getSchedules
+https://sm-api.services.dev.wootmath.com/sm-{branch-identifier}/trpc/schedule.getSchedules
 ```
+
+Example: PR #123 on branch `feature/user-auth` → `/sm-gh-123-feature-user-auth/trpc/...`
 
 ## Environment Configuration
 
@@ -179,36 +230,64 @@ aws ecs update-service \
 
 1. **Service Won't Start**
    - Check CloudWatch logs: `/ecs/saga-sm-api`
-   - Verify image exists in ECR
+   - Verify image exists in ECR: `saga-sm-api:latest`
    - Check security group allows port 3000
+   - Ensure container has access to required SSM parameters
 
-2. **Health Check Failures**
-   - Ensure `/health` endpoint is implemented
+2. **Docker Build Failures**
+   - Verify `saga-soa` directory exists as sibling to `saga-sm`
+   - Check workspace structure: `dev/saga-sm` and `dev/saga-soa`
+   - Ensure all saga-soa packages are available
+   - Run build from correct directory (dev root)
+
+3. **Health Check Failures**
+   - Ensure `/health` endpoint is implemented in API
    - Check application is binding to port 3000
    - Verify container health check passes
+   - Check if dependencies (DB, external services) are available
 
-3. **Load Balancer Issues**
-   - Check listener rule priority conflicts
-   - Verify path patterns match your routes
-   - Check target group health
+4. **Load Balancer Issues**
+   - Check listener rule priority conflicts (API uses priority 10)
+   - Verify path patterns match your routes (`/trpc/*`, `/health/*`, `/api/*`)
+   - Check target group health in ECS console
+
+5. **ECR Authentication Issues**
+   - Script handles `aws ecr get-login-password` automatically
+   - Check AWS credentials have ECR permissions
+   - Verify region is set correctly (us-west-2)
+
+6. **CloudFormation Deployment Failures**
+   - Check SSM parameters exist for environment
+   - Verify VPC and subnet IDs are correct in SSM
+   - Check ECS cluster ARN is valid
 
 ### Debug Commands
 
 ```bash
-# Check service events
-aws ecs describe-services --cluster <cluster> --services saga-sm-api
+# Check service events (replace cluster ARN with actual)
+aws ecs describe-services \
+  --cluster arn:aws:ecs:us-west-2:531314149529:cluster/shared-dev-cluster \
+  --services saga-sm-api
 
-# View task definition
-aws ecs describe-task-definition --task-definition saga-sm-api
+# View current task definition
+aws ecs describe-task-definition --task-definition saga-sm-api:1
 
 # Check running tasks
-aws ecs list-tasks --cluster <cluster> --service-name saga-sm-api
+aws ecs list-tasks \
+  --cluster arn:aws:ecs:us-west-2:531314149529:cluster/shared-dev-cluster \
+  --service-name saga-sm-api
 
-# View logs
-aws logs get-log-events --log-group-name "/ecs/saga-sm-api" --log-stream-name <stream>
+# View recent logs
+aws logs tail /ecs/saga-sm-api --follow
 
-# Check SSM parameters
+# Check SSM parameters for environment
 aws ssm get-parameters-by-path --path "/dev/app" --recursive
+
+# Check ECR repository
+aws ecr describe-repositories --repository-names saga-sm-api
+
+# List available image tags
+aws ecr list-images --repository-name saga-sm-api --query 'imageIds[*].imageTag'
 ```
 
 ### Access Container for Debugging
@@ -228,13 +307,25 @@ If needed, you can enable execute command access:
 
 ## Cleanup
 
-To remove the deployment:
+To remove deployments:
+
 ```bash
-# Delete the CloudFormation stack
+# Delete development stack
 sam delete --stack-name saga-sm-api-fargate
 
-# Clean up ECR images (optional)
+# Delete QA stack  
+sam delete --stack-name saga-sm-api-qa-fargate
+
+# Delete production stack
+sam delete --stack-name saga-sm-api-prod-fargate
+
+# Clean up ECR images (optional - removes ALL images)
 aws ecr delete-repository --repository-name saga-sm-api --force
+
+# Or just delete specific tags
+aws ecr batch-delete-image \
+  --repository-name saga-sm-api \
+  --image-ids imageTag=v1.2.3-20241210-143022
 ```
 
 ## Security Notes

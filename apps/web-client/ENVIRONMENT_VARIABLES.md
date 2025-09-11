@@ -1,14 +1,43 @@
 # Environment Variable Management for Amplify Hosting
 
+## 📋 TLDR
+
+**Key Environment Variables:**
+- `NEXT_PUBLIC_SAGA_SM_API_URL` - API endpoint (auto-configured from SSM)
+- `BUILD_ENV` - Environment (`dev`/`qa`/`prod`) 
+
+**How It Works:**
+- 🔧 Deploy script reads API URLs from **SSM Parameter Store**
+- 🌐 Environment-specific URLs set automatically based on `--env` flag
+- 📦 Build environment variables injected during deployment
+- ⚡ **Zero manual configuration** required - all automated
+
+**SSM Parameters:**
+```bash
+/saga-sm/web-client/api-url/dev    # Used by feature branches
+/saga-sm/web-client/api-url/qa     # Used by develop branch  
+/saga-sm/web-client/api-url/prod   # Used by main branch
+```
+
+**Realistic URL Examples:**
+```bash
+# Ephemeral branch URLs (auto-generated)
+https://feature-user-auth.d2jpp1ywz4pb1c.amplifyapp.com
+https://bugfix-api-timeout.d2jpp1ywz4pb1c.amplifyapp.com  
+https://pr-45.d2jpp1ywz4pb1c.amplifyapp.com
+```
+
+---
+
 This document explains how environment variables are managed across different environments in your Amplify-hosted web client application.
 
 ## Overview
 
-The web client uses environment-specific API URLs to communicate with the backend services. Different environments (dev, qa, prod) need different API endpoints, and this is managed through a combination of:
+The web client uses environment-specific API URLs to communicate with the backend services. Different environments (dev, qa, prod) need different API endpoints, and this is managed through:
 
-1. **AWS Systems Manager (SSM) Parameter Store** - Stores environment-specific values
-2. **Amplify Environment Variables** - Set per branch during deployment
-3. **GitHub Actions Integration** - Automatically retrieves and sets variables
+1. **AWS Systems Manager (SSM) Parameter Store** - Stores environment-specific API URLs
+2. **Deployment Script Automation** - Automatically retrieves and injects variables during build
+3. **Monorepo Build Integration** - Coordinates with API types building process
 
 ## Environment Variables
 

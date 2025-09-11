@@ -1,8 +1,6 @@
 # Development overrides for docker-compose
 # This file is automatically used by docker-compose for local development
 
-version: '3.8'
-
 services:
   # Development-specific API overrides
   api:

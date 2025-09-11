@@ -8,6 +8,7 @@ set -e
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+WORKSPACE_ROOT="$(dirname "$(dirname "$PROJECT_ROOT")")"
 BUILD_ENV=${BUILD_ENV:-dev}
 BRANCH_NAME=${BRANCH_NAME:-$(git rev-parse --abbrev-ref HEAD)}
 AWS_REGION=${AWS_REGION:-us-west-2}
@@ -36,6 +37,123 @@ log_warning() {
 
 log_step() {
     echo -e "${BLUE}🔵 $1${NC}"
+}
+
+# AWS error diagnosis helper
+diagnose_aws_error() {
+    local error_output="$1"
+    local command_context="$2"
+    
+    echo ""
+    log_error "AWS command failed: $command_context"
+    
+    # Check for common error patterns
+    if echo "$error_output" | grep -qi "NoCredentialsError\|Unable to locate credentials"; then
+        log_error "🔐 AWS credentials not configured"
+        echo "  💡 Try one of these:"
+        echo "     aws configure"
+        echo "     aws sso login"
+        echo "     export AWS_PROFILE=your-profile"
+        
+    elif echo "$error_output" | grep -qi "TokenRefreshRequired\|SSO session has expired"; then
+        log_error "🔐 SSO session expired"
+        echo "  💡 Try: aws sso login"
+        
+    elif echo "$error_output" | grep -qi "AccessDenied\|UnauthorizedOperation\|Forbidden"; then
+        log_error "🚫 Insufficient permissions"
+        echo "  💡 Check that your AWS user/role has the required permissions:"
+        echo "     - SSM: GetParameter"
+        echo "     - Amplify: GetApp, GetBranch, CreateBranch, CreateDeployment"
+        
+    elif echo "$error_output" | grep -qi "ParameterNotFound"; then
+        log_error "📋 SSM parameter not found"
+        echo "  💡 Possible causes:"
+        echo "     - Parameter doesn't exist (check: sam deploy)"
+        echo "     - Wrong region (current: $AWS_REGION)"
+        echo "     - Wrong parameter path"
+        echo "     - Insufficient SSM permissions"
+        
+    elif echo "$error_output" | grep -qi "InvalidUserID.NotFound\|does not exist"; then
+        log_error "🏗️  Resource not found"
+        echo "  💡 Make sure infrastructure is deployed:"
+        echo "     sam deploy"
+        
+    elif echo "$error_output" | grep -qi "endpoint.*could not be resolved\|gaierror"; then
+        log_error "🌐 Network/DNS error"
+        echo "  💡 Check your internet connection and AWS region"
+        
+    else
+        log_error "❓ Unexpected AWS error"
+        echo "  Raw error: $error_output"
+    fi
+    
+    echo ""
+    echo "  🔍 Debug commands:"
+    echo "     aws sts get-caller-identity  # Check current AWS identity"
+    echo "     aws configure list           # Check AWS configuration"
+    echo "     aws ssm describe-parameters --region $AWS_REGION --query 'Parameters[?starts_with(Name, \`/saga-sm/\`)].Name'  # List saga-sm parameters"
+    if [[ "$command_context" == *"parameter"* ]]; then
+        # Extract parameter name from context if it's a parameter-related error
+        local param_path=$(echo "$command_context" | sed -n 's/.*get-parameter \([^ ]*\).*/\1/p')
+        if [ -n "$param_path" ]; then
+            echo "     aws ssm get-parameter --name '$param_path' --region $AWS_REGION  # Test this specific parameter"
+            echo "     aws ssm describe-parameters --region $AWS_REGION --filters 'Key=Name,Values=$param_path'  # Check if parameter exists"
+        fi
+    fi
+    echo "     aws cloudformation describe-stacks --region $AWS_REGION --query 'Stacks[?contains(StackName, \`saga-sm\`)].StackName'  # List saga-sm stacks"
+    echo ""
+}
+
+# Get SSM parameter with error handling
+get_ssm_parameter() {
+    local param_name="$1"
+    local required="${2:-true}"
+    
+    local result
+    result=$(aws ssm get-parameter \
+        --name "$param_name" \
+        --region "$AWS_REGION" \
+        --query "Parameter.Value" \
+        --output text 2>&1)
+    
+    if [ $? -eq 0 ]; then
+        echo "$result"
+        return 0
+    else
+        if [ "$required" = "true" ]; then
+            diagnose_aws_error "$result" "get-parameter $param_name"
+            log_error "Cannot continue without required parameter: $param_name"
+            exit 1
+        else
+            return 1
+        fi
+    fi
+}
+
+# Basic AWS configuration check
+check_aws_config() {
+    log_step "Checking AWS configuration"
+    
+    # Check if we can make a basic AWS call
+    local caller_identity
+    caller_identity=$(aws sts get-caller-identity --region "$AWS_REGION" 2>&1) || {
+        diagnose_aws_error "$caller_identity" "get-caller-identity"
+        return 1
+    }
+    
+    local account_id=$(echo "$caller_identity" | jq -r '.Account // empty')
+    local user_arn=$(echo "$caller_identity" | jq -r '.Arn // empty')
+    
+    if [ -n "$account_id" ] && [ -n "$user_arn" ]; then
+        log_info "✅ AWS configuration valid"
+        log_info "   Account: $account_id"
+        log_info "   Identity: $user_arn"
+        log_info "   Region: $AWS_REGION"
+        return 0
+    else
+        log_error "❌ Could not verify AWS configuration"
+        return 1
+    fi
 }
 
 # Parse command line arguments
@@ -68,21 +186,24 @@ while [[ $# -gt 0 ]]; do
             echo "  --help              Show this help message"
             echo ""
             echo "Examples:"
-            echo "  $0                           # Deploy current branch to dev"
-            echo "  $0 --env qa                  # Deploy to qa environment"
-            echo "  $0 --branch feature-xyz      # Deploy to specific Amplify branch"
-            echo "  $0 --skip-build              # Deploy existing build"
+            echo "  $0                                    # Deploy current branch to dev"
+            echo "  $0 --env qa                           # Deploy to qa environment"
+            echo "  $0 --branch feature/user-auth        # Deploy feature branch (becomes feature-user-auth)"
+            echo "  $0 --skip-build                      # Deploy existing build"
             echo ""
             echo "Branch Mapping:"
-            echo "  • main branch      → Uses 'main' Amplify branch (prod)"
-            echo "  • develop branch   → Uses 'develop' Amplify branch (qa)"
-            echo "  • feature branches → Creates ephemeral Amplify branch"
-            echo "  • PR branches      → Creates 'pr-{number}' Amplify branch"
+            echo "  • main branch               → Uses 'main' Amplify branch (prod)"
+            echo "  • develop branch            → Uses 'develop' Amplify branch (qa)"
+            echo "  • feature/user-auth         → Creates 'feature-user-auth' ephemeral branch"
+            echo "  • bugfix/api-timeout        → Creates 'bugfix-api-timeout' ephemeral branch"
+            echo "  • PR branches               → Creates 'pr-{number}' branch"
             echo ""
             echo "Prerequisites:"
             echo "  • Infrastructure deployed: sam deploy"
             echo "  • AWS credentials configured"
             echo "  • SSM parameters exist from CloudFormation"
+            echo "  • Dependencies installed: pnpm install (from workspace root)"
+            echo "  • For monorepo: pnpm or turbo available for dependency builds"
             exit 0
             ;;
         *)
@@ -126,36 +247,25 @@ echo ""
 command -v aws >/dev/null 2>&1 || { log_error "AWS CLI is required but not installed."; exit 1; }
 command -v npm >/dev/null 2>&1 || { log_error "npm is required but not installed."; exit 1; }
 command -v zip >/dev/null 2>&1 || { log_error "zip is required but not installed."; exit 1; }
+command -v jq >/dev/null 2>&1 || { log_error "jq is required but not installed."; exit 1; }
+
+# Check AWS configuration
+check_aws_config || exit 1
 
 # Step 1: Get configuration from SSM
 log_step "Step 1: Retrieving configuration from SSM Parameter Store"
 
-AMPLIFY_APP_ID=$(aws ssm get-parameter \
-    --name "/saga-sm/web-client/amplify/app-id" \
-    --region "$AWS_REGION" \
-    --query "Parameter.Value" \
-    --output text 2>/dev/null) || {
-    log_error "Failed to get Amplify App ID from SSM parameter"
-    log_error "Make sure infrastructure is deployed: sam deploy"
-    exit 1
-}
+AMPLIFY_APP_ID=$(get_ssm_parameter "/saga-sm/web-client/amplify/app-id")
 
-AMPLIFY_DOMAIN=$(aws ssm get-parameter \
-    --name "/saga-sm/web-client/amplify/domain" \
-    --region "$AWS_REGION" \
-    --query "Parameter.Value" \
-    --output text 2>/dev/null) || {
+if ! AMPLIFY_DOMAIN=$(get_ssm_parameter "/saga-sm/web-client/amplify/domain" false); then
     log_warning "Could not retrieve domain from SSM (will use app ID)"
     AMPLIFY_DOMAIN="${AMPLIFY_APP_ID}.amplifyapp.com"
-}
+fi
 
-# Strip https:// prefix if it exists in the domain
+# Normalize domain (strip https:// and extract base domain if needed)
 AMPLIFY_DOMAIN=${AMPLIFY_DOMAIN#https://}
-
-# Extract just the base domain (remove any existing branch prefix)
-# If domain is like "staging.d2jpp1ywz4pb1c.amplifyapp.com", get "d2jpp1ywz4pb1c.amplifyapp.com"
-if [[ "$AMPLIFY_DOMAIN" == *.amplifyapp.com ]]; then
-    # Extract the base domain by removing everything before the app ID
+if [[ "$AMPLIFY_DOMAIN" == *.amplifyapp.com ]] && [[ "$AMPLIFY_DOMAIN" != "$AMPLIFY_APP_ID.amplifyapp.com" ]]; then
+    # Extract base domain if it has a branch prefix
     AMPLIFY_DOMAIN=$(echo "$AMPLIFY_DOMAIN" | sed -E 's/^[^.]*\.//')
 fi
 
@@ -168,10 +278,20 @@ cd "$PROJECT_ROOT"
 # Step 2: Install dependencies (if not skipped)
 if [ "$SKIP_INSTALL" != "true" ]; then
     log_step "Step 2: Installing dependencies"
-    if [ -f "package-lock.json" ]; then
-        npm ci
+    
+    cd "$WORKSPACE_ROOT"
+    if command -v pnpm >/dev/null 2>&1 && [ -f "pnpm-workspace.yaml" ]; then
+        log_info "📦 Installing workspace dependencies with pnpm..."
+        pnpm install
     else
-        npm install
+        # Fallback to npm in web-client directory
+        log_warning "pnpm workspace not detected, falling back to npm"
+        cd "$PROJECT_ROOT"
+        if [ -f "package-lock.json" ]; then
+            npm ci
+        else
+            npm install
+        fi
     fi
 else
     log_warning "Skipping dependency installation"
@@ -179,44 +299,63 @@ fi
 
 # Step 3: Build the application (if not skipped)
 if [ "$SKIP_BUILD" != "true" ]; then
-    log_step "Step 3: Building Next.js application for $BUILD_ENV environment"
-
-    # Clean previous build artifacts to ensure fresh build
-    log_info "🧹 Cleaning previous build artifacts..."
-    rm -rf .next out
+    log_step "Step 3: Building application and dependencies for $BUILD_ENV environment"
 
     # Get API URL from SSM for the current environment
-    API_URL_PARAM="/saga-sm/web-client/api-url/$BUILD_ENV"
-    API_URL=$(aws ssm get-parameter \
-        --name "$API_URL_PARAM" \
-        --region "$AWS_REGION" \
-        --query "Parameter.Value" \
-        --output text 2>/dev/null) || {
-        log_warning "Could not retrieve API URL from SSM parameter: $API_URL_PARAM"
-        API_URL="http://localhost:3000"  # fallback
-    }
-
+    if ! API_URL=$(get_ssm_parameter "/saga-sm/web-client/api-url/$BUILD_ENV" false); then
+        log_warning "Could not retrieve API URL from SSM, using fallback"
+        API_URL="http://localhost:3000"
+    fi
     log_info "🔗 Using API URL: $API_URL"
 
-    # Set environment variables for Next.js build
+    # Set environment variables for build
     export BUILD_ENV
     export NEXT_TELEMETRY_DISABLED=1
     export NODE_ENV=production
     export NEXT_PUBLIC_SAGA_SM_API_URL="$API_URL"
     export NEXT_PUBLIC_TRPC_BASE_PATH="/trpc"
+
+    # Clean previous build artifacts
+    cd "$PROJECT_ROOT"
+    log_info "🧹 Cleaning previous build artifacts..."
+    rm -rf .next out
+
+    # Build with workspace dependency resolution
+    cd "$WORKSPACE_ROOT"
     
-    # Run Next.js build (which includes static export)
-    npm run build
+    if command -v turbo >/dev/null 2>&1 && [ -f "turbo.json" ]; then
+        log_info "🏗️  Building with Turbo (includes API types dependency)..."
+        turbo run build --filter="@saga-sm/web-client"
+        log_info "🔗 Refreshing workspace dependencies..."
+        pnpm install --ignore-scripts
+    elif command -v pnpm >/dev/null 2>&1 && [ -f "pnpm-workspace.yaml" ]; then
+        log_info "🏗️  Building with pnpm workspace..."
+        log_info "🔧 Building API types package..."
+        pnpm --filter="@saga-sm/api-types" run build
+        log_info "🔗 Refreshing workspace dependencies..."
+        pnpm install --ignore-scripts
+        log_info "🌐 Building web client..."
+        pnpm --filter="@saga-sm/web-client" run build
+    else
+        log_error "Neither turbo nor pnpm workspace detected"
+        log_error "This monorepo requires either turbo or pnpm for proper builds"
+        exit 1
+    fi
+
+    # Verify build output
+    cd "$PROJECT_ROOT"
+    if [ ! -d "out" ]; then
+        log_error "Build did not produce expected 'out' directory"
+        exit 1
+    fi
 
     # Add build metadata
-    mkdir -p out
     echo "{\"buildTime\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"commit\":\"$(git rev-parse HEAD 2>/dev/null || echo 'unknown')\",\"branch\":\"$BRANCH_NAME\",\"amplifyBranch\":\"$AMPLIFY_BRANCH_NAME\",\"env\":\"$BUILD_ENV\",\"amplifyAppId\":\"$AMPLIFY_APP_ID\",\"apiUrl\":\"$API_URL\"}" > out/build-info.json
 
     log_info "✅ Build completed"
 else
     log_warning "Skipping build step"
-
-    # Check if build exists
+    cd "$PROJECT_ROOT"
     if [ ! -d "out" ]; then
         log_error "No build found! Run without --skip-build or build manually first."
         exit 1
@@ -226,13 +365,11 @@ fi
 # Step 4: Check/Create Amplify branch
 log_step "Step 4: Managing Amplify branch: $AMPLIFY_BRANCH_NAME"
 
-BRANCH_EXISTS=$(aws amplify get-branch \
+if ! aws amplify get-branch \
     --app-id "$AMPLIFY_APP_ID" \
     --branch-name "$AMPLIFY_BRANCH_NAME" \
     --region "$AWS_REGION" \
-    2>/dev/null || echo "")
-
-if [ -z "$BRANCH_EXISTS" ]; then
+    >/dev/null 2>&1; then
     log_info "🌱 Creating new ephemeral branch: $AMPLIFY_BRANCH_NAME"
 
     # Determine stage based on branch type
@@ -243,13 +380,17 @@ if [ -z "$BRANCH_EXISTS" ]; then
         STAGE="BETA"
     fi
 
-    aws amplify create-branch \
+    if ! aws amplify create-branch \
         --app-id "$AMPLIFY_APP_ID" \
         --branch-name "$AMPLIFY_BRANCH_NAME" \
         --no-enable-auto-build \
         --stage "$STAGE" \
         --region "$AWS_REGION" \
-        --tags "Environment=$BUILD_ENV,Type=ephemeral,GitBranch=$BRANCH_NAME" > /dev/null
+        --tags "Environment=$BUILD_ENV,Type=ephemeral,GitBranch=$BRANCH_NAME" \
+        >/dev/null 2>&1; then
+        log_error "Failed to create Amplify branch: $AMPLIFY_BRANCH_NAME"
+        exit 1
+    fi
 
     # Wait for branch to be ready
     sleep 3
@@ -280,15 +421,20 @@ DEPLOYMENT=$(aws amplify create-deployment \
     --app-id "$AMPLIFY_APP_ID" \
     --branch-name "$AMPLIFY_BRANCH_NAME" \
     --region "$AWS_REGION" \
-    --output json)
+    --output json 2>&1)
+
+if [ $? -ne 0 ]; then
+    diagnose_aws_error "$DEPLOYMENT" "create-deployment"
+    log_error "Failed to create Amplify deployment"
+    exit 1
+fi
 
 UPLOAD_URL=$(echo "$DEPLOYMENT" | jq -r '.zipUploadUrl')
 JOB_ID=$(echo "$DEPLOYMENT" | jq -r '.jobId // empty')
 
-if [ -z "$UPLOAD_URL" ]; then
+if [ -z "$UPLOAD_URL" ] || [ "$UPLOAD_URL" = "null" ]; then
     log_error "Failed to get upload URL from Amplify"
-    log_error "This might indicate the app has GitHub integration enabled."
-    log_error "Make sure the Amplify app was created without repository connection."
+    log_error "Make sure the Amplify app was created without GitHub integration."
     exit 1
 fi
 

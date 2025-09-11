@@ -1,12 +1,28 @@
 # Ephemeral API Environments
 
+## 📋 TLDR
+
+**How It Works:**
+- 🔄 **Auto-deploy** on PR creation (when `apps/api/` files change)
+- 🌐 **Unique URLs** like `/sm-gh-123-feature-user-auth/trpc/...`
+- 🧹 **Auto-cleanup** when PR is closed/merged
+- 📦 **Same build process** as main deployments but with branch-specific naming
+
+**Example Flow:**
+1. Open PR #123 on branch `feature/user-auth` 
+2. Auto-deploys to: `https://sm-api.services.dev.wootmath.com/sm-gh-123-feature-user-auth/trpc/schedule.getSchedules`
+3. Test your changes in isolation
+4. Close PR → automatically cleaned up
+
+---
+
 This document describes how to use ephemeral environments for the Saga-SM API service, which are automatically created for pull requests and cleaned up when PRs are closed.
 
 ## Overview
 
 Ephemeral environments allow you to deploy temporary API instances for feature branches, enabling:
 - Testing changes in isolation
-- Integration testing with other services
+- Integration testing with other services  
 - Demonstrating features to stakeholders
 - QA validation before merging to main branches
 
@@ -14,10 +30,10 @@ Ephemeral environments allow you to deploy temporary API instances for feature b
 
 ### Automatic Deployment
 When you open a pull request that modifies files in `apps/api/`, the GitHub Actions workflow will:
-1. Generate a URL-safe branch identifier (e.g., `gh-123-feature-branch`)
-2. Deploy a new CloudFormation stack with the naming pattern: `saga-sm-api-ephemeral-{branch_identifier}`
-3. Create an ALB listener rule matching the path pattern: `/sm-{branch_identifier}*`
-4. Comment on the PR with the deployment details and endpoint URL
+1. Generate a URL-safe branch identifier (e.g., `gh-123-feature-user-auth`)
+2. Deploy a new CloudFormation stack: `saga-sm-api-ephemeral-gh-123-feature-user-auth`
+3. Create an ALB listener rule matching path pattern: `/sm-gh-123-feature-user-auth*`
+4. Comment on the PR with deployment details and endpoint URL
 
 ### Automatic Cleanup
 When a pull request is closed (merged or discarded), the cleanup workflow will:
@@ -28,6 +44,11 @@ When a pull request is closed (merged or discarded), the cleanup workflow will:
 ## URL Pattern
 
 Ephemeral environments use path-based routing to avoid DNS complexity:
+
+### Examples
+- **Main API**: `https://sm-api.services.dev.wootmath.com/trpc/schedule.getSchedules`
+- **PR #123 (feature/user-auth)**: `https://sm-api.services.dev.wootmath.com/sm-gh-123-feature-user-auth/trpc/schedule.getSchedules`
+- **PR #456 (bugfix/api-timeout)**: `https://sm-api.services.dev.wootmath.com/sm-gh-456-bugfix-api-timeout/trpc/schedule.getSchedules`
 
 ```
 https://services.dev.sagasm.com/sm-{branch_identifier}/trpc

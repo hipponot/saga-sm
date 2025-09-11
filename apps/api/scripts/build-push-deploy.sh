@@ -248,7 +248,7 @@ fi
 
 # Step 6: Clean up local images (optional)
 log_step "Step 6: Cleaning up local images"
-docker rmi "$IMAGE_NAME:$TAG" "$ECR_REPOSITORY:$DEPLOY_TAG" "$ECR_REPOSITORY:latest" > /dev/null 2>&1 || true
+docker rmi "$IMAGE_NAME:$TAG" "$ECR_REPOSITORY:$DEPLOY_TAG" "$ECR_REPOSITORY:latest" >/dev/null 2>&1 || true
 
 # Function to update samconfig.yaml with new image URI
 update_samconfig() {
@@ -258,24 +258,17 @@ update_samconfig() {
     
     log_info "Updating samconfig.yaml for environment: $environment"
     
-    # Create a backup of the current samconfig.yaml
-    cp "$samconfig_file" "$samconfig_file.backup"
-    
     # Update the ImageId parameter for the specified environment
-    sed -i "/^$environment:/,/^[a-zA-Z]/ { /- ImageId=/s|ImageId=.*|ImageId=$new_image_uri|; }" "$samconfig_file"
-    
-    if [ $? -eq 0 ]; then
+    sed -i.backup "/^$environment:/,/^[a-zA-Z]/ { /- ImageId=/s|ImageId=.*|ImageId=$new_image_uri|; }" "$samconfig_file" && {
+        rm -f "$samconfig_file.backup"
         log_info "✅ Successfully updated samconfig.yaml"
-    else
+        return 0
+    } || {
+        # Restore backup if sed failed
+        [ -f "$samconfig_file.backup" ] && mv "$samconfig_file.backup" "$samconfig_file"
         log_error "Failed to update samconfig.yaml"
-        # Restore backup
-        mv "$samconfig_file.backup" "$samconfig_file"
         return 1
-    fi
-    
-    # Clean up backup
-    rm -f "$samconfig_file.backup"
-    return 0
+    }
 }
 
 # Step 7: Deploy (if requested)

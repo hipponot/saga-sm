@@ -1,27 +1,58 @@
 # Saga-SM Web Client - AWS Amplify Deployment Guide
 
-This guide covers deploying the Saga-SM Web Client to AWS Amplify using AWS SAM and manual deployment scripts.
+## 📋 TLDR
+
+**Quick Start:**
+```bash
+# Deploy current branch to dev
+./scripts/deploy.sh
+
+# Deploy feature branch (feature/user-auth → feature-user-auth)
+./scripts/deploy.sh --branch feature/user-auth
+```
+
+**Key Points:**
+- 🏗️ **Monorepo Build:** Script automatically builds API types first, then web client
+- 🌐 **Manual Branch Management:** Creates Amplify branches via AWS CLI (no GitHub integration)
+- 🔧 **Workspace Aware:** Requires pnpm workspace or Turbo for dependency resolution
+- ⚡ **Zero Config:** Retrieves all settings from AWS SSM Parameter Store
+- 🧹 **Self-Contained:** Handles dependencies, builds, and deployments via AWS commands
+- 📏 **Branch Normalization:** `/` becomes `-`, max 63 chars for Amplify compatibility
+- 📦 **Direct Upload:** Creates ZIP packages and uploads directly to Amplify S3
+
+---
 
 ## Overview
 
+This guide covers deploying the Saga-SM Web Client to AWS Amplify using AWS SAM and manual deployment scripts.
+
 The deployment setup includes:
 - **AWS SAM template** (`template.yaml`) for infrastructure setup
-- **Deployment script** (`scripts/deploy.sh`) for manual deployments
+- **Manual deployment script** (`scripts/deploy.sh`) using AWS CLI commands (no GitHub integration)
 - **Static export configuration** for Next.js compatibility with Amplify
+- **Monorepo integration** with automatic API types dependency building
+- **Direct S3 upload** via Amplify deployment APIs
 
 ## Prerequisites
 
-- AWS CLI configured with appropriate credentials
-- SAM CLI installed
-- Node.js and npm
-- `jq` command-line JSON processor
-- `zip` utility
+### Required Tools
+- **AWS CLI** configured with appropriate credentials
+- **SAM CLI** installed for infrastructure deployment
+- **Node.js** (v18+) and **npm**
+- **pnpm** (recommended) or **Turbo** for monorepo builds
+- **jq** command-line JSON processor
+- **zip** utility
+
+### Workspace Requirements
+- This is a **monorepo** that requires workspace dependency management
+- The web client depends on `@saga-sm/api-types` which must be built first
+- Script supports **Turbo** (preferred) or **pnpm workspace** for builds
 
 ## Initial Setup
 
 ### 1. Deploy Infrastructure
 
-First, deploy the Amplify infrastructure using SAM:
+First, deploy the Amplify infrastructure using SAM. This creates an Amplify app **without GitHub integration** for manual deployments:
 
 ```bash
 # From the web-client directory
@@ -35,6 +66,8 @@ During the guided deployment, you'll be prompted to set:
 - Parameters:
   - AppName: `saga-sm-web-client`
   - ProjectName: `saga-sm`
+
+**Important**: The SAM template creates an Amplify app configured for manual deployment (no repository connection). This allows us to use AWS CLI commands for deployment control.
 
 ### 2. Update GitHub Repository Reference
 
@@ -64,8 +97,8 @@ aws ssm get-parameter --name "/saga-sm/web-client/amplify/domain"
 # Deploy to specific environment
 ./scripts/deploy.sh --env qa
 
-# Deploy specific branch
-./scripts/deploy.sh --branch feature-xyz
+# Deploy specific branch (feature/user-auth → feature-user-auth)
+./scripts/deploy.sh --branch feature/user-auth
 
 # Skip build (use existing build)
 ./scripts/deploy.sh --skip-build
@@ -73,12 +106,28 @@ aws ssm get-parameter --name "/saga-sm/web-client/amplify/domain"
 
 ### Branch Mapping
 
-The deployment script automatically maps Git branches to Amplify branches:
+The deployment script **manually creates and manages** Amplify branches using AWS CLI commands (no GitHub integration):
 
 - **`main`** → `main` Amplify branch (Production)
+  - URL: `https://main.d2jpp1ywz4pb1c.amplifyapp.com`
 - **`develop`** → `develop` Amplify branch (Staging/QA)
+  - URL: `https://develop.d2jpp1ywz4pb1c.amplifyapp.com`
 - **Feature branches** → Ephemeral branches (auto-created)
+  - `feature/user-auth` → `feature-user-auth`
+    - URL: `https://feature-user-auth.d2jpp1ywz4pb1c.amplifyapp.com`
+  - `bugfix/api-timeout` → `bugfix-api-timeout`
+    - URL: `https://bugfix-api-timeout.d2jpp1ywz4pb1c.amplifyapp.com`
+  - `feature/SAGA-123-dashboard` → `feature-SAGA-123-dashboard`
+    - URL: `https://feature-SAGA-123-dashboard.d2jpp1ywz4pb1c.amplifyapp.com`
 - **PR branches** → `pr-{number}` branches
+  - PR #45 → `pr-45`
+    - URL: `https://pr-45.d2jpp1ywz4pb1c.amplifyapp.com`
+
+### Branch Name Normalization Rules
+- **Slashes replaced**: `/` becomes `-`
+- **Length limit**: Max 63 characters for Amplify branch names
+- **Case preserved**: `feature/SAGA-123-Dashboard` → `feature-SAGA-123-Dashboard`
+- **Underscores to hyphens in URLs**: Amplify converts `_` to `-` in the final URL
 
 ### Environment Configuration
 
@@ -90,6 +139,7 @@ The deployment script automatically maps Git branches to Amplify branches:
 
 ## Build Configuration
 
+### Next.js Static Export
 The Next.js application is configured for static export to be compatible with Amplify:
 
 ```javascript
@@ -103,39 +153,95 @@ const nextConfig = {
 }
 ```
 
+### Monorepo Build Dependencies
+The build process requires these packages to be built in order:
+1. **`@saga-sm/api-types`** - Generates TypeScript definitions from tRPC routers
+2. **`@saga-sm/web-client`** - Consumes the API types for type-safe API calls
+
+The deployment script automatically handles this dependency chain using:
+- **Turbo** (preferred): `turbo run build --filter="@saga-sm/web-client"`
+- **pnpm workspace**: Manual build order with workspace linking refresh
+
 ## Deployment Process
 
 The deployment script performs these steps:
 
-1. **Configuration Retrieval** - Gets Amplify App ID from SSM
-2. **Dependency Installation** - Runs `npm ci` or `npm install`
-3. **Application Build** - Builds Next.js app with static export
-4. **Branch Management** - Creates/updates Amplify branch if needed
-5. **Package Creation** - Creates ZIP from `out/` directory
-6. **Upload & Deploy** - Uploads to Amplify and starts deployment
-7. **Monitoring** - Waits for deployment completion
-8. **Results Display** - Shows deployment URL and details
+1. **AWS Configuration Check** - Validates credentials and connectivity
+2. **Configuration Retrieval** - Gets Amplify App ID and domain from SSM
+3. **Workspace Dependencies** - Installs dependencies using pnpm workspace
+4. **API Types Build** - Builds `@saga-sm/api-types` package first
+5. **Workspace Refresh** - Updates symlinks to include built packages
+6. **Web Client Build** - Builds Next.js app with static export
+7. **Branch Management** - Creates/updates Amplify branch if needed
+8. **Package Creation** - Creates ZIP from `out/` directory
+9. **Manual Deployment Creation** - Uses `aws amplify create-deployment` (no GitHub)
+10. **Direct Upload** - Uses `curl` to upload ZIP to Amplify S3 bucket
+11. **Deployment Start** - Uses `aws amplify start-deployment` to trigger build
+12. **Monitoring** - Waits for deployment completion with progress updates
+13. **Results Display** - Shows deployment URL and helpful commands
+
+### Build Process Details
+
+The script uses a tiered approach for builds:
+
+**Tier 1: Turbo (Preferred)**
+```bash
+turbo run build --filter="@saga-sm/web-client"
+```
+- Automatically resolves dependencies via `turbo.json`
+- Builds API types first, then web client
+- Caches builds for performance
+
+**Tier 2: pnpm Workspace**
+```bash
+pnpm --filter="@saga-sm/api-types" run build
+pnpm install --ignore-scripts  # Refresh workspace links
+pnpm --filter="@saga-sm/web-client" run build
+```
+- Manual dependency order management
+- Explicit workspace link refresh after API types build
+
+### Manual Deployment Process
+Unlike Amplify's GitHub integration, we use **explicit AWS CLI commands**:
+
+```bash
+# Create deployment (returns upload URL)
+aws amplify create-deployment --app-id $APP_ID --branch-name $BRANCH
+
+# Upload static files directly
+curl -X PUT $UPLOAD_URL --data-binary @deploy.zip
+
+# Start deployment manually  
+aws amplify start-deployment --app-id $APP_ID --branch-name $BRANCH
+```
+
+This approach gives us:
+- **Full control** over build process and timing
+- **Monorepo compatibility** with proper dependency builds
+- **No GitHub webhook dependencies** or repository access requirements
+- **Explicit error handling** at each deployment step
 
 ## Useful Commands
 
 ### View Deployment Status
 
 ```bash
-# Get current deployments
-aws amplify list-jobs --app-id <APP_ID> --branch-name <BRANCH>
+# Get current deployments (ephemeral branch example)
+aws amplify list-jobs --app-id d2jpp1ywz4pb1c --branch-name feature-user-auth
 
-# Get specific job details
-aws amplify get-job --app-id <APP_ID> --branch-name <BRANCH> --job-id <JOB_ID>
+# Get specific job details  
+aws amplify get-job --app-id d2jpp1ywz4pb1c --branch-name feature-user-auth --job-id 7
 ```
 
 ### Manage Branches
 
 ```bash
 # List all branches
-aws amplify list-branches --app-id <APP_ID>
+aws amplify list-branches --app-id d2jpp1ywz4pb1c
 
-# Delete ephemeral branch
-aws amplify delete-branch --app-id <APP_ID> --branch-name <BRANCH>
+# Delete ephemeral branch examples
+aws amplify delete-branch --app-id d2jpp1ywz4pb1c --branch-name feature-user-auth
+aws amplify delete-branch --app-id d2jpp1ywz4pb1c --branch-name pr-45
 ```
 
 ### SSM Parameters
@@ -153,15 +259,37 @@ aws ssm get-parameters-by-path --path "/saga-sm/web-client/amplify"
    - Ensure infrastructure is deployed: `sam deploy`
    - Check AWS credentials and region
 
-2. **"Failed to get upload URL"**
-   - App might have GitHub integration enabled
-   - Ensure app was created without repository connection
+2. **"Cannot find module '@saga-sm/api-types'"**
+   - API types not built before web client
+   - Solution: Script automatically handles this, but ensure workspace setup is correct
+   - Manual fix: `cd ../../ && pnpm --filter="@saga-sm/api-types" run build`
 
-3. **Build Failures**
-   - Check Next.js build locally: `npm run build`
-   - Ensure all dependencies are installed
+3. **"Neither turbo nor pnpm workspace detected"**
+   - Script requires monorepo workspace tools
+   - Ensure `pnpm-workspace.yaml` exists in workspace root
+   - Install turbo: `npm install -g turbo` or use pnpm
 
-4. **Deployment Timeout**
+4. **"Failed to get upload URL"**
+   - App might have GitHub integration enabled (conflicts with manual deployment)
+   - Ensure Amplify app was created **without repository connection**
+   - Manual deployment requires apps to be created with "Deploy without Git provider"
+
+5. **Build Failures**
+   - Check dependencies are installed: `pnpm install` from workspace root
+   - Verify API types build: `pnpm --filter="@saga-sm/api-types" run build`
+   - Test Next.js build locally: `npm run build`
+
+6. **Workspace Link Issues**
+   - Symlinks may be broken after builds
+   - Solution: Script automatically runs `pnpm install --ignore-scripts` to refresh
+   - Manual fix: Run from workspace root: `pnpm install`
+
+7. **Long Branch Names Truncated**
+   - Branch names are limited to 63 characters for Amplify
+   - Example: `feature/very-long-branch-name-that-exceeds-the-amplify-limit` becomes `feature-very-long-branch-name-that-exceeds-the-amplify-limi`
+   - Solution: Use shorter, descriptive branch names
+
+8. **Deployment Timeout**
    - Check deployment logs in AWS Console
    - Verify package size isn't too large
 
@@ -176,9 +304,11 @@ aws configure set default.cli_pager ""
 ./scripts/deploy.sh --env dev 2>&1 | tee deployment.log
 ```
 
-## GitHub Actions Integration
+## GitHub Actions Integration (Optional)
 
-The infrastructure creates an IAM role for GitHub Actions deployment. To set up automated deployments:
+The infrastructure creates an IAM role for optional GitHub Actions deployment. However, the primary deployment method is the **manual script** using AWS CLI commands.
+
+For GitHub Actions automation (optional):
 
 1. Add these secrets to your GitHub repository:
    ```
@@ -187,7 +317,13 @@ The infrastructure creates an IAM role for GitHub Actions deployment. To set up 
    AWS_REGION: us-west-2
    ```
 
-2. Create a GitHub Actions workflow file in `.github/workflows/deploy.yml`
+2. Create a GitHub Actions workflow that calls the deployment script:
+   ```yaml
+   - name: Deploy to Amplify
+     run: ./scripts/deploy.sh --env ${{ matrix.environment }}
+   ```
+
+**Note**: GitHub Actions would still use the same manual deployment approach (AWS CLI commands), not Amplify's built-in GitHub integration.
 
 ## Security Notes
 
@@ -209,8 +345,8 @@ For deployment issues:
 To remove all resources:
 
 ```bash
-# Delete all branches (except main/develop if needed)
-aws amplify list-branches --app-id <APP_ID> --query 'branches[?branchName!=`main` && branchName!=`develop`].branchName' --output text | xargs -I {} aws amplify delete-branch --app-id <APP_ID> --branch-name {}
+# Delete all ephemeral branches (except main/develop)
+aws amplify list-branches --app-id d2jpp1ywz4pb1c --query 'branches[?branchName!=`main` && branchName!=`develop`].branchName' --output text | xargs -I {} aws amplify delete-branch --app-id d2jpp1ywz4pb1c --branch-name {}
 
 # Delete CloudFormation stack
 aws cloudformation delete-stack --stack-name saga-sm-web-client-infrastructure
