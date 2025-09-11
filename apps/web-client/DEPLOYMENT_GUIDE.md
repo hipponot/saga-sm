@@ -332,6 +332,201 @@ For GitHub Actions automation (optional):
 - Ephemeral branches should be cleaned up after use
 - No sensitive data should be included in the static build
 
+## Required AWS Permissions
+
+To run the deployment scripts successfully, your AWS credentials need these permissions:
+
+### Core Deployment Permissions
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AmplifyManagement",
+            "Effect": "Allow",
+            "Action": [
+                "amplify:GetApp",
+                "amplify:ListApps",
+                "amplify:CreateApp",
+                "amplify:DeleteApp",
+                "amplify:UpdateApp",
+                "amplify:GetBranch",
+                "amplify:ListBranches",
+                "amplify:CreateBranch",
+                "amplify:DeleteBranch",
+                "amplify:UpdateBranch",
+                "amplify:CreateDeployment",
+                "amplify:StartDeployment",
+                "amplify:GetJob",
+                "amplify:ListJobs",
+                "amplify:StopJob"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3ForAmplifyDeployment",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": [
+                "arn:aws:s3:::amplify-*",
+                "arn:aws:s3:::amplify-*/*",
+                "arn:aws:s3:::aws-sam-cli-managed-*",
+                "arn:aws:s3:::aws-sam-cli-managed-*/*"
+            ]
+        },
+        {
+            "Sid": "SSMParameterStore",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParameters", 
+                "ssm:GetParametersByPath",
+                "ssm:PutParameter",
+                "ssm:DeleteParameter"
+            ],
+            "Resource": [
+                "arn:aws:ssm:*:*:parameter/saga-sm/web-client/*",
+                "arn:aws:ssm:*:*:parameter/*/amplify/*"
+            ]
+        },
+        {
+            "Sid": "CloudFormationSAM",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:CreateStack",
+                "cloudformation:UpdateStack", 
+                "cloudformation:DeleteStack",
+                "cloudformation:DescribeStacks",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResources",
+                "cloudformation:GetTemplate",
+                "cloudformation:ListStacks",
+                "cloudformation:ValidateTemplate"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IAMRoleManagement",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:GetRole",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:PassRole",
+                "iam:CreateOpenIDConnectProvider",
+                "iam:DeleteOpenIDConnectProvider",
+                "iam:GetOpenIDConnectProvider"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:role/saga-sm-*",
+                "arn:aws:iam::*:role/aws-sam-cli-managed-*",
+                "arn:aws:iam::*:oidc-provider/token.actions.githubusercontent.com"
+            ]
+        }
+    ]
+}
+```
+
+### Infrastructure Setup Permissions
+
+For initial infrastructure deployment (SAM template):
+
+```json
+{
+    "Sid": "AmplifyInfrastructure", 
+    "Effect": "Allow",
+    "Action": [
+        "amplify:CreateDomainAssociation",
+        "amplify:DeleteDomainAssociation",
+        "amplify:GetDomainAssociation",
+        "amplify:ListDomainAssociations",
+        "amplify:CreateBackendEnvironment",
+        "amplify:DeleteBackendEnvironment",
+        "amplify:GetBackendEnvironment",
+        "amplify:ListBackendEnvironments"
+    ],
+    "Resource": "*"
+}
+```
+
+### Minimum Permissions for Script Operation
+
+If you only need to deploy to existing infrastructure (not create it):
+
+```json
+{
+    "Version": "2012-10-17", 
+    "Statement": [
+        {
+            "Sid": "DeploymentOnly",
+            "Effect": "Allow",
+            "Action": [
+                "amplify:GetApp",
+                "amplify:GetBranch", 
+                "amplify:CreateBranch",
+                "amplify:CreateDeployment",
+                "amplify:StartDeployment",
+                "amplify:GetJob",
+                "ssm:GetParameter",
+                "s3:PutObject"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+### Testing Your Permissions
+
+```bash
+# Test Amplify access
+aws amplify list-apps --region us-west-2
+
+# Test SSM access
+aws ssm get-parameter --name "/saga-sm/web-client/amplify/app-id" --region us-west-2
+
+# Test CloudFormation access (for infrastructure)
+aws cloudformation list-stacks --region us-west-2
+
+# Test S3 upload capability (replace with actual app ID)
+aws amplify create-deployment --app-id d2jpp1ywz4pb1c --branch-name test-permissions --region us-west-2
+```
+
+### GitHub Actions Permissions
+
+If using GitHub Actions, the OIDC role needs these additional permissions:
+
+```json
+{
+    "Sid": "GitHubActionsOIDC",
+    "Effect": "Allow",
+    "Principal": {
+        "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+        "StringEquals": {
+            "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+            "token.actions.githubusercontent.com:sub": "repo:YOUR_GITHUB_ORG/saga-sm:*"
+        }
+    }
+}
+```
+
 ## Support
 
 For deployment issues:
@@ -339,6 +534,7 @@ For deployment issues:
 2. Verify SSM parameters exist
 3. Test AWS CLI access to Amplify
 4. Review deployment script logs
+5. Verify AWS permissions using the test commands above
 
 ## Cleanup
 

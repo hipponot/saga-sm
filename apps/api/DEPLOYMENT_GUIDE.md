@@ -343,6 +343,172 @@ aws ecr batch-delete-image \
 - **ALB Metrics**: Request count, latency, error rates
 - **Custom Metrics**: Can be added via application code
 
+## Required AWS Permissions
+
+To run the deployment scripts successfully, your AWS credentials need these permissions:
+
+### Core Deployment Permissions
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ECRManagement",
+            "Effect": "Allow",
+            "Action": [
+                "ecr:GetAuthorizationToken",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+                "ecr:DescribeRepositories",
+                "ecr:CreateRepository",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload",
+                "ecr:PutImage",
+                "ecr:ListImages",
+                "ecr:BatchDeleteImage",
+                "ecr:DeleteRepository"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "ECSDeployment",
+            "Effect": "Allow",
+            "Action": [
+                "ecs:DescribeServices",
+                "ecs:DescribeTaskDefinition",
+                "ecs:ListTasks",
+                "ecs:UpdateService",
+                "ecs:RegisterTaskDefinition",
+                "ecs:DescribeTasks",
+                "ecs:ListTaskDefinitions"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudFormationSAM",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:CreateStack",
+                "cloudformation:UpdateStack",
+                "cloudformation:DeleteStack",
+                "cloudformation:DescribeStacks",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResources",
+                "cloudformation:GetTemplate",
+                "cloudformation:ListStacks",
+                "cloudformation:ValidateTemplate"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "SSMParameterStore",
+            "Effect": "Allow", 
+            "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParameters",
+                "ssm:GetParametersByPath",
+                "ssm:PutParameter",
+                "ssm:DeleteParameter"
+            ],
+            "Resource": "arn:aws:ssm:*:*:parameter/*/app/*"
+        },
+        {
+            "Sid": "IAMRoleManagement",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:GetRole",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:PassRole"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:role/saga-sm-*",
+                "arn:aws:iam::*:role/aws-sam-cli-managed-*"
+            ]
+        },
+        {
+            "Sid": "CloudWatchLogs",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:DeleteLogGroup",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents",
+                "logs:FilterLogEvents",
+                "logs:StartQuery",
+                "logs:StopQuery",
+                "logs:GetQueryResults"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3ForSAM",
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": [
+                "arn:aws:s3:::aws-sam-cli-managed-*",
+                "arn:aws:s3:::aws-sam-cli-managed-*/*"
+            ]
+        }
+    ]
+}
+```
+
+### Administrative Permissions for Full Setup
+
+If you need to set up SSM parameters and infrastructure from scratch:
+
+```json
+{
+    "Sid": "InfrastructureSetup",
+    "Effect": "Allow",
+    "Action": [
+        "ec2:DescribeVpcs",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:CreateTargetGroup",
+        "elasticloadbalancing:DeleteTargetGroup",
+        "elasticloadbalancing:CreateListener",
+        "elasticloadbalancing:DeleteListener",
+        "elasticloadbalancing:ModifyListener"
+    ],
+    "Resource": "*"
+}
+```
+
+### Testing Your Permissions
+
+```bash
+# Test ECR access
+aws ecr describe-repositories --region us-west-2
+
+# Test ECS access  
+aws ecs list-clusters --region us-west-2
+
+# Test SSM access
+aws ssm get-parameters-by-path --path "/dev/app" --region us-west-2
+
+# Test CloudFormation access
+aws cloudformation list-stacks --region us-west-2
+```
+
 ## Support
 
 For deployment issues:
@@ -351,3 +517,4 @@ For deployment issues:
 3. Examine CloudWatch logs for application errors
 4. Verify Docker image builds locally
 5. Test API endpoints after successful deployment
+6. Verify AWS permissions using the test commands above
