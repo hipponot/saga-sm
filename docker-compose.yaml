@@ -16,24 +16,22 @@ services:
     networks:
       - saga-sm-network
 
-  # MySQL Database
-  mysql:
-    image: mysql:8.0
-    container_name: saga-sm-mysql
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: saga-sm-postgres
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword123
-      MYSQL_DATABASE: saga_sm
-      MYSQL_USER: saga_user
-      MYSQL_PASSWORD: password123
+      POSTGRES_DB: saga_sm
+      POSTGRES_USER: saga_user
+      POSTGRES_PASSWORD: password123
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./scripts/mysql-init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init:/docker-entrypoint-initdb.d
     networks:
       - saga-sm-network
-    command: --default-authentication-plugin=mysql_native_password
 
   # Redis Cache
   redis:
@@ -61,12 +59,12 @@ services:
       PUBSUB_PORT: 3002
       # MongoDB connection
       MONGODB_URI: mongodb://admin:password123@mongodb:27017/saga_sm?authSource=admin
-      # MySQL connection  
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: saga_sm
-      MYSQL_USER: saga_user
-      MYSQL_PASSWORD: password123
+      # PostgreSQL connection  
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: saga_sm
+      POSTGRES_USER: saga_user
+      POSTGRES_PASSWORD: password123
       # Redis connection
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -75,7 +73,7 @@ services:
       - "3002:3002"
     depends_on:
       - mongodb
-      - mysql
+      - postgres
       - redis
     networks:
       - saga-sm-network
@@ -114,7 +112,7 @@ networks:
 volumes:
   mongodb_data:
     driver: local
-  mysql_data:
+  postgres_data:
     driver: local
   redis_data:
     driver: local

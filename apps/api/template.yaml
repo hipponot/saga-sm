@@ -101,15 +101,15 @@ Resources:
             # Database connections
             - Name: MONGODB_URI
               Value: mongodb://admin:password123@localhost:27017/saga_sm?authSource=admin
-            - Name: MYSQL_HOST
+            - Name: POSTGRES_HOST
               Value: localhost
-            - Name: MYSQL_PORT
-              Value: "3306"
-            - Name: MYSQL_DATABASE
+            - Name: POSTGRES_PORT
+              Value: "5432"
+            - Name: POSTGRES_DB
               Value: saga_sm
-            - Name: MYSQL_USER
+            - Name: POSTGRES_USER
               Value: saga_user
-            - Name: MYSQL_PASSWORD
+            - Name: POSTGRES_PASSWORD
               Value: password123
             - Name: REDIS_HOST
               Value: localhost
@@ -130,27 +130,23 @@ Resources:
             Timeout: 5
             Retries: 3
             StartPeriod: 60
-        - Name: mysql
-          Image: mysql:8.0
+        - Name: postgres
+          Image: postgres:16-alpine
           Essential: false
           Environment:
-            - Name: MYSQL_ROOT_PASSWORD
-              Value: rootpassword123
-            - Name: MYSQL_DATABASE
+            - Name: POSTGRES_DB
               Value: saga_sm
-            - Name: MYSQL_USER
+            - Name: POSTGRES_USER
               Value: saga_user
-            - Name: MYSQL_PASSWORD
+            - Name: POSTGRES_PASSWORD
               Value: password123
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: us-west-2
               awslogs-create-group: "true"
-              awslogs-group: !Sub /ecs/${AppName}-mysql
-              awslogs-stream-prefix: mysql
-          Command:
-            - --default-authentication-plugin=mysql_native_password
+              awslogs-group: !Sub /ecs/${AppName}-postgres
+              awslogs-stream-prefix: postgres
         - Name: mongodb
           Image: mongo:8.0
           Essential: false
@@ -295,7 +291,7 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}*
-                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-mysql*
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-postgres*
                   - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-mongodb*
                   - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-redis*
       Tags:
@@ -332,7 +328,7 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}*
-                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-mysql*
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-postgres*
                   - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-mongodb*
                   - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-redis*
         - PolicyName: ECRAccess

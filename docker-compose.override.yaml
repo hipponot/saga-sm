@@ -38,6 +38,6 @@ services:
     networks:
       - saga-sm-network
     environment:
-      ADMINER_DEFAULT_SERVER: mysql
+      ADMINER_DEFAULT_SERVER: postgres
 
 
