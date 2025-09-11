@@ -123,6 +123,11 @@ pnpm test         # Run all tests
 pnpm check        # Full validation (build + test + lint + typecheck)
 pnpm lint         # Lint all code
 pnpm typecheck    # TypeScript validation
+
+# Deployment (from anywhere in monorepo)
+pnpm run deploy:web     # Deploy web client to Amplify
+pnpm run deploy:api     # Deploy API to ECS/Fargate  
+pnpm run deploy         # Build + deploy both (API then web)
 ```
 
 ### Individual Applications
@@ -248,12 +253,31 @@ The web client provides comprehensive testing tools:
 
 ## 🚀 Deployment
 
-When ready for production:
+### Quick Deployment (from monorepo root)
+
+```bash
+# Deploy web client only
+pnpm run deploy:web --env qa --force
+
+# Deploy API only  
+pnpm run deploy:api v1.2.3 prod
+
+# Deploy everything (builds first)
+pnpm run deploy
+```
+
+### Production Deployment Steps
 
 1. Update saga-soa dependencies to published npm packages
 2. Build applications: `pnpm build`
-3. Deploy API and web client independently
+3. Deploy using convenience scripts:
+   - **API**: `pnpm run deploy:api [tag] [environment] [deploy:true|false]`
+   - **Web Client**: `pnpm run deploy:web [--env ENV] [--force]`
 4. Configure environment variables for production
+
+See individual deployment guides:
+- [Web Client Deployment Guide](./apps/web-client/DEPLOYMENT_GUIDE.md)
+- [API Deployment Guide](./apps/api/DEPLOYMENT_GUIDE.md)
 
 ## 📚 Next Steps
 

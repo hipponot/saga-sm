@@ -48,20 +48,25 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-log_info() {
-    echo -e "${GREEN}ℹ️  $1${NC}"
-}
+log_info() { echo -e "${GREEN}ℹ️  $1${NC}"; }
+log_error() { echo -e "${RED}❌ $1${NC}"; }
+log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+log_step() { echo -e "${BLUE}🔵 $1${NC}"; }
 
-log_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
-
-log_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-log_step() {
-    echo -e "${BLUE}🔵 $1${NC}"
+# Check required tools and access
+check_prerequisites() {
+    local missing=()
+    
+    command -v aws >/dev/null 2>&1 || missing+=("aws CLI")
+    command -v docker >/dev/null 2>&1 || missing+=("docker")
+    docker info >/dev/null 2>&1 || missing+=("docker (not running)")
+    aws sts get-caller-identity >/dev/null 2>&1 || missing+=("AWS credentials")
+    
+    if [ ${#missing[@]} -gt 0 ]; then
+        log_error "Missing requirements: ${missing[*]}"
+        log_error "See deployment guide for setup instructions"
+        exit 1
+    fi
 }
 
 # Function to map environment names to samconfig section names
@@ -141,76 +146,16 @@ docker tag "$IMAGE_NAME:$TAG" "$ECR_REPOSITORY:latest"
 
 # Step 3: Validate prerequisites and login to ECR
 log_step "Step 3: Validating prerequisites and logging into ECR"
-
-# Check if AWS CLI is installed
-if ! command -v aws &> /dev/null; then
-    log_error "AWS CLI is not installed or not in PATH"
-    echo ""
-    echo "📋 To install AWS CLI:"
-    echo "  curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\""
-    echo "  unzip awscliv2.zip"
-    echo "  sudo ./aws/install"
-    exit 1
-fi
-
-# Check if Docker is running
-if ! docker info &> /dev/null; then
-    log_error "Docker is not running or not accessible"
-    echo ""
-    echo "📋 To start Docker:"
-    echo "  sudo systemctl start docker"
-    echo "  # Or if using Docker Desktop, start the application"
-    exit 1
-fi
-
-# Check if AWS credentials are configured
-if ! aws sts get-caller-identity &> /dev/null; then
-    log_error "AWS credentials not configured or insufficient permissions"
-    echo ""
-    echo "📋 To configure AWS credentials:"
-    echo "  aws configure"
-    echo "  # Or set environment variables:"
-    echo "  export AWS_ACCESS_KEY_ID=your_access_key"
-    echo "  export AWS_SECRET_ACCESS_KEY=your_secret_key"
-    echo "  export AWS_DEFAULT_REGION=$AWS_REGION"
-    echo ""
-    echo "📋 Required IAM permissions:"
-    echo "  - ecr:GetAuthorizationToken"
-    echo "  - ecr:BatchCheckLayerAvailability"  
-    echo "  - ecr:GetDownloadUrlForLayer"
-    echo "  - ecr:BatchGetImage"
-    echo "  - ecr:DescribeRepositories"
-    echo "  - ecr:CreateRepository (if repository doesn't exist)"
-    echo "  - ecr:InitiateLayerUpload"
-    echo "  - ecr:UploadLayerPart"
-    echo "  - ecr:CompleteLayerUpload"
-    echo "  - ecr:PutImage"
-    exit 1
-fi
+check_prerequisites
 
 # Attempt ECR login
 log_info "Attempting ECR login..."
-if aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY 2>/dev/null; then
-    log_info "✅ Successfully logged into ECR"
-else
-    log_error "ECR login failed"
-    echo ""
-    echo "📋 Troubleshooting ECR login:"
-    echo "  1. Verify your AWS credentials:"
-    echo "     aws sts get-caller-identity"
-    echo ""
-    echo "  2. Check if you have ECR permissions:"
-    echo "     aws ecr describe-repositories --region $AWS_REGION"
-    echo ""
-    echo "  3. Manually test ECR login:"
-    echo "     aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY"
-    echo ""
-    echo "  4. If using MFA, ensure your session token is valid:"
-    echo "     aws sts get-session-token --duration-seconds 3600"
-    echo ""
-    echo "  5. For cross-account access, verify assume role permissions"
+if ! aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY 2>/dev/null; then
+    log_error "ECR login failed → Check AWS credentials and ECR permissions"
+    log_error "Debug: aws sts get-caller-identity && aws ecr describe-repositories --region $AWS_REGION"
     exit 1
 fi
+log_info "✅ Successfully logged into ECR"
 
 # Step 4: Create ECR repository if it doesn't exist
 log_step "Step 4: Ensuring ECR repository exists"
@@ -250,7 +195,7 @@ fi
 log_step "Step 6: Cleaning up local images"
 docker rmi "$IMAGE_NAME:$TAG" "$ECR_REPOSITORY:$DEPLOY_TAG" "$ECR_REPOSITORY:latest" >/dev/null 2>&1 || true
 
-# Function to update samconfig.yaml with new image URI
+# Update samconfig.yaml with new image URI
 update_samconfig() {
     local environment=$1
     local new_image_uri=$2
@@ -258,17 +203,15 @@ update_samconfig() {
     
     log_info "Updating samconfig.yaml for environment: $environment"
     
-    # Update the ImageId parameter for the specified environment
-    sed -i.backup "/^$environment:/,/^[a-zA-Z]/ { /- ImageId=/s|ImageId=.*|ImageId=$new_image_uri|; }" "$samconfig_file" && {
+    # Use sed to update ImageId parameter for the environment
+    if sed -i.backup "/^$environment:/,/^[a-zA-Z]/ { /- ImageId=/s|ImageId=.*|ImageId=$new_image_uri|; }" "$samconfig_file"; then
         rm -f "$samconfig_file.backup"
         log_info "✅ Successfully updated samconfig.yaml"
-        return 0
-    } || {
-        # Restore backup if sed failed
+    else
         [ -f "$samconfig_file.backup" ] && mv "$samconfig_file.backup" "$samconfig_file"
         log_error "Failed to update samconfig.yaml"
         return 1
-    }
+    fi
 }
 
 # Step 7: Deploy (if requested)
@@ -335,24 +278,10 @@ else
 fi
 
 echo ""
-
-# Show useful commands
-echo "📋 Useful Commands:"
-echo "  # Manual deployment to specific environment:"
-echo "    sam deploy --config-env default  # for dev environment"
-echo "    sam deploy --config-env qa" 
-echo "    sam deploy --config-env prod"
-echo ""
-echo "  # Check service status:"
-echo "    aws ecs describe-services --cluster <cluster-arn> --services saga-sm-api-$ENVIRONMENT"
-echo ""
-echo "  # Build and deploy in one command:"
-echo "    $0 <tag> <environment> <deploy:true|false>"
-echo "    Example: $0 v1.2.3 qa true"
-echo ""
-echo "  # Note: Deployment uses timestamped tags to force CloudFormation updates"
-echo "    Base tag 'v1.2.3' becomes 'v1.2.3-20241210-143022' for deployment"
-echo "    This ensures ECS service redeploys even with same base image"
+echo "📋 Quick Commands:"
+echo "  Manual deploy: sam deploy --config-env $(get_samconfig_env $ENVIRONMENT)"
+echo "  Service status: aws ecs describe-services --services saga-sm-api-$ENVIRONMENT"
+echo "  Re-run: $0 $BASE_TAG $ENVIRONMENT true"
 echo ""
 
 log_info "Done! 🎉"

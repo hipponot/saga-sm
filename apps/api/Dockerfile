@@ -1,82 +1,83 @@
-# Build stage
-FROM node:18-alpine AS builder
+# Optimized multi-stage Dockerfile for faster builds and smaller images
+# Build context should be run from the parent directory of saga-sm and saga-soa
+
+# Dependencies stage - for better layer caching
+FROM node:18-alpine AS dependencies
 
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm@9.0.0
+# Install pnpm (matching the version used in the project)
+RUN npm install -g pnpm@8.15.4
 
-# Copy workspace configuration and dependencies (from saga-sm directory)
-COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml ./
+# Copy workspace configuration first (best layer caching)
+COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml saga-sm/turbo.json ./
 
-# Copy saga-soa packages (sibling directory)
+# Copy all package.json files for dependency resolution
+COPY saga-sm/apps/api/package.json ./apps/api/
+COPY saga-sm/apps/api/types/package.json ./apps/api/types/
+
+# Copy saga-soa packages (required dependencies)
 COPY saga-soa/ ./saga-soa/
 
-# Copy API package files and dependencies
-COPY saga-sm/apps/api/package.json ./apps/api/
-COPY saga-sm/apps/api/types/ ./apps/api/types/
-
 # Fix package.json paths for Docker build environment
-RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json
-RUN sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/types/package.json
+RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json && \
+    sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/types/package.json
 
-# Install all dependencies
+# Install ALL dependencies (this layer cached when package.json files don't change)
 RUN pnpm install --no-frozen-lockfile
 
-# Copy API source code
+# Build stage
+FROM dependencies AS builder
+
+# Copy source code only after dependencies are installed
 COPY saga-sm/apps/api/src/ ./apps/api/src/
 COPY saga-sm/apps/api/tsconfig.json saga-sm/apps/api/tsup.config.ts ./apps/api/
+COPY saga-sm/apps/api/types/src/ ./apps/api/types/src/
+COPY saga-sm/apps/api/types/tsconfig.json saga-sm/apps/api/types/tsup.config.ts saga-sm/apps/api/types/codegen.config.js ./apps/api/types/
 
-# Build the application
-WORKDIR /app/apps/api
-RUN pnpm run build
+# Use turbo to build with optimized dependency resolution
+WORKDIR /app
+RUN npx turbo build --filter=@saga-sm/api
 
-# Production stage
+# Production stage - smaller base image
 FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# Install curl for health checks and pnpm
-RUN apk add --no-cache curl && npm install -g pnpm@9.0.0
+# Install only curl for health checks (using latest stable version)
+RUN apk add --no-cache curl
 
-# Copy workspace configuration (from saga-sm directory)
-COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml ./
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S apiuser -u 1001 -G nodejs
 
-# Copy saga-soa packages (sibling directory)
-COPY saga-soa/ ./saga-soa/
+# Copy workspace files and saga-soa dependencies for production install
+COPY --from=builder /app/pnpm-workspace.yaml /app/package.json /app/pnpm-lock.yaml ./
+COPY --from=builder /app/saga-soa/ ./saga-soa/
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+COPY --from=builder /app/apps/api/types/package.json ./apps/api/types/
 
-# Copy API package.json and dependencies
-COPY saga-sm/apps/api/package.json ./apps/api/
-COPY saga-sm/apps/api/types/ ./apps/api/types/
+# Install pnpm and production dependencies only
+RUN npm install -g pnpm@8.15.4 && \
+    sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json && \
+    sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/types/package.json && \
+    pnpm install --prod --no-frozen-lockfile
 
-# Fix package.json paths for Docker build environment
-RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json
-RUN sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/types/package.json
-
-# Create non-root user first
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S apiuser -u 1001 -G nodejs
-
-# Install production dependencies only
-RUN pnpm install --no-frozen-lockfile --prod
-
-# Create apps/api directory structure
-RUN mkdir -p /app/apps/api
-
-# Copy built application from builder stage with correct ownership
+# Copy built application
 COPY --from=builder --chown=apiuser:nodejs /app/apps/api/dist ./apps/api/dist
 
+# Switch to non-root user
 USER apiuser
 
-# Set working directory to API
+# Set working directory
 WORKDIR /app/apps/api
 
 # Expose port
 EXPOSE 3000
 
-# Health check using curl
+# Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:3000/health || exit 1
 
-# Start the application
-CMD ["pnpm", "start"]
+# Start application
+CMD ["node", "dist/main.js"]
