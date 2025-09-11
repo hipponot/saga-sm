@@ -40,3 +40,4 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: mysql
 
+

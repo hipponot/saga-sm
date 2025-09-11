@@ -35,6 +35,19 @@ services:
       - saga-sm-network
     command: --default-authentication-plugin=mysql_native_password
 
+  # Redis Cache
+  redis:
+    image: redis:7.0-alpine
+    container_name: saga-sm-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - saga-sm-network
+    command: redis-server --appendonly yes
+
   # API Service
   api:
     build:
@@ -54,12 +67,16 @@ services:
       MYSQL_DATABASE: saga_sm
       MYSQL_USER: saga_user
       MYSQL_PASSWORD: password123
+      # Redis connection
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "3000:3000"
       - "3002:3002"
     depends_on:
       - mongodb
       - mysql
+      - redis
     networks:
       - saga-sm-network
     volumes:
@@ -98,4 +115,6 @@ volumes:
   mongodb_data:
     driver: local
   mysql_data:
+    driver: local
+  redis_data:
     driver: local

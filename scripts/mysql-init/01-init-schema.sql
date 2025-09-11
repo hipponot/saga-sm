@@ -74,3 +74,4 @@ FLUSH PRIVILEGES;
 INSERT INTO audit_log (entity_type, entity_id, action, new_values) 
 VALUES ('system', 'database', 'create', '{"message": "Database initialized successfully"}');
 
+

@@ -53,3 +53,4 @@ db.schedules.createIndex({ "participants": 1 });
 
 print("MongoDB initialization completed successfully");
 
+

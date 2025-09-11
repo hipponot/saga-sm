@@ -82,8 +82,8 @@ Resources:
     Properties:
       RequiresCompatibilities:
         - "FARGATE"
-      Cpu: "512"
-      Memory: "1024"
+      Cpu: "2048"
+      Memory: "4096"
       ContainerDefinitions:
         - Name: !Ref AppName
           Image: !Ref ImageId
@@ -98,6 +98,23 @@ Resources:
               Value: "3000"
             - Name: ENVIRONMENT
               Value: !Ref Environment
+            # Database connections
+            - Name: MONGODB_URI
+              Value: mongodb://admin:password123@localhost:27017/saga_sm?authSource=admin
+            - Name: MYSQL_HOST
+              Value: localhost
+            - Name: MYSQL_PORT
+              Value: "3306"
+            - Name: MYSQL_DATABASE
+              Value: saga_sm
+            - Name: MYSQL_USER
+              Value: saga_user
+            - Name: MYSQL_PASSWORD
+              Value: password123
+            - Name: REDIS_HOST
+              Value: localhost
+            - Name: REDIS_PORT
+              Value: "6379"
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -113,6 +130,58 @@ Resources:
             Timeout: 5
             Retries: 3
             StartPeriod: 60
+        - Name: mysql
+          Image: mysql:8.0
+          Essential: false
+          Environment:
+            - Name: MYSQL_ROOT_PASSWORD
+              Value: rootpassword123
+            - Name: MYSQL_DATABASE
+              Value: saga_sm
+            - Name: MYSQL_USER
+              Value: saga_user
+            - Name: MYSQL_PASSWORD
+              Value: password123
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: us-west-2
+              awslogs-create-group: "true"
+              awslogs-group: !Sub /ecs/${AppName}-mysql
+              awslogs-stream-prefix: mysql
+          Command:
+            - --default-authentication-plugin=mysql_native_password
+        - Name: mongodb
+          Image: mongo:8.0
+          Essential: false
+          Environment:
+            - Name: MONGO_INITDB_ROOT_USERNAME
+              Value: admin
+            - Name: MONGO_INITDB_ROOT_PASSWORD
+              Value: password123
+            - Name: MONGO_INITDB_DATABASE
+              Value: saga_sm
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: us-west-2
+              awslogs-create-group: "true"
+              awslogs-group: !Sub /ecs/${AppName}-mongodb
+              awslogs-stream-prefix: mongodb
+        - Name: redis
+          Image: redis:7.0-alpine
+          Essential: false
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: us-west-2
+              awslogs-create-group: "true"
+              awslogs-group: !Sub /ecs/${AppName}-redis
+              awslogs-stream-prefix: redis
+          Command:
+            - redis-server
+            - --appendonly
+            - "yes"
       NetworkMode: awsvpc
       ExecutionRoleArn: !GetAtt ExecutionRole.Arn
       TaskRoleArn: !GetAtt TaskRole.Arn
@@ -224,7 +293,11 @@ Resources:
                 Action:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}*
+                Resource:
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}*
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-mysql*
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-mongodb*
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-redis*
       Tags:
         - Key: Name
           Value: !Sub ${AppName}-task-role
@@ -259,6 +332,9 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}*
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-mysql*
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-mongodb*
+                  - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-redis*
         - PolicyName: ECRAccess
           PolicyDocument:
             Statement:

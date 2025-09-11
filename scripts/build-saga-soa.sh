@@ -114,3 +114,4 @@ log_info "You can now run Docker builds that depend on saga-soa packages"
 # Return to original directory
 cd "$SAGA_SM_ROOT"
 
+

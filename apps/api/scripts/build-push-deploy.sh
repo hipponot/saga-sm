@@ -118,14 +118,14 @@ if [ ! -d "$SAGA_SOA_ROOT" ]; then
     exit 1
 fi
 
-# Change to dev root for Docker build (needs both sm2 and saga-soa)
+# Change to dev root for Docker build (needs both saga-sm and saga-soa)
 cd "$DEV_ROOT"
 
 # Step 1: Build the Docker image
 log_step "Step 1: Building Docker image (from dev root with saga-soa)"
 log_info "Building from: $(pwd)"
-log_info "Dockerfile: sm2/apps/api/Dockerfile"
-docker build -f sm2/apps/api/Dockerfile -t "$IMAGE_NAME:$TAG" .
+log_info "Dockerfile: saga-sm/apps/api/Dockerfile"
+docker build -f saga-sm/apps/api/Dockerfile -t "$IMAGE_NAME:$TAG" .
 if [ $? -eq 0 ]; then
     log_info "✅ Docker image built successfully"
 else
