@@ -6,15 +6,15 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm@9.0.0
 
-# Copy workspace configuration and dependencies (from sm2 directory)
-COPY sm2/pnpm-workspace.yaml sm2/package.json sm2/pnpm-lock.yaml ./
+# Copy workspace configuration and dependencies (from saga-sm directory)
+COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml ./
 
 # Copy saga-soa packages (sibling directory)
 COPY saga-soa/ ./saga-soa/
 
 # Copy API package files and dependencies
-COPY sm2/apps/api/package.json ./apps/api/
-COPY sm2/apps/api/types/ ./apps/api/types/
+COPY saga-sm/apps/api/package.json ./apps/api/
+COPY saga-sm/apps/api/types/ ./apps/api/types/
 
 # Fix package.json paths for Docker build environment
 RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json
@@ -24,8 +24,8 @@ RUN sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/t
 RUN pnpm install --no-frozen-lockfile
 
 # Copy API source code
-COPY sm2/apps/api/src/ ./apps/api/src/
-COPY sm2/apps/api/tsconfig.json sm2/apps/api/tsup.config.ts ./apps/api/
+COPY saga-sm/apps/api/src/ ./apps/api/src/
+COPY saga-sm/apps/api/tsconfig.json saga-sm/apps/api/tsup.config.ts ./apps/api/
 
 # Build the application
 WORKDIR /app/apps/api
@@ -39,15 +39,15 @@ WORKDIR /app
 # Install curl for health checks and pnpm
 RUN apk add --no-cache curl && npm install -g pnpm@9.0.0
 
-# Copy workspace configuration (from sm2 directory)
-COPY sm2/pnpm-workspace.yaml sm2/package.json sm2/pnpm-lock.yaml ./
+# Copy workspace configuration (from saga-sm directory)
+COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml ./
 
 # Copy saga-soa packages (sibling directory)
 COPY saga-soa/ ./saga-soa/
 
 # Copy API package.json and dependencies
-COPY sm2/apps/api/package.json ./apps/api/
-COPY sm2/apps/api/types/ ./apps/api/types/
+COPY saga-sm/apps/api/package.json ./apps/api/
+COPY saga-sm/apps/api/types/ ./apps/api/types/
 
 # Fix package.json paths for Docker build environment
 RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json
