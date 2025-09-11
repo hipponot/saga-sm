@@ -6,24 +6,26 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm@9.0.0
 
-# Copy workspace configuration and dependencies
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+# Copy workspace configuration and dependencies (from sm2 directory)
+COPY sm2/pnpm-workspace.yaml sm2/package.json sm2/pnpm-lock.yaml ./
 
-# Copy saga-soa packages
+# Copy saga-soa packages (sibling directory)
 COPY saga-soa/ ./saga-soa/
 
-# Copy API package files
-COPY apps/api/package.json ./apps/api/
+# Copy API package files and dependencies
+COPY sm2/apps/api/package.json ./apps/api/
+COPY sm2/apps/api/types/ ./apps/api/types/
 
 # Fix package.json paths for Docker build environment
 RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json
+RUN sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/types/package.json
 
 # Install all dependencies
 RUN pnpm install --no-frozen-lockfile
 
 # Copy API source code
-COPY apps/api/src/ ./apps/api/src/
-COPY apps/api/tsconfig.json apps/api/tsup.config.ts ./apps/api/
+COPY sm2/apps/api/src/ ./apps/api/src/
+COPY sm2/apps/api/tsconfig.json sm2/apps/api/tsup.config.ts ./apps/api/
 
 # Build the application
 WORKDIR /app/apps/api
@@ -37,17 +39,19 @@ WORKDIR /app
 # Install curl for health checks and pnpm
 RUN apk add --no-cache curl && npm install -g pnpm@9.0.0
 
-# Copy workspace configuration
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+# Copy workspace configuration (from sm2 directory)
+COPY sm2/pnpm-workspace.yaml sm2/package.json sm2/pnpm-lock.yaml ./
 
-# Copy saga-soa packages
+# Copy saga-soa packages (sibling directory)
 COPY saga-soa/ ./saga-soa/
 
-# Copy API package.json
-COPY apps/api/package.json ./apps/api/
+# Copy API package.json and dependencies
+COPY sm2/apps/api/package.json ./apps/api/
+COPY sm2/apps/api/types/ ./apps/api/types/
 
 # Fix package.json paths for Docker build environment
 RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json
+RUN sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/types/package.json
 
 # Create non-root user first
 RUN addgroup -g 1001 -S nodejs

@@ -12,12 +12,12 @@ default:
       parameter_overrides:
         - AppName=saga-sm-api
         - Environment=dev
-        - ImageId=531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api:latest
+        - ImageId=531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api:test-v1.0.4-20250910-172105
         - VpcIdSSMParameter=/dev/app/vpc-id
         - SubnetsSSMParameter=/dev/app/private-subnet-ids
         - AppSecurityGroupIdSSMParameter=/dev/app/app-sg-id
-        - LoadBalancerArnSSMParameter=/dev/services/alb-arn
-        - ListenerArnSSMParameter=/dev/services/alb-listener-arn
+        - LoadBalancerArnSSMParameter=/dev/services/services-alb-arn
+        - ListenerArnSSMParameter=/dev/services/services-alb-3000-listener-arn
         - ClusterArnSSMParameter=/dev/ecs-cluster-arn
       image_repositories: []
 
@@ -62,3 +62,31 @@ prod:
         - ListenerArnSSMParameter=/prod/app/alb-listener-arn
         - ClusterArnSSMParameter=/prod/app/ecs-cluster-arn
       image_repositories: []
+
+ephemeral:
+  deploy:
+    parameters:
+      stack_name: saga-sm-api-ephemeral-{branch_identifier}
+      resolve_s3: true
+      s3_prefix: saga-sm-api-ephemeral-{branch_identifier}
+      region: us-west-2
+      confirm_changeset: false
+      capabilities: CAPABILITY_NAMED_IAM
+      parameter_overrides:
+        - AppName=saga-sm-api
+        - Environment=ephemeral
+        - BranchIdentifier={branch_identifier}
+        - ImageId={image_id}
+        - BaseDomain=services.dev.sagasm.com
+        - VpcIdSSMParameter=/dev/app/vpc-id
+        - SubnetsSSMParameter=/dev/app/private-subnet-ids
+        - AppSecurityGroupIdSSMParameter=/dev/app/app-sg-id
+        - LoadBalancerArnSSMParameter=/dev/services/services-alb-arn
+        - ListenerArnSSMParameter=/dev/services/services-alb-3000-listener-arn
+        - ClusterArnSSMParameter=/dev/ecs-cluster-arn
+      image_repositories: []
+      tags:
+        - Environment=ephemeral
+        - BranchIdentifier={branch_identifier}
+        - AutoCleanup=true
+        - StackType=ephemeral

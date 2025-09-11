@@ -10,11 +10,17 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-    Description: Environment (dev, qa, prod)
+    Description: Environment (dev, qa, prod, ephemeral)
     AllowedValues:
       - dev
       - qa
       - prod
+      - ephemeral
+
+  BranchIdentifier:
+    Type: String
+    Default: ""
+    Description: URL-safe branch identifier for ephemeral environments (e.g. gh-123-feature-branch)
 
   HealthCheckGracePeriodSeconds:
     Type: Number
@@ -57,6 +63,17 @@ Parameters:
     Default: 531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api:latest
     Description: Docker image for the API service
 
+  BaseDomain:
+    Type: String
+    Default: services.dev.wootmath.com
+    Description: Base domain for the service endpoints
+
+Conditions:
+  IsEphemeralEnvironment: !Not
+    - !Equals
+      - !Ref BranchIdentifier
+      - ""
+
 Resources:
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -91,7 +108,7 @@ Resources:
           HealthCheck:
             Command:
               - CMD-SHELL
-              - "node -e 'require(\"http\").get(\"http://localhost:3000/health\", (res) => { let data = \"\"; res.on(\"data\", chunk => data += chunk); res.on(\"end\", () => process.exit(res.statusCode === 200 ? 0 : 1)); }).on(\"error\", () => process.exit(1))'"
+              - 'node -e ''require("http").get("http://localhost:3000/health", (res) => { let data = ""; res.on("data", chunk => data += chunk); res.on("end", () => process.exit(res.statusCode === 200 ? 0 : 1)); }).on("error", () => process.exit(1))'''
             Interval: 30
             Timeout: 5
             Retries: 3
@@ -115,7 +132,10 @@ Resources:
           ContainerPort: 3000
           TargetGroupArn: !GetAtt TargetGroup.TargetGroupArn
       TaskDefinition: !Ref TaskDefinition
-      ServiceName: !Ref AppName
+      ServiceName: !If
+        - IsEphemeralEnvironment
+        - !Sub "${AppName}-${BranchIdentifier}"
+        - !Ref AppName
       NetworkConfiguration:
         AwsvpcConfiguration:
           SecurityGroups:
@@ -147,9 +167,14 @@ Resources:
           Value: "60"
       Tags:
         - Key: Name
-          Value: !Sub ${AppName}-tg
+          Value: !If
+            - IsEphemeralEnvironment
+            - !Sub "${AppName}-${BranchIdentifier}-tg"
+            - !Sub "${AppName}-tg"
         - Key: Environment
           Value: !Ref Environment
+        - Key: BranchIdentifier
+          Value: !Ref BranchIdentifier
 
   ListenerRule:
     Type: "AWS::ElasticLoadBalancingV2::ListenerRule"
@@ -158,20 +183,31 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
       Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values: !If
+              - IsEphemeralEnvironment
+              - - !Sub "sm-api-${BranchIdentifier}.${BaseDomain}"
+              - - !Sub "sm-api.${BaseDomain}"
         - Field: path-pattern
           PathPatternConfig:
             Values:
-              - "/sm*"
               - "/trpc*"
               - "/health*"
               - "/api*"
       ListenerArn: !Ref ListenerArnSSMParameter
-      Priority: 10
+      Priority: !If
+        - IsEphemeralEnvironment
+        - 5
+        - 10
 
   TaskRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${AppName}-task-role
+      RoleName: !If
+        - IsEphemeralEnvironment
+        - !Sub "${AppName}-${BranchIdentifier}-task-role"
+        - !Sub "${AppName}-task-role"
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -198,7 +234,10 @@ Resources:
   ExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${AppName}-execution-role
+      RoleName: !If
+        - IsEphemeralEnvironment
+        - !Sub "${AppName}-${BranchIdentifier}-execution-role"
+        - !Sub "${AppName}-execution-role"
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -257,6 +296,16 @@ Outputs:
 
   ServiceEndpoint:
     Description: Endpoint for the API service
-    Value: !Sub "https://${LoadBalancerArnSSMParameter}/trpc"
+    Value: !If
+      - IsEphemeralEnvironment
+      - !Sub "https://sm-api-${BranchIdentifier}.${BaseDomain}/trpc"
+      - !Sub "https://sm-api.${BaseDomain}/trpc"
     Export:
       Name: !Sub ${AWS::StackName}-Endpoint
+
+  BranchIdentifier:
+    Condition: IsEphemeralEnvironment
+    Description: Branch identifier used for this deployment
+    Value: !Ref BranchIdentifier
+    Export:
+      Name: !Sub ${AWS::StackName}-BranchIdentifier

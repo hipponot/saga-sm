@@ -43,7 +43,15 @@ export function GlobalUrlEditor() {
     }
 
     return (
-        <div className="global-url-editor">
+        <div 
+            className="global-url-editor"
+            style={{
+                position: 'fixed',
+                top: '1rem',
+                right: '1rem',
+                zIndex: 1000,
+            }}
+        >
             {!isEditing ? (
                 /* Always visible display panel */
                 <div className="url-display-panel">
@@ -121,12 +129,6 @@ export function GlobalUrlEditor() {
             )}
 
             <style jsx>{`
-        .global-url-editor {
-          position: fixed;
-          top: 1rem;
-          right: 1rem;
-          z-index: 1000;
-        }
 
         /* Always visible display panel */
         .url-display-panel {
