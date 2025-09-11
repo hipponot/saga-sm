@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify'
-import type { ILogger } from '@saga-soa/logger'
+import type { ILogger } from '@hipponot/logger'
 import { EventEmitter } from 'events'
 
 export interface PubSubEvent {
@@ -162,8 +162,8 @@ export class PubSubService extends EventEmitter {
             totalSubscriptions: this.subscriptions.size,
             activeChannels: Array.from(new Set(Array.from(this.subscriptions.values()).map(s => s.channel))),
             connectionStatus: 'connected',
-            lastActivity: this.eventHistory.length > 0 
-                ? this.eventHistory[this.eventHistory.length - 1].timestamp 
+            lastActivity: this.eventHistory.length > 0
+                ? this.eventHistory[this.eventHistory.length - 1].timestamp
                 : new Date().toISOString()
         }
     }

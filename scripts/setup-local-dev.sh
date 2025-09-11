@@ -47,11 +47,11 @@ if [ -f "apps/api/package.json" ]; then
     
     // Update dependencies to use file: protocol
     if (pkg.dependencies) {
-        pkg.dependencies['@saga-soa/api-core'] = 'file:../../../saga-soa/packages/api-core';
-        pkg.dependencies['@saga-soa/db'] = 'file:../../../saga-soa/packages/db';
-        pkg.dependencies['@saga-soa/logger'] = 'file:../../../saga-soa/packages/logger';
-        pkg.dependencies['@saga-soa/pubsub-core'] = 'file:../../../saga-soa/packages/pubsub-core';
-        pkg.dependencies['@saga-soa/config'] = 'file:../../../saga-soa/packages/config';
+        pkg.dependencies['@hipponot/api-core'] = 'file:../../../saga-soa/packages/api-core';
+        pkg.dependencies['@hipponot/db'] = 'file:../../../saga-soa/packages/db';
+        pkg.dependencies['@hipponot/logger'] = 'file:../../../saga-soa/packages/logger';
+        pkg.dependencies['@hipponot/pubsub-core'] = 'file:../../../saga-soa/packages/pubsub-core';
+        pkg.dependencies['@hipponot/config'] = 'file:../../../saga-soa/packages/config';
         pkg.dependencies['@saga-sm/api-types'] = 'file:./types';
     }
     
@@ -59,7 +59,7 @@ if [ -f "apps/api/package.json" ]; then
     if (!pkg.devDependencies) {
         pkg.devDependencies = {};
     }
-    pkg.devDependencies['@saga-soa/trpc-codegen'] = 'file:../../../saga-soa/packages/trpc-codegen';
+    pkg.devDependencies['@hipponot/trpc-codegen'] = 'file:../../../saga-soa/packages/trpc-codegen';
     
     fs.writeFileSync('apps/api/package.json', JSON.stringify(pkg, null, 4));
     "
@@ -78,7 +78,7 @@ if [ -f "apps/api/types/package.json" ]; then
     
     // Update devDependencies to use file: protocol
     if (pkg.devDependencies) {
-        pkg.devDependencies['@saga-soa/trpc-codegen'] = 'file:../../../../saga-soa/packages/trpc-codegen';
+        pkg.devDependencies['@hipponot/trpc-codegen'] = 'file:../../../../saga-soa/packages/trpc-codegen';
     }
     
     fs.writeFileSync('apps/api/types/package.json', JSON.stringify(pkg, null, 4));
@@ -94,7 +94,7 @@ pnpm install
 echo "✅ Local development setup complete!"
 echo ""
 echo "🚀 To start development:"
-echo "  Terminal 1: cd ../saga-soa && turbo run dev --filter='@saga-soa/*' --concurrency 12"  
+echo "  Terminal 1: cd ../saga-soa && turbo run dev --filter='@hipponot/*' --concurrency 12"  
 echo "  Terminal 2: cd saga-sm && pnpm dev"
 echo ""
 echo "📱 Applications will be available at:"

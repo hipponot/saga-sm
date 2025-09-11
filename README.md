@@ -95,7 +95,7 @@ cp apps/api/.env.example apps/api/.env
 **4. Start development servers:**
 ```bash
 # Terminal 1: Start saga-soa packages (if using pnpm link)
-cd ../saga-soa && turbo run dev --filter='@saga-soa/*'
+cd ../saga-soa && turbo run dev --filter='@hipponot/*'
 
 # Terminal 2: Start saga-sm applications
 cd saga-sm && pnpm dev

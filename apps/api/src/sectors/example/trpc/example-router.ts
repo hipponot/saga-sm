@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify'
-import { AbstractTRPCController, router } from '@saga-soa/api-core/abstract-trpc-controller'
-import type { ILogger } from '@saga-soa/logger'
+import { AbstractTRPCController, router } from '@hipponot/api-core/abstract-trpc-controller'
+import type { ILogger } from '@hipponot/logger'
 import type { IExampleHelper } from '../helpers/example_helper'
 import {
     CreateExampleSchema,
@@ -70,7 +70,7 @@ export class ExampleController extends AbstractTRPCController {
                     if (!this.exampleHelper.validateStatus(input.status)) {
                         throw new Error(`Invalid status: ${input.status}`)
                     }
-                    
+
                     const newExample: ExampleDataZ = {
                         id: this.exampleHelper.generateId(),
                         ...input,

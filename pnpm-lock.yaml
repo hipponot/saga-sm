@@ -23,24 +23,24 @@ importers:
 
   apps/api:
     dependencies:
+      '@hipponot/api-core':
+        specifier: file:../../../saga-soa/packages/api-core
+        version: file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2)(typescript@5.8.2)
+      '@hipponot/config':
+        specifier: file:../../../saga-soa/packages/config
+        version: file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)
+      '@hipponot/db':
+        specifier: file:../../../saga-soa/packages/db
+        version: file:../saga-soa/packages/db
+      '@hipponot/logger':
+        specifier: file:../../../saga-soa/packages/logger
+        version: file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2)
+      '@hipponot/pubsub-core':
+        specifier: file:../../../saga-soa/packages/pubsub-core
+        version: file:../saga-soa/packages/pubsub-core
       '@saga-sm/api-types':
         specifier: file:./types
         version: file:apps/api/types
-      '@saga-soa/api-core':
-        specifier: file:../../../saga-soa/packages/api-core
-        version: file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2)(typescript@5.8.2)
-      '@saga-soa/config':
-        specifier: file:../../../saga-soa/packages/config
-        version: file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)
-      '@saga-soa/db':
-        specifier: file:../../../saga-soa/packages/db
-        version: file:../saga-soa/packages/db
-      '@saga-soa/logger':
-        specifier: file:../../../saga-soa/packages/logger
-        version: file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2)
-      '@saga-soa/pubsub-core':
-        specifier: file:../../../saga-soa/packages/pubsub-core
-        version: file:../saga-soa/packages/pubsub-core
       inversify:
         specifier: ^6.0.2
         version: 6.2.2(reflect-metadata@0.2.2)
@@ -51,7 +51,7 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
-      '@saga-soa/trpc-codegen':
+      '@hipponot/trpc-codegen':
         specifier: file:../../../saga-soa/packages/trpc-codegen
         version: file:../saga-soa/packages/trpc-codegen
       '@types/node':
@@ -76,10 +76,10 @@ importers:
         specifier: ^3.25.67
         version: 3.25.76
     devDependencies:
-      '@saga-soa/trpc-codegen':
+      '@hipponot/trpc-codegen':
         specifier: file:../../../../saga-soa/packages/trpc-codegen
         version: file:../saga-soa/packages/trpc-codegen
-      '@saga-soa/zod2ts':
+      '@hipponot/zod2ts':
         specifier: file:../../../../saga-soa/build-tools/zod2ts
         version: file:../saga-soa/build-tools/zod2ts(typescript@5.8.2)
       '@trpc/client':
@@ -7496,7 +7496,7 @@ packages:
   file:../saga-soa/build-tools/zod2ts(typescript@5.8.2):
     resolution: {directory: ../saga-soa/build-tools/zod2ts, type: directory}
     id: file:../saga-soa/build-tools/zod2ts
-    name: '@saga-soa/zod2ts'
+    name: '@hipponot/zod2ts'
     hasBin: true
     dependencies:
       commander: 12.1.0
@@ -7509,7 +7509,7 @@ packages:
   file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2)(typescript@5.8.2):
     resolution: {directory: ../saga-soa/packages/api-core, type: directory}
     id: file:../saga-soa/packages/api-core
-    name: '@saga-soa/api-core'
+    name: '@hipponot/api-core'
     dependencies:
       '@apollo/server': 4.12.2(graphql@16.11.0)
       '@trpc/server': 11.5.1(typescript@5.8.2)
@@ -7546,7 +7546,7 @@ packages:
   file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2):
     resolution: {directory: ../saga-soa/packages/config, type: directory}
     id: file:../saga-soa/packages/config
-    name: '@saga-soa/config'
+    name: '@hipponot/config'
     dependencies:
       dotenv: 17.2.0
       dotenv-flow: 4.1.0
@@ -7562,7 +7562,7 @@ packages:
 
   file:../saga-soa/packages/db:
     resolution: {directory: ../saga-soa/packages/db, type: directory}
-    name: '@saga-soa/db'
+    name: '@hipponot/db'
     dependencies:
       inversify: 6.2.2(reflect-metadata@0.2.2)
       mongodb: 5.9.2
@@ -7584,7 +7584,7 @@ packages:
   file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2):
     resolution: {directory: ../saga-soa/packages/logger, type: directory}
     id: file:../saga-soa/packages/logger
-    name: '@saga-soa/logger'
+    name: '@hipponot/logger'
     dependencies:
       inversify: 6.2.2(reflect-metadata@0.2.2)
       pino: 8.21.0
@@ -7599,7 +7599,7 @@ packages:
 
   file:../saga-soa/packages/pubsub-core:
     resolution: {directory: ../saga-soa/packages/pubsub-core, type: directory}
-    name: '@saga-soa/pubsub-core'
+    name: '@hipponot/pubsub-core'
     dependencies:
       uuid: 11.1.0
       zod: 3.25.67
@@ -7607,7 +7607,7 @@ packages:
 
   file:../saga-soa/packages/trpc-codegen:
     resolution: {directory: ../saga-soa/packages/trpc-codegen, type: directory}
-    name: '@saga-soa/trpc-codegen'
+    name: '@hipponot/trpc-codegen'
     hasBin: true
     dependencies:
       chokidar: 3.6.0
