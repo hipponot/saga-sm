@@ -5,29 +5,29 @@
       "dependencies": {
         "@hipponot/api-core": {
           "local": "file:../../../saga-soa/packages/api-core",
-          "published": "^1.0.0"
+          "published": "^1.0.4"
         },
         "@hipponot/config": {
           "local": "file:../../../saga-soa/packages/config",
-          "published": "^1.0.0"
+          "published": "^1.0.3"
         },
         "@hipponot/db": {
           "local": "file:../../../saga-soa/packages/db",
-          "published": "^1.0.0"
+          "published": "^1.0.3"
         },
         "@hipponot/logger": {
           "local": "file:../../../saga-soa/packages/logger",
-          "published": "^1.0.0"
+          "published": "^1.0.4"
         },
         "@hipponot/pubsub-core": {
           "local": "file:../../../saga-soa/packages/pubsub-core",
-          "published": "^1.0.0"
+          "published": "^1.0.4"
         }
       },
       "devDependencies": {
         "@hipponot/trpc-codegen": {
           "local": "file:../../../saga-soa/packages/trpc-codegen",
-          "published": "^1.0.0"
+          "published": "^1.0.3"
         }
       }
     },
@@ -35,11 +35,11 @@
       "devDependencies": {
         "@hipponot/trpc-codegen": {
           "local": "file:../../../../saga-soa/packages/trpc-codegen",
-          "published": "^1.0.0"
+          "published": "^1.0.3"
         },
         "@hipponot/zod2ts": {
           "local": "file:../../../../saga-soa/build-tools/zod2ts",
-          "published": "^1.0.0"
+          "published": "^1.0.3"
         }
       }
     }

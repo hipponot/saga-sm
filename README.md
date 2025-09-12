@@ -22,6 +22,18 @@ This project provides:
 - **Type-safe API**: Full TypeScript support from API to client
 - **Interactive testing**: Web client for endpoint exploration and testing
 
+## 📖 Documentation Guide
+
+| Topic | Guide | Description |
+|-------|-------|-------------|
+| **Getting Started** | [README.md](README.md) | Project overview, quick start, architecture |
+| **Environment Setup** | [Environment Setup](ENVIRONMENT_SETUP.md) | .env files, database config, local development |
+| **GitHub Authentication** | [GitHub Setup](GITHUB_SETUP.md) | Personal access tokens, package registry access |
+| **Docker & Containers** | [Docker Setup](DOCKER_SETUP.md) | Container builds, authentication, troubleshooting |
+| **Dependency Management** | [Dependencies](DEPENDENCIES.md) | Local vs published packages, switching modes |
+| **Testing** | [Testing Guide](TESTING.md) | Unit tests, integration tests, database setup |
+| **Deployment** | [Web Client](apps/web-client/DEPLOYMENT_GUIDE.md) • [API](apps/api/DEPLOYMENT_GUIDE.md) | Production deployment guides |
+
 ## 📁 Project Structure
 
 ```
@@ -113,7 +125,11 @@ If you prefer manual control or the quick-start script doesn't work:
 
 **1. Setup development environment:**
 ```bash
-./scripts/dev-setup.sh local  # Configure saga-soa dependencies
+# For local development (recommended for saga-soa development)
+./scripts/dev-setup.sh local
+
+# For CI-like environment (uses published packages, requires GitHub token)
+./scripts/dev-setup.sh ci
 ```
 
 **2. Start databases:**
@@ -130,6 +146,20 @@ docker compose up -d postgres mongodb redis
 ```bash
 pnpm dev
 ```
+
+### Dependency Management
+
+saga-sm works with saga-soa in **local** (file: dependencies) or **published** (@hipponot packages) modes:
+
+```bash
+# Local development mode (default)
+./scripts/dev-setup.sh local
+
+# Published packages mode (requires GitHub token)
+./scripts/dev-setup.sh ci
+```
+
+**For detailed dependency management:** See [Dependencies Guide](DEPENDENCIES.md)
 
 ### AWS Deployment Prerequisites
 
@@ -282,9 +312,10 @@ The web client provides comprehensive testing tools:
 - Fix: Run `pnpm install` to recreate workspace symlinks
 - Or re-run: `./scripts/quick-start.sh`
 
-**"saga-soa packages not found"**
+**"saga-soa packages not found"** or **"403 Forbidden" from GitHub Packages**
 - Ensure saga-soa is cloned in the correct directory structure
-- Re-run the setup script: `./scripts/setup-local-dev.sh`
+- For published packages: Set up GitHub token (see [GitHub Setup](GITHUB_SETUP.md))
+- Re-run the setup script: `./scripts/dev-setup.sh local`
 
 **"Database connection failed"**
 - Check MongoDB is running locally or update `MONGODB_URI` in `apps/api/.env`
@@ -297,6 +328,42 @@ The web client provides comprehensive testing tools:
 **"Hot reloading not working"**
 - Restart both terminal sessions
 - Verify saga-soa packages are building with `turbo run dev`
+
+## 🐳 Docker
+
+### Docker Compose Setup
+
+Build and run the full application stack using Docker:
+
+```bash
+# Set up GitHub token for package access
+export GITHUB_TOKEN=$(gh auth token)
+
+# Build all services
+docker-compose build
+
+# Start the full stack (databases + API + web client)
+docker-compose up -d
+
+# Or start specific services
+docker-compose up -d api web-client
+```
+
+### Authentication Requirements
+
+Docker builds require GitHub Packages access for @hipponot packages:
+
+- **Quick setup**: `export GITHUB_TOKEN=$(gh auth token)` 
+- **Docker guide**: See [Docker Setup](DOCKER_SETUP.md)
+- **GitHub tokens**: See [GitHub Setup](GITHUB_SETUP.md)
+- **Fallback option**: Use local dependencies with `./scripts/switch-saga-soa-deps.sh local`
+
+### Services
+
+- **API**: `http://localhost:3000` (tRPC + REST endpoints)
+- **Web Client**: `http://localhost:3001` (Testing interface)  
+- **Database**: PostgreSQL (5432), MongoDB (27017), Redis (6379)
+- **Adminer**: `http://localhost:8080` (Database admin, dev mode only)
 
 ## 🚀 Deployment
 

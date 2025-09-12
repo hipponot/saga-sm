@@ -15,7 +15,7 @@ export interface Endpoint {
 
 export interface ApiResponse {
     success: boolean
-    data?: any
+    data?: unknown
     error?: string
     timestamp: string
     duration: number

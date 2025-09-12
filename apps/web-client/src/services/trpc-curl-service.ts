@@ -1,5 +1,5 @@
 import { ServiceInterface, Endpoint, ApiResponse } from './types'
-import { TRPC_ENDPOINT, getTrpcEndpoint } from './endpoints'
+import { getTrpcEndpoint } from './endpoints'
 
 export class TrpcCurlService implements ServiceInterface {
     private currentUrl: string
@@ -23,7 +23,7 @@ export class TrpcCurlService implements ServiceInterface {
         try {
             const url = `${this.currentUrl}/${endpoint.id}`
 
-            let body: any = {}
+            let body: Record<string, unknown> = {}
             if (input.trim()) {
                 try {
                     body = JSON.parse(input)
@@ -121,8 +121,7 @@ export class TrpcCurlService implements ServiceInterface {
             // Generate GET request with query parameters
             let finalUrl = url
             if (hasInput) {
-                const queryParam = `$(echo '$INPUT' | jq -c .)`
-                finalUrl = `${url}?input=\${queryParam}`
+                finalUrl = `${url}?input=$(echo '$INPUT' | jq -c .)`
             }
 
             code += `curl -X GET \\\n`

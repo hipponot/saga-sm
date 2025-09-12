@@ -346,8 +346,8 @@ export default function ApiTestPage() {
                         <div className={styles.infoBox}>
                             <p className={styles.infoText}>
                                 <strong className={styles.infoTextStrong}>Ready to test:</strong>{' '}
-                                Select an endpoint, configure the input data, and click "Execute
-                                Endpoint" to see the response here.
+                                Select an endpoint, configure the input data, and click &quot;Execute
+                                Endpoint&quot; to see the response here.
                             </p>
                         </div>
                     </div>
