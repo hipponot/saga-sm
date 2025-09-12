@@ -105,6 +105,15 @@ setup_development() {
     log_info "Refreshing workspace dependencies..."
     pnpm install
     
+    # Build workspace packages in correct order to establish dependencies
+    log_info "Building workspace packages to establish dependencies..."
+    if pnpm build >/dev/null 2>&1; then
+        log_success "Workspace packages built successfully"
+    else
+        log_warning "Initial build had issues, but continuing setup..."
+        log_info "You may need to run 'pnpm build' manually after setup"
+    fi
+    
     log_success "Development environment configured"
 }
 
@@ -178,11 +187,11 @@ EOF
 verify_setup() {
     log_section "Verifying Setup"
     
-    log_info "Running build to verify dependencies..."
+    log_info "Running final build verification..."
     if pnpm build >/dev/null 2>&1; then
-        log_success "Build completed successfully"
+        log_success "Final build verification completed successfully"
     else
-        log_warning "Build had issues. Check: pnpm build"
+        log_warning "Build verification had issues. Check: pnpm build"
     fi
     
     log_info "Running tests to verify environment..."
