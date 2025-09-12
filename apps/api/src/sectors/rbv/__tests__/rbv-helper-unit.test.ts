@@ -73,7 +73,9 @@ describe('RBVHelper (Unit Tests with Mocked Database)', () => {
             mockPrisma.bellSchedule.findUnique.mockRejectedValue(dbError)
 
             // The actual implementation doesn't have try-catch, so it will throw
-            await expect(rbvHelper.get_schedule('schedule-1')).rejects.toThrow('Database connection failed')
+            await expect(rbvHelper.get_schedule('schedule-1')).rejects.toThrow(
+                'Database connection failed'
+            )
         })
     })
 

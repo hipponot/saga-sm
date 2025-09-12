@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 import type { PrismaClient } from '@prisma/client'
 
-// Mock Prisma client with comprehensive database operations  
+// Mock Prisma client with comprehensive database operations
 export const createMockPrismaClient = () => {
     const mockPrisma = {
         // Connection methods
@@ -141,9 +141,9 @@ export const mockPrisma = createMockPrismaClient()
 
 // Helper function to reset all mocks
 export const resetDatabaseMocks = () => {
-    Object.values(mockPrisma).forEach((model) => {
+    Object.values(mockPrisma).forEach(model => {
         if (typeof model === 'object' && model !== null) {
-            Object.values(model).forEach((method) => {
+            Object.values(model).forEach(method => {
                 if (vi.isMockFunction(method)) {
                     method.mockClear()
                 }

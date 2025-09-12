@@ -27,11 +27,13 @@ src/
 ## Features
 
 ### Database Mocking Infrastructure
+
 - **`database-mock.ts`**: Provides comprehensive mocking for Prisma client operations
 - **Mock factories**: Helper functions to create test data for Bell Schedules, Days, Time Slots, etc.
 - **Reset utilities**: Functions to clear mocks between tests
 
 ### Test Setup
+
 - **`vitest.setup.ts`**: Configures global mocking and test environment
 - **Automatic mock reset**: Database mocks are reset before each test
 - **Dependency injection support**: Works with the existing Inversify container setup
@@ -39,13 +41,15 @@ src/
 ### Unit Tests Created
 
 #### 1. RBV Helper Unit Tests (`rbv-helper-unit.test.ts`)
+
 - ✅ Tests `get_schedule` method with mocked database calls
 - ✅ Tests `upsert_schedule` method for create and update operations
-- ✅ Tests `delete_schedule` method 
+- ✅ Tests `delete_schedule` method
 - ✅ Error handling scenarios
 - ✅ Proper mock verification and assertions
 
 #### 2. Example Controller Tests (`example-controller.test.ts`)
+
 - ✅ Tests controller initialization and dependency injection
 - ✅ Tests tRPC router creation and endpoint availability
 - ✅ Tests helper integration without complex tRPC internals
@@ -85,6 +89,7 @@ pnpm test:all
 ## Mock Capabilities
 
 The database mocking system supports:
+
 - All Prisma model operations (create, read, update, delete, upsert)
 - Complex include relationships
 - Transaction operations
@@ -95,6 +100,7 @@ The database mocking system supports:
 ## Integration with Existing Tests
 
 The new unit tests complement the existing integration tests:
+
 - **Integration tests**: Test with real database for end-to-end scenarios
 - **Unit tests**: Test business logic with mocked dependencies for speed and reliability
 - Both test types can run independently or together

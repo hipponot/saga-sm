@@ -11,7 +11,7 @@ vi.mock('@repo/db', () => ({
 beforeEach(() => {
     // Reset all database mocks before each test
     resetDatabaseMocks()
-    
+
     // Reset any other global state if needed
     vi.clearAllTimers()
 })
