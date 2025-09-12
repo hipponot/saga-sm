@@ -3,6 +3,9 @@ node_modules/
 .pnp
 .pnp.js
 
+# npmrc because it can contains the github token
+.npmrc
+
 # Production builds
 /dist
 /build

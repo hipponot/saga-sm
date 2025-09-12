@@ -85,25 +85,81 @@ check_prerequisites() {
     fi
 }
 
+# Setup GitHub authentication if needed (lightweight version for quick-start)
+setup_github_auth_if_needed() {
+    log_info "Setting up GitHub authentication for package access..."
+    
+    # Check if we already have a valid token in environment
+    if [ -n "$GITHUB_TOKEN" ]; then
+        log_info "Found GITHUB_TOKEN in environment, testing validity..."
+        
+        # Test the current token
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/orgs/hipponot/packages?package_type=npm" 2>/dev/null || echo "000")
+        
+        if [ "$HTTP_CODE" = "200" ]; then
+            log_success "Environment token is valid and has package access"
+            export GITHUB_TOKEN
+            return 0
+        else
+            log_warning "Environment token failed or invalid (HTTP $HTTP_CODE)"
+            unset GITHUB_TOKEN
+        fi
+    fi
+    
+    # Try GitHub CLI
+    if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+        GITHUB_TOKEN=$(gh auth token 2>/dev/null)
+        if [ -n "$GITHUB_TOKEN" ]; then
+            log_info "Using GitHub CLI token"
+            
+            # Test the CLI token
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+                -H "Authorization: Bearer $GITHUB_TOKEN" \
+                "https://api.github.com/orgs/hipponot/packages?package_type=npm" 2>/dev/null || echo "000")
+            
+            if [ "$HTTP_CODE" = "200" ]; then
+                log_success "GitHub CLI token is valid"
+                export GITHUB_TOKEN
+                return 0
+            else
+                log_warning "GitHub CLI token failed (HTTP $HTTP_CODE)"
+            fi
+        fi
+    fi
+    
+    # No valid authentication found
+    log_error "No valid GitHub authentication found for package access"
+    log_info "Quick setup options:"
+    log_info "  1. Set GITHUB_TOKEN: export GITHUB_TOKEN=your_token_here"
+    log_info "  2. Use GitHub CLI: gh auth login --hostname github.com --scopes 'repo,read:packages'"
+    log_info "  3. For local development only: ./scripts/dev-setup.sh local"
+    exit 1
+}
+
 # Setup development environment
 setup_development() {
     log_section "Setting Up Development Environment"
     
+    # Setup GitHub authentication first
+    setup_github_auth_if_needed
+    
     # Run dev setup script
     if [ -x "./scripts/dev-setup.sh" ]; then
         log_info "Running development environment setup..."
-        ./scripts/dev-setup.sh published
+        ./scripts/dev-setup.sh ci
     else
         log_warning "dev-setup.sh not found, running manual setup..."
         
-        # Manual install
+        # Manual install with token
         log_info "Installing dependencies..."
-        pnpm install
+        GITHUB_TOKEN="$GITHUB_TOKEN" pnpm install
     fi
     
     # Ensure workspace symlinks are properly created (important after git clean)
     log_info "Refreshing workspace dependencies..."
-    pnpm install
+    GITHUB_TOKEN="$GITHUB_TOKEN" pnpm install
     
     # Build workspace packages in correct order to establish dependencies
     log_info "Building workspace packages to establish dependencies..."
