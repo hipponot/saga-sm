@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getApiUrl } from '../../src/config/client-config'
+import { useState, useEffect, useCallback } from 'react'
 import { useApiUrl } from '../../src/context/api-url-context'
 import styles from './page.module.css'
 
@@ -16,17 +15,6 @@ interface PingEvent {
     timestamp: string
 }
 
-interface PongResponse {
-    id: string
-    name: string
-    channel: string
-    payload: {
-        reply: string
-        originalMessage: string
-        timestamp: string
-    }
-    timestamp: string
-}
 
 interface EventHistory {
     id: string
@@ -49,7 +37,7 @@ interface RealPingResult {
     success: boolean
     pingEvent: PingEvent
     message: string
-    pubsubResult?: any
+    pubsubResult?: unknown
 }
 
 interface RealPongEvent {
@@ -132,7 +120,9 @@ function RealPingPongSection() {
             if (emittedEvents.length > 0) {
                 // Add any pong responses from the emitted events
                 const pongEvents = emittedEvents
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .filter((event: any) => event.name === 'pong:response')
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .map((event: any) => ({
                         id: event.id,
                         name: event.name,
@@ -218,7 +208,7 @@ function RealPingPongSection() {
                             <strong>Timestamp:</strong>{' '}
                             {new Date(realPingResponse.pingEvent.timestamp).toLocaleString()}
                         </div>
-                        {realPingResponse.pubsubResult && (
+                        {realPingResponse.pubsubResult != null && (
                             <div className={styles.pubsubResult}>
                                 <strong>PubSub Result:</strong>
                                 <pre className={styles.codeBlock}>
@@ -291,8 +281,8 @@ export default function TRPCAPIPage() {
     const [connectionStatus, setConnectionStatus] = useState<
         'disconnected' | 'connecting' | 'connected'
     >('disconnected')
-    const [eventHistory, setEventHistory] = useState<EventHistory[]>([])
-    const [performanceStats, setPerformanceStats] = useState<PerformanceStats>({
+    const [eventHistory] = useState<EventHistory[]>([])
+    const [performanceStats] = useState<PerformanceStats>({
         totalEvents: 0,
         pingEvents: 0,
         pongEvents: 0,
@@ -301,12 +291,7 @@ export default function TRPCAPIPage() {
         lastActivity: new Date().toISOString(),
     })
 
-    useEffect(() => {
-        // Check connection status on mount
-        checkConnectionStatus()
-    }, [])
-
-    const checkConnectionStatus = async () => {
+    const checkConnectionStatus = useCallback(async () => {
         try {
             setConnectionStatus('connecting')
             const response = await fetch(`${apiUrl}/trpc/pubsub.getServiceStatus`)
@@ -315,10 +300,15 @@ export default function TRPCAPIPage() {
             } else {
                 setConnectionStatus('disconnected')
             }
-        } catch (error) {
+        } catch {
             setConnectionStatus('disconnected')
         }
-    }
+    }, [apiUrl])
+
+    useEffect(() => {
+        // Check connection status on mount
+        checkConnectionStatus()
+    }, [checkConnectionStatus])
 
     const testConnection = async () => {
         await checkConnectionStatus()

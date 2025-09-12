@@ -86,7 +86,7 @@ test.describe('Complete User Workflows', () => {
 
         // Navigate back home
         await page.getByRole('link', { name: '← Back to Home' }).click()
-        await expect(page).toHaveURL(/^https?:\/\/[^\/]+\/?$/)
+        await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/)
 
         // Should redirect back to tRPC API
         await page.waitForURL(/\/trpc-api\/?/, { timeout: 10000 })

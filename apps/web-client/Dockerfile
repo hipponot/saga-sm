@@ -1,28 +1,35 @@
 # Dependencies stage - for better layer caching
 FROM node:18-alpine AS dependencies
 
+# Accept GitHub token for private package access
+ARG GITHUB_TOKEN
+
 WORKDIR /app
 
 # Install pnpm (matching the version used in the project)
 RUN npm install -g pnpm@8.15.4
 
 # Copy workspace configuration first (best layer caching)
-COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml saga-sm/turbo.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml turbo.json ./
 
-# Copy saga-soa packages
-COPY saga-soa/ ./saga-soa/
+# Configure GitHub Packages registry for @hipponot packages
+RUN echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc && \
+    if [ -n "$GITHUB_TOKEN" ]; then \
+        echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \
+    else \
+        echo "//npm.pkg.github.com/:_authToken=\${GITHUB_TOKEN}" >> .npmrc; \
+    fi
 
 # Copy pre-built API types (dist folder only)
-COPY saga-sm/apps/api/types/dist/ ./apps/api/types/dist/
+COPY apps/api/types/dist/ ./apps/api/types/dist/
 
 # Create minimal package.json for API types (production only)
 RUN echo '{"name":"@saga-sm/api-types","version":"1.0.0","type":"module","private":true,"main":"./dist/index.js","types":"./dist/index.d.ts","exports":{".":{"types":"./dist/index.d.ts","default":"./dist/index.js"},"./schemas":{"types":"./dist/schemas/index.d.ts","default":"./dist/schemas/index.js"},"./generated":{"types":"./dist/generated/index.d.ts","default":"./dist/generated/index.js"}},"dependencies":{"zod":"^3.25.67"}}' > ./apps/api/types/package.json
 
 # Copy web client package files
-COPY saga-sm/apps/web-client/package.json ./apps/web-client/
+COPY apps/web-client/package.json apps/web-client/.npmrc ./apps/web-client/
 
-# Fix package.json paths for Docker build environment (if any saga-soa deps exist)
-RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/web-client/package.json || true
+# No need to fix package.json paths since we're using published packages
 
 # Install ALL dependencies (this layer cached when package.json files don't change)
 RUN pnpm install --no-frozen-lockfile
@@ -31,12 +38,12 @@ RUN pnpm install --no-frozen-lockfile
 FROM dependencies AS builder
 
 # Copy web client source code only after dependencies are installed
-COPY saga-sm/apps/web-client/app/ ./apps/web-client/app/
-COPY saga-sm/apps/web-client/src/ ./apps/web-client/src/
-COPY saga-sm/apps/web-client/*.json ./apps/web-client/
-COPY saga-sm/apps/web-client/*.ts ./apps/web-client/
-COPY saga-sm/apps/web-client/eslint.config.mjs ./apps/web-client/
-COPY saga-sm/apps/web-client/next.config.js ./apps/web-client/
+COPY apps/web-client/app/ ./apps/web-client/app/
+COPY apps/web-client/src/ ./apps/web-client/src/
+COPY apps/web-client/*.json ./apps/web-client/
+COPY apps/web-client/*.ts ./apps/web-client/
+COPY apps/web-client/eslint.config.mjs ./apps/web-client/
+COPY apps/web-client/next.config.js ./apps/web-client/
 
 # Set Docker environment variable to indicate containerized deployment
 ENV DOCKER_ENV=true
@@ -48,6 +55,9 @@ RUN npx turbo build --filter=@saga-sm/web-client
 # Production stage
 FROM node:18-alpine AS production
 
+# Accept GitHub token for private package access
+ARG GITHUB_TOKEN
+
 WORKDIR /app
 
 # Create non-root user
@@ -56,13 +66,17 @@ RUN addgroup -g 1001 -S nodejs && \
 
 # Copy workspace configuration from builder
 COPY --from=builder /app/pnpm-workspace.yaml /app/package.json /app/pnpm-lock.yaml ./
-COPY --from=builder /app/saga-soa/ ./saga-soa/
 COPY --from=builder /app/apps/api/types/dist/ ./apps/api/types/dist/
-COPY --from=builder /app/apps/web-client/package.json ./apps/web-client/
+COPY --from=builder /app/apps/web-client/package.json /app/apps/web-client/.npmrc ./apps/web-client/
 
 # Recreate minimal package.json for API types and install dependencies
 RUN echo '{"name":"@saga-sm/api-types","version":"1.0.0","type":"module","private":true,"main":"./dist/index.js","types":"./dist/index.d.ts","exports":{".":{"types":"./dist/index.d.ts","default":"./dist/index.js"},"./schemas":{"types":"./dist/schemas/index.d.ts","default":"./dist/schemas/index.js"},"./generated":{"types":"./dist/generated/index.d.ts","default":"./dist/generated/index.js"}},"dependencies":{"zod":"^3.25.67"}}' > ./apps/api/types/package.json && \
-    sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/web-client/package.json || true && \
+    echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc && \
+    if [ -n "$GITHUB_TOKEN" ]; then \
+        echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \
+    else \
+        echo "//npm.pkg.github.com/:_authToken=\${GITHUB_TOKEN}" >> .npmrc; \
+    fi && \
     npm install -g pnpm@8.15.4 serve@14.2.3 && \
     pnpm install --prod --no-frozen-lockfile
 

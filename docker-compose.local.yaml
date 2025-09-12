@@ -1,3 +1,7 @@
+# Docker Compose configuration for local saga-soa development
+# Build context should be run from the dev directory (parent of saga-sm and saga-soa)
+# Usage: cd /path/to/dev && docker-compose -f saga-sm/docker-compose.local.yaml up -d
+
 services:
   # MongoDB Database
   mongodb:
@@ -12,7 +16,7 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-      - ./scripts/mongo-init:/docker-entrypoint-initdb.d
+      - ./saga-sm/scripts/mongo-init:/docker-entrypoint-initdb.d
     networks:
       - saga-sm-network
 
@@ -29,7 +33,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/postgres-init:/docker-entrypoint-initdb.d
+      - ./saga-sm/scripts/postgres-init:/docker-entrypoint-initdb.d
     networks:
       - saga-sm-network
 
@@ -46,13 +50,11 @@ services:
       - saga-sm-network
     command: redis-server --appendonly yes
 
-  # API Service (requires published packages)
+  # API Service (local saga-soa dependencies)
   api:
     build:
       context: .
-      dockerfile: apps/api/Dockerfile
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
+      dockerfile: saga-sm/apps/api/Dockerfile.local
     container_name: saga-sm-api
     restart: unless-stopped
     environment:
@@ -82,7 +84,7 @@ services:
       - saga-sm-network
     volumes:
       # Mount source for development (optional)
-      - ./apps/api/src:/app/apps/api/src:ro
+      - ./saga-sm/apps/api/src:/app/saga-sm/apps/api/src:ro
     profiles:
       - full  # Only start with --profile full
 
@@ -90,10 +92,8 @@ services:
   db-setup:
     build:
       context: .
-      dockerfile: apps/api/Dockerfile
+      dockerfile: saga-sm/apps/api/Dockerfile.local
       target: dependencies
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: saga-sm-db-setup
     environment:
       DATABASE_URL: postgresql://saga_user:password123@postgres:5432/saga_sm
@@ -105,7 +105,7 @@ services:
         condition: service_started
     networks:
       - saga-sm-network
-    working_dir: /app/packages/database
+    working_dir: /app/saga-sm/packages/database
     command: >
       sh -c "
         echo 'Waiting for databases to be ready...' &&
@@ -117,13 +117,11 @@ services:
     profiles:
       - setup
 
-  # Web Client (requires published packages)
+  # Web Client (local saga-soa dependencies)
   web-client:
     build:
       context: .
-      dockerfile: apps/web-client/Dockerfile
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
+      dockerfile: saga-sm/apps/web-client/Dockerfile.local
     container_name: saga-sm-web-client
     restart: unless-stopped
     environment:
@@ -140,8 +138,8 @@ services:
       - saga-sm-network
     volumes:
       # Mount source for development (optional)
-      - ./apps/web-client/app:/app/apps/web-client/app:ro
-      - ./apps/web-client/src:/app/apps/web-client/src:ro
+      - ./saga-sm/apps/web-client/app:/app/saga-sm/apps/web-client/app:ro
+      - ./saga-sm/apps/web-client/src:/app/saga-sm/apps/web-client/src:ro
     profiles:
       - full  # Only start with --profile full
 

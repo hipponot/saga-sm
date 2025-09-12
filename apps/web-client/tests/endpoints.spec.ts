@@ -24,7 +24,7 @@ test.describe('Endpoints Page Functionality', () => {
 
         await backLink.click()
         // Home redirects to /trpc-api so check for either
-        await expect(page).toHaveURL(/^https?:\/\/[^\/]+(\/trpc-api\/?|\/?)?$/)
+        await expect(page).toHaveURL(/^https?:\/\/[^/]+(\/(trpc-api\/?)?)?$/)
     })
 
     test('endpoint list is populated', async ({ page }) => {

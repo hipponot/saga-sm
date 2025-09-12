@@ -11,7 +11,7 @@ interface Example {
     status: 'draft' | 'published' | 'archived'
     priority: 'low' | 'medium' | 'high'
     tags: string[]
-    metadata?: Record<string, any>
+    metadata?: Record<string, string | number | boolean>
     createdAt: string
     updatedAt: string
 }
