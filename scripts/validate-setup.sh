@@ -177,7 +177,8 @@ main() {
         echo ""
         echo "Next steps:"
         echo "  pnpm dev              # Start development servers"
-        echo "  pnpm test             # Run all tests"
+        echo "  pnpm test             # Run unit tests"
+        echo "  pnpm playwright       # Run E2E tests"
         echo "  ./scripts/quick-start.sh # Re-run setup if needed"
     else
         echo -e "${RED}❌ Some validation checks failed.${NC}"

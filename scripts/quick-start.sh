@@ -101,6 +101,10 @@ setup_development() {
         pnpm install
     fi
     
+    # Ensure workspace symlinks are properly created (important after git clean)
+    log_info "Refreshing workspace dependencies..."
+    pnpm install
+    
     log_success "Development environment configured"
 }
 

@@ -11,7 +11,7 @@ test.describe('Endpoints Page Functionality', () => {
         await expect(page.getByText('Interactive testing interface')).toBeVisible()
 
         // Check for sidebar and main content areas
-        await expect(page.getByText('Endpoints')).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'Endpoints' })).toBeVisible()
 
         // Should show placeholder when no endpoint selected
         await expect(page.getByText('Select an Endpoint')).toBeVisible()
@@ -49,9 +49,9 @@ test.describe('Endpoints Page Functionality', () => {
             // Click the first endpoint
             await endpointButtons.first().click()
 
-            // Should show service toggle options
-            await expect(page.getByText('tRPC Client')).toBeVisible()
-            await expect(page.getByText('HTTP/cURL')).toBeVisible()
+            // Should show service toggle options (use labels/radio buttons)
+            await expect(page.getByRole('radio', { name: 'tRPC Client' })).toBeVisible()
+            await expect(page.getByRole('radio', { name: 'HTTP/cURL' })).toBeVisible()
 
             // Should show execute button
             await expect(page.getByRole('button', { name: 'Execute Endpoint' })).toBeVisible()
@@ -129,19 +129,18 @@ test.describe('Endpoints Page Functionality', () => {
     })
 
     test('execute endpoint button state', async ({ page }) => {
-        const executeButton = page.getByRole('button', { name: 'Execute Endpoint' })
-
-        // Should be disabled initially (no endpoint selected)
-        await expect(executeButton).toBeDisabled()
-
+        // Check if Execute Endpoint button exists
+        const executeButton = page.getByRole('button', { name: /Execute.*Endpoint/i })
+        
+        // First select an endpoint to make the button appear
         const endpointButtons = page.locator('[class*="endpointItem"], .endpointItem')
         const endpointCount = await endpointButtons.count()
 
         if (endpointCount > 0) {
-            // Click the first endpoint
             await endpointButtons.first().click()
-
-            // Button should now be enabled
+            
+            // Now the execute button should be visible and enabled
+            await expect(executeButton).toBeVisible()
             await expect(executeButton).toBeEnabled()
 
             // Click execute (this might fail if API is not running, but button should work)

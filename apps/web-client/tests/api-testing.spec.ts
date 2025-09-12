@@ -9,7 +9,7 @@ test.describe('API Testing Functionality', () => {
     test('api-test page loads with correct elements', async ({ page }) => {
         // Check main elements
         await expect(page.getByText('🧪 Example API Tester')).toBeVisible()
-        await expect(page.getByText('API Configuration')).toBeVisible()
+        await expect(page.getByRole('heading', { name: '🔗 API Configuration' })).toBeVisible()
         await expect(page.getByText('API Mode')).toBeVisible()
         await expect(page.getByText('Select Endpoint')).toBeVisible()
     })
@@ -150,7 +150,7 @@ test.describe('API Testing Functionality', () => {
     test('navigation links work correctly', async ({ page }) => {
         // Test Endpoint List link
         await page.getByRole('link', { name: '📋 Endpoint List' }).click()
-        await expect(page).toHaveURL('/endpoints')
+        await expect(page).toHaveURL(/\/endpoints\/?/)
 
         // Go back and test Home link
         await page.goto('/api-test')

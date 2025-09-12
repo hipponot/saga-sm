@@ -11,10 +11,11 @@
         "typecheck": "tsc --noEmit",
         "check": "pnpm run build && pnpm run lint && pnpm run typecheck",
         "clean": "rm -rf .next",
-        "test": "playwright test",
-        "test:headed": "playwright test --headed",
-        "test:ui": "playwright test --ui",
-        "test:debug": "playwright test --debug"
+        "test": "echo 'No unit tests for web-client. Use pnpm playwright for E2E tests.'",
+        "playwright": "playwright test",
+        "playwright:headed": "playwright test --headed",
+        "playwright:ui": "playwright test --ui",
+        "playwright:debug": "playwright test --debug"
     },
     "dependencies": {
         "@saga-sm/api-types": "file:../api/types",

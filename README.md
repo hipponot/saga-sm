@@ -155,10 +155,16 @@ pnpm dev
 ```bash
 pnpm dev          # Run both API and web client
 pnpm build        # Build all applications  
-pnpm test         # Run all tests
+pnpm test         # Run unit tests (API, types)
 pnpm check        # Full validation (build + test + lint + typecheck)
 pnpm lint         # Lint all code
 pnpm typecheck    # TypeScript validation
+
+# End-to-End Testing
+pnpm playwright         # Run E2E tests (headless)
+pnpm playwright:headed  # Run E2E tests (with browser UI)
+pnpm playwright:ui      # Run E2E tests (interactive UI)
+pnpm playwright:debug   # Debug E2E tests
 
 # Deployment (from anywhere in monorepo)
 pnpm run deploy:web     # Deploy web client to Amplify
@@ -270,6 +276,11 @@ The web client provides comprehensive testing tools:
 ## 🚨 Troubleshooting
 
 ### Common Issues
+
+**"Cannot find module '@saga-sm/api-types'" or similar dependency errors**
+- This happens after `git clean` or when workspace symlinks are broken
+- Fix: Run `pnpm install` to recreate workspace symlinks
+- Or re-run: `./scripts/quick-start.sh`
 
 **"saga-soa packages not found"**
 - Ensure saga-soa is cloned in the correct directory structure
