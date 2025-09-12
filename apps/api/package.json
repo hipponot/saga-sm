@@ -1,61 +1,62 @@
 {
-    "name": "@saga-sm/api",
-    "version": "1.0.0",
-    "description": "Schedule management tRPC API service",
-    "type": "module",
-    "main": "dist/main.js",
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "default": "./dist/index.js"
-        }
-    },
-    "scripts": {
-        "dev": "tsup --watch --onSuccess \"node dist/main.js\"",
-        "build": "tsup",
-        "start": "node dist/main.js",
-        "test": "vitest run",
-        "test:watch": "vitest",
-        "test:integration": "vitest run --config vitest.integration.config.ts",
-        "clean": "rm -rf dist",
-        "check": "pnpm run build && pnpm run test && pnpm run lint && pnpm run typecheck",
-        "lint": "prettier --check .",
-        "lint:fix": "prettier --write .",
-        "typecheck": "tsc --noEmit",
-        "prisma:generate": "prisma generate --schema ./src/sectors/rbv/prisma/schema.prisma"
-    },
-    "dependencies": {
-        "@prisma/client": "^6.16.0",
-        "@repo/db": "workspace:*",
-        "@saga-soa/api-core": "file:../../../saga-soa/packages/api-core",
-        "@saga-soa/config": "file:../../../saga-soa/packages/config",
-        "@saga-soa/db": "file:../../../saga-soa/packages/db",
-        "@saga-soa/logger": "file:../../../saga-soa/packages/logger",
-        "@saga-soa/pubsub-core": "file:../../../saga-soa/packages/pubsub-core",
-        "guid-typescript": "^1.0.9",
-        "@hipponot/api-core": "file:../../../saga-soa/packages/api-core",
-        "@hipponot/db": "file:../../../saga-soa/packages/db",
-        "@hipponot/logger": "file:../../../saga-soa/packages/logger",
-        "@hipponot/pubsub-core": "file:../../../saga-soa/packages/pubsub-core",
-        "inversify": "^6.0.2",
-        "reflect-metadata": "^0.2.2",
-        "zod": "^3.22.4",
-        "@hipponot/config": "file:../../../saga-soa/packages/config",
-        "@saga-sm/api-types": "file:./types"
-    },
-    "devDependencies": {
-        "@faker-js/faker": "^10.0.0",
-        "@types/node": "^18.19.31",
-        "fishery": "^2.3.1",
-        "prettier": "^3.2.5",
-        "prisma": "^6.16.0",
-        "tsup": "^8.0.2",
-        "typescript": "^5.8.2",
-        "vitest": "^1.6.0",
-        "@hipponot/trpc-codegen": "file:../../../saga-soa/packages/trpc-codegen"
-    },
-    "engines": {
-        "node": ">=18"
-    },
-    "private": true
+  "name": "@saga-sm/api",
+  "version": "1.0.0",
+  "description": "Schedule management tRPC API service",
+  "type": "module",
+  "main": "dist/main.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "tsup --watch --onSuccess \"node dist/main.js\"",
+    "build": "tsup",
+    "start": "node dist/main.js",
+    "test": "vitest run --config vitest.config.ts",
+    "test:unit": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "test:watch:unit": "vitest --config vitest.config.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:coverage": "vitest run --coverage",
+    "test:all": "pnpm run test:unit && pnpm run test:integration",
+    "test:setup": "../../scripts/setup-test-env.sh",
+    "clean": "rm -rf dist",
+    "check": "pnpm run build && pnpm run test:all && pnpm run lint && pnpm run typecheck",
+    "lint": "prettier --check .",
+    "lint:fix": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate --schema ../../packages/database/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@hipponot/api-core": "file:../../../saga-soa/packages/api-core",
+    "@hipponot/config": "file:../../../saga-soa/packages/config",
+    "@hipponot/db": "file:../../../saga-soa/packages/db",
+    "@hipponot/logger": "file:../../../saga-soa/packages/logger",
+    "@hipponot/pubsub-core": "file:../../../saga-soa/packages/pubsub-core",
+    "@prisma/client": "^6.16.0",
+    "@repo/db": "workspace:*",
+    "@saga-sm/api-types": "file:./types",
+    "guid-typescript": "^1.0.9",
+    "inversify": "^6.0.2",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.0.0",
+    "@hipponot/trpc-codegen": "file:../../../saga-soa/packages/trpc-codegen",
+    "@types/node": "^18.19.31",
+    "@vitest/coverage-v8": "^1.6.1",
+    "fishery": "^2.3.1",
+    "prettier": "^3.2.5",
+    "prisma": "^6.16.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.8.2",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true
 }

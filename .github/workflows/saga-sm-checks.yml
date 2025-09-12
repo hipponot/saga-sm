@@ -4,19 +4,19 @@ on:
   push:
     branches: [main]
     paths:
-      - 'apps/api/**'
-      - 'packages/**'
-      - 'scripts/**'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/**'
+      - "apps/api/**"
+      - "packages/**"
+      - "scripts/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/**"
   pull_request:
-    branches: [main]
     paths:
-      - 'apps/api/**'
-      - 'packages/**'
-      - 'scripts/**'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/**'
+      - "apps/api/**"
+      - "packages/**"
+      - "scripts/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/**"
+  workflow_dispatch:
 
 # Concurrency groups to prevent multiple runs from interfering
 concurrency:
@@ -44,7 +44,11 @@ jobs:
     name: 🧹 Lint & Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/gh_7032
     # Job-level concurrency for this specific job type
     concurrency:
       group: lint-unit-${{ github.ref }}
@@ -83,7 +87,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 📦 Install dependencies
+<<<<<<< HEAD
         run: pnpm install --frozen-lockfile
+=======
+        run: pnpm install --no-frozen-lockfile
+>>>>>>> origin/gh_7032
 
       - name: 🏗️ Generate Prisma client
         run: |
@@ -121,7 +129,11 @@ jobs:
     name: 🔗 Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/gh_7032
     # Job-level concurrency for integration tests
     concurrency:
       group: integration-${{ github.ref }}
@@ -150,7 +162,11 @@ jobs:
           MONGO_INITDB_ROOT_PASSWORD: password123
           MONGO_INITDB_DATABASE: saga_sm
         options: >-
+<<<<<<< HEAD
           --health-cmd mongosh --eval "db.runCommand('ping')"
+=======
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'"
+>>>>>>> origin/gh_7032
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -199,7 +215,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 📦 Install dependencies
+<<<<<<< HEAD
         run: pnpm install --frozen-lockfile
+=======
+        run: pnpm install --no-frozen-lockfile
+>>>>>>> origin/gh_7032
 
       - name: 🗄️ Setup database schema
         run: |
@@ -229,6 +249,7 @@ jobs:
     needs: [lint-and-unit-tests, integration-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 20
+<<<<<<< HEAD
     
     # Job-level concurrency for full suite
     concurrency:
@@ -240,6 +261,19 @@ jobs:
       fail-fast: false  # Continue testing other configs if one fails
       matrix:
         node-version: [20]  # Can add more versions later: [18, 20, 22]
+=======
+
+    # Job-level concurrency for full suite
+    concurrency:
+      group: full-suite-${{ github.ref }}
+      cancel-in-progress: false # Don't cancel full suite runs
+
+    # Strategy for testing different configurations
+    strategy:
+      fail-fast: false # Continue testing other configs if one fails
+      matrix:
+        node-version: [20] # Can add more versions later: [18, 20, 22]
+>>>>>>> origin/gh_7032
 
     services:
       postgres:
@@ -263,7 +297,11 @@ jobs:
           MONGO_INITDB_ROOT_PASSWORD: password123
           MONGO_INITDB_DATABASE: saga_sm
         options: >-
+<<<<<<< HEAD
           --health-cmd mongosh --eval "db.runCommand('ping')"
+=======
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'"
+>>>>>>> origin/gh_7032
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -283,7 +321,11 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: 📦 Install dependencies
+<<<<<<< HEAD
         run: pnpm install --frozen-lockfile
+=======
+        run: pnpm install --no-frozen-lockfile
+>>>>>>> origin/gh_7032
 
       - name: 🏗️ Build all components
         run: |
@@ -316,7 +358,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint-and-unit-tests, integration-tests]
     if: always()
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/gh_7032
     # Don't cancel status reporting
     concurrency:
       group: ci-status-${{ github.ref }}

@@ -27,7 +27,7 @@ export default function ExampleDemoPage() {
             tags: ['documentation', 'tutorial'],
             metadata: { author: 'John Doe', category: 'guide' },
             createdAt: '2024-01-15T09:00:00Z',
-            updatedAt: '2024-01-15T09:00:00Z'
+            updatedAt: '2024-01-15T09:00:00Z',
         },
         {
             id: '2',
@@ -38,8 +38,8 @@ export default function ExampleDemoPage() {
             tags: ['api', 'integration', 'tutorial'],
             metadata: { author: 'Jane Smith', category: 'technical' },
             createdAt: '2024-01-14T14:00:00Z',
-            updatedAt: '2024-01-15T10:00:00Z'
-        }
+            updatedAt: '2024-01-15T10:00:00Z',
+        },
     ])
 
     const [newExample, setNewExample] = useState({
@@ -48,7 +48,7 @@ export default function ExampleDemoPage() {
         status: 'draft' as 'draft' | 'published' | 'archived',
         priority: 'medium' as 'low' | 'medium' | 'high',
         tags: [] as string[],
-        tagInput: ''
+        tagInput: '',
     })
 
     const [isCreating, setIsCreating] = useState(false)
@@ -68,9 +68,9 @@ export default function ExampleDemoPage() {
                 tags: newExample.tags,
                 metadata: {},
                 createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                updatedAt: new Date().toISOString(),
             }
-            
+
             setExamples(prev => [...prev, example])
             setNewExample({
                 title: '',
@@ -78,7 +78,7 @@ export default function ExampleDemoPage() {
                 status: 'draft',
                 priority: 'medium',
                 tags: [],
-                tagInput: ''
+                tagInput: '',
             })
             setIsCreating(false)
         }, 1000)
@@ -93,7 +93,7 @@ export default function ExampleDemoPage() {
             setNewExample(prev => ({
                 ...prev,
                 tags: [...prev.tags, prev.tagInput.trim()],
-                tagInput: ''
+                tagInput: '',
             }))
         }
     }
@@ -101,7 +101,7 @@ export default function ExampleDemoPage() {
     const handleRemoveTag = (tagToRemove: string) => {
         setNewExample(prev => ({
             ...prev,
-            tags: prev.tags.filter(tag => tag !== tagToRemove)
+            tags: prev.tags.filter(tag => tag !== tagToRemove),
         }))
     }
 
@@ -112,7 +112,9 @@ export default function ExampleDemoPage() {
     return (
         <div className={styles.container}>
             <header className={styles.header}>
-                <Link href="/" className={styles.backLink}>← Back to Home</Link>
+                <Link href="/" className={styles.backLink}>
+                    ← Back to Home
+                </Link>
                 <h1>Example Management Demo</h1>
                 <p>Interactive demonstration of example creation and management</p>
             </header>
@@ -127,7 +129,9 @@ export default function ExampleDemoPage() {
                                 type="text"
                                 required
                                 value={newExample.title}
-                                onChange={(e) => setNewExample(prev => ({ ...prev, title: e.target.value }))}
+                                onChange={e =>
+                                    setNewExample(prev => ({ ...prev, title: e.target.value }))
+                                }
                                 placeholder="Enter example title"
                             />
                         </div>
@@ -136,7 +140,12 @@ export default function ExampleDemoPage() {
                             <label>Description</label>
                             <textarea
                                 value={newExample.description}
-                                onChange={(e) => setNewExample(prev => ({ ...prev, description: e.target.value }))}
+                                onChange={e =>
+                                    setNewExample(prev => ({
+                                        ...prev,
+                                        description: e.target.value,
+                                    }))
+                                }
                                 placeholder="Optional description"
                                 rows={3}
                             />
@@ -147,7 +156,15 @@ export default function ExampleDemoPage() {
                                 <label>Status</label>
                                 <select
                                     value={newExample.status}
-                                    onChange={(e) => setNewExample(prev => ({ ...prev, status: e.target.value as 'draft' | 'published' | 'archived' }))}
+                                    onChange={e =>
+                                        setNewExample(prev => ({
+                                            ...prev,
+                                            status: e.target.value as
+                                                | 'draft'
+                                                | 'published'
+                                                | 'archived',
+                                        }))
+                                    }
                                 >
                                     <option value="draft">Draft</option>
                                     <option value="published">Published</option>
@@ -159,7 +176,12 @@ export default function ExampleDemoPage() {
                                 <label>Priority</label>
                                 <select
                                     value={newExample.priority}
-                                    onChange={(e) => setNewExample(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
+                                    onChange={e =>
+                                        setNewExample(prev => ({
+                                            ...prev,
+                                            priority: e.target.value as 'low' | 'medium' | 'high',
+                                        }))
+                                    }
                                 >
                                     <option value="low">Low</option>
                                     <option value="medium">Medium</option>
@@ -174,29 +196,43 @@ export default function ExampleDemoPage() {
                                 <input
                                     type="text"
                                     value={newExample.tagInput}
-                                    onChange={(e) => setNewExample(prev => ({ ...prev, tagInput: e.target.value }))}
-                                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                                    onChange={e =>
+                                        setNewExample(prev => ({
+                                            ...prev,
+                                            tagInput: e.target.value,
+                                        }))
+                                    }
+                                    onKeyPress={e =>
+                                        e.key === 'Enter' && (e.preventDefault(), handleAddTag())
+                                    }
                                     placeholder="Add a tag and press Enter"
                                 />
-                                <button type="button" onClick={handleAddTag} className="btn-secondary">Add Tag</button>
+                                <button
+                                    type="button"
+                                    onClick={handleAddTag}
+                                    className="btn-secondary"
+                                >
+                                    Add Tag
+                                </button>
                             </div>
                             {newExample.tags.length > 0 && (
                                 <div className={styles.tags}>
-                                    {newExample.tags.map((tag) => (
+                                    {newExample.tags.map(tag => (
                                         <span key={tag} className={styles.tag}>
                                             {tag}
-                                            <button type="button" onClick={() => handleRemoveTag(tag)}>×</button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveTag(tag)}
+                                            >
+                                                ×
+                                            </button>
                                         </span>
                                     ))}
                                 </div>
                             )}
                         </div>
 
-                        <button 
-                            type="submit" 
-                            className="btn-primary"
-                            disabled={isCreating}
-                        >
+                        <button type="submit" className="btn-primary" disabled={isCreating}>
                             {isCreating ? 'Creating...' : 'Create Example'}
                         </button>
                     </form>
@@ -204,25 +240,29 @@ export default function ExampleDemoPage() {
 
                 <div className={styles.exampleList}>
                     <h2>Examples ({examples.length})</h2>
-                    
+
                     {examples.length === 0 ? (
                         <div className={styles.emptyState}>
                             <p>No examples created yet. Create your first example above!</p>
                         </div>
                     ) : (
                         <div className={styles.exampleGrid}>
-                            {examples.map((example) => (
+                            {examples.map(example => (
                                 <div key={example.id} className={styles.exampleCard}>
                                     <div className={styles.exampleHeader}>
                                         <h3>{example.title}</h3>
                                         <div className={styles.exampleActions}>
-                                            <span className={`${styles.status} ${styles[example.status]}`}>
+                                            <span
+                                                className={`${styles.status} ${styles[example.status]}`}
+                                            >
                                                 {example.status}
                                             </span>
-                                            <span className={`${styles.priority} ${styles[example.priority]}`}>
+                                            <span
+                                                className={`${styles.priority} ${styles[example.priority]}`}
+                                            >
                                                 {example.priority}
                                             </span>
-                                            <button 
+                                            <button
                                                 className="btn-danger"
                                                 onClick={() => handleDeleteExample(example.id)}
                                             >
@@ -230,26 +270,30 @@ export default function ExampleDemoPage() {
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     {example.description && (
                                         <p className={styles.exampleDescription}>
                                             {example.description}
                                         </p>
                                     )}
-                                    
+
                                     <div className={styles.exampleDetails}>
                                         {example.tags.length > 0 && (
                                             <div className={styles.tags}>
-                                                {example.tags.map((tag) => (
-                                                    <span key={tag} className={styles.tag}>{tag}</span>
+                                                {example.tags.map(tag => (
+                                                    <span key={tag} className={styles.tag}>
+                                                        {tag}
+                                                    </span>
                                                 ))}
                                             </div>
                                         )}
                                         <div className={styles.timeInfo}>
-                                            <strong>Created:</strong> {formatDateTime(example.createdAt)}
+                                            <strong>Created:</strong>{' '}
+                                            {formatDateTime(example.createdAt)}
                                         </div>
                                         <div className={styles.timeInfo}>
-                                            <strong>Updated:</strong> {formatDateTime(example.updatedAt)}
+                                            <strong>Updated:</strong>{' '}
+                                            {formatDateTime(example.updatedAt)}
                                         </div>
                                     </div>
                                 </div>

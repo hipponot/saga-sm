@@ -56,7 +56,9 @@
 .section {
     background: var(--background);
     border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
     padding: 24px;
     margin-bottom: 24px;
     border: 1px solid var(--gray-alpha-100);
@@ -674,7 +676,8 @@
 }
 
 @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 1;
     }
     50% {
@@ -686,63 +689,63 @@
     .container {
         padding: 0 16px;
     }
-    
+
     .title {
         font-size: 32px;
     }
-    
+
     .subtitle {
         font-size: 16px;
     }
-    
+
     .section {
         padding: 16px;
     }
-    
+
     .grid,
     .gridLg {
         grid-template-columns: 1fr;
     }
-    
+
     .connectionStatusRow {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .connectionControls {
         width: 100%;
     }
-    
+
     .buttonGroup {
         flex-direction: column;
         margin: 1em 0;
     }
-    
+
     .connectionControls {
         margin: 0.5em 0;
     }
-    
+
     .subscriptionStatus {
         margin: 0.5em 0;
     }
-    
+
     .formGroup {
         margin-top: 0.5em;
     }
-    
+
     .descriptionText {
         margin: 0.5em 0;
     }
-    
+
     .button {
         width: 100%;
         text-align: center;
     }
-    
+
     .statsGrid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .pingResponseGrid {
         grid-template-columns: 1fr;
     }

@@ -3,27 +3,31 @@
 ## 📋 TLDR
 
 **Key Environment Variables:**
+
 - `NEXT_PUBLIC_SAGA_SM_API_URL` - API endpoint (auto-configured from SSM)
-- `BUILD_ENV` - Environment (`dev`/`qa`/`prod`) 
+- `BUILD_ENV` - Environment (`dev`/`qa`/`prod`)
 
 **How It Works:**
+
 - 🔧 Deploy script reads API URLs from **SSM Parameter Store**
 - 🌐 Environment-specific URLs set automatically based on `--env` flag
 - 📦 Build environment variables injected during deployment
 - ⚡ **Zero manual configuration** required - all automated
 
 **SSM Parameters:**
+
 ```bash
 /saga-sm/web-client/api-url/dev    # Used by feature branches
-/saga-sm/web-client/api-url/qa     # Used by develop branch  
+/saga-sm/web-client/api-url/qa     # Used by develop branch
 /saga-sm/web-client/api-url/prod   # Used by main branch
 ```
 
 **Realistic URL Examples:**
+
 ```bash
 # Ephemeral branch URLs (auto-generated)
 https://feature-user-auth.d2jpp1ywz4pb1c.amplifyapp.com
-https://bugfix-api-timeout.d2jpp1ywz4pb1c.amplifyapp.com  
+https://bugfix-api-timeout.d2jpp1ywz4pb1c.amplifyapp.com
 https://pr-45.d2jpp1ywz4pb1c.amplifyapp.com
 ```
 
@@ -55,16 +59,19 @@ The web client uses environment-specific API URLs to communicate with the backen
 ## Environment Configuration
 
 ### Development Environment
+
 - **SSM Parameter**: `/saga-sm/web-client/api-url/dev`
 - **Default Value**: `http://localhost:3000`
 - **Used for**: Local development, feature branches, PR previews
 
 ### QA/Staging Environment
+
 - **SSM Parameter**: `/saga-sm/web-client/api-url/qa`
 - **Default Value**: `https://api-qa.example.com`
 - **Used for**: Testing, staging deployments
 
 ### Production Environment
+
 - **SSM Parameter**: `/saga-sm/web-client/api-url/prod`
 - **Default Value**: `https://api.example.com`
 - **Used for**: Production deployments (main branch)
@@ -72,20 +79,26 @@ The web client uses environment-specific API URLs to communicate with the backen
 ## How It Works
 
 ### 1. Infrastructure Setup
+
 The CloudFormation template (`template.yaml`) creates:
+
 - SSM parameters for each environment
 - Amplify app with default environment variables
 - IAM permissions for GitHub Actions to read SSM parameters
 
 ### 2. Deployment Process
+
 During GitHub Actions deployment:
+
 1. Determines environment based on branch (`main` = prod, others = dev)
 2. Retrieves appropriate API URL from SSM Parameter Store
 3. Updates Amplify branch environment variables
 4. Deploys the application with environment-specific configuration
 
 ### 3. Runtime Usage
+
 The Next.js application:
+
 1. Reads `NEXT_PUBLIC_SAGA_SM_API_URL` at build time
 2. Uses this URL for all API calls through the client configuration
 3. Automatically adapts to the deployed environment
@@ -143,12 +156,12 @@ aws amplify get-branch --app-id "$APP_ID" --branch-name "main" --query "branch.e
 
 ## Branch-to-Environment Mapping
 
-| Branch Pattern | Environment | API URL Source |
-|---------------|-------------|----------------|
-| `main` | `prod` | `/saga-sm/web-client/api-url/prod` |
-| `develop` | `qa` | `/saga-sm/web-client/api-url/qa` |
-| `pr-*` | `dev` | `/saga-sm/web-client/api-url/dev` |
-| Others | `dev` | `/saga-sm/web-client/api-url/dev` |
+| Branch Pattern | Environment | API URL Source                     |
+| -------------- | ----------- | ---------------------------------- |
+| `main`         | `prod`      | `/saga-sm/web-client/api-url/prod` |
+| `develop`      | `qa`        | `/saga-sm/web-client/api-url/qa`   |
+| `pr-*`         | `dev`       | `/saga-sm/web-client/api-url/dev`  |
+| Others         | `dev`       | `/saga-sm/web-client/api-url/dev`  |
 
 ## Deployment Commands
 
@@ -197,6 +210,7 @@ aws amplify update-branch \
 ### Permission Issues
 
 If GitHub Actions can't read SSM parameters:
+
 1. Check the IAM role permissions in the CloudFormation template
 2. Verify the OIDC provider is configured correctly
 3. Ensure the GitHub repository configuration matches the IAM trust policy
@@ -214,4 +228,3 @@ If GitHub Actions can't read SSM parameters:
 - Implement encrypted SSM parameters for sensitive values
 - Add automated validation of API URLs during deployment
 - Create monitoring/alerting for environment variable changes
-

@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'export',        // Enable static export for Amplify
-    trailingSlash: true,     // Required for Amplify
+    output: 'export', // Enable static export for Amplify
+    trailingSlash: true, // Required for Amplify
     images: {
-        unoptimized: true,   // Disable image optimization for static export
+        unoptimized: true, // Disable image optimization for static export
     },
     compiler: {
         styledComponents: false,

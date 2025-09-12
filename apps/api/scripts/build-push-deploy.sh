@@ -72,16 +72,64 @@ check_prerequisites() {
 # Function to map environment names to samconfig section names
 get_samconfig_env() {
     local env=$1
+    local is_ci=$2
+    
+    if [ "$is_ci" = "true" ]; then
+        # Use CI-specific sections for CI/CD deployments
+        case "$env" in
+            "dev")
+                echo "ci-dev"
+                ;;
+            "qa")
+                echo "ci-qa"
+                ;;
+            "prod")
+                echo "ci-prod"
+                ;;
+            "ephemeral")
+                echo "ephemeral"  # Ephemeral already has EcsExecEnabled=true
+                ;;
+            *)
+                log_warning "Unknown CI environment '$env', using ci-$env"
+                echo "ci-$env"
+                ;;
+        esac
+    else
+        # Use manual deployment sections (will enable ECS Exec)
+        case "$env" in
+            "dev")
+                echo "default"
+                ;;
+            "qa"|"prod"|"ephemeral")
+                echo "$env"
+                ;;
+            *)
+                log_warning "Unknown environment '$env', using as-is"
+                echo "$env"
+                ;;
+        esac
+    fi
+}
+
+# Function to get the correct stack name for task_connect.sh
+get_stack_name() {
+    local env=$1
     case "$env" in
         "dev")
-            echo "default"
+            echo "saga-sm-api-fargate"
             ;;
-        "qa"|"prod"|"ephemeral")
-            echo "$env"
+        "qa")
+            echo "saga-sm-api-qa-fargate"
+            ;;
+        "prod")
+            echo "saga-sm-api-prod-fargate"
+            ;;
+        "ephemeral")
+            echo "saga-sm-api-ephemeral-{branch_identifier}"
             ;;
         *)
-            log_warning "Unknown environment '$env', using as-is"
-            echo "$env"
+            log_warning "Unknown environment '$env', using saga-sm-api-$env-fargate"
+            echo "saga-sm-api-$env-fargate"
             ;;
     esac
 }
@@ -90,6 +138,18 @@ get_samconfig_env() {
 BASE_TAG=${1:-latest}
 ENVIRONMENT=${2:-dev}
 DEPLOY=${3:-true}  # Set to false to skip deployment
+
+# Detect if running in CI/CD environment
+# Common CI/CD environment variables
+if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ] || [ -n "$GITLAB_CI" ] || [ -n "$JENKINS_HOME" ] || [ -n "$BUILDKITE" ] || [ -n "$CIRCLECI" ] || [ -n "$CODEBUILD_BUILD_ID" ]; then
+    IS_CI="true"
+    ECS_EXEC_ENABLED="false"
+    log_info "Running in CI/CD environment - ECS Exec will be disabled"
+else
+    IS_CI="false"
+    ECS_EXEC_ENABLED="true"
+    log_info "Running in local/manual environment - ECS Exec will be enabled for debugging"
+fi
 
 # Generate unique deployment tag with timestamp to force CloudFormation changes
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
@@ -107,8 +167,9 @@ echo "  Image Name:     $IMAGE_NAME"
 echo "  Base Tag:       $BASE_TAG"
 echo "  Deploy Tag:     $DEPLOY_TAG"
 echo "  Environment:    $ENVIRONMENT"
-echo "  SAM Config:     $(get_samconfig_env $ENVIRONMENT)"
+echo "  SAM Config:     $(get_samconfig_env $ENVIRONMENT $IS_CI)"
 echo "  Deploy:         $DEPLOY"
+echo "  ECS Exec:       $ECS_EXEC_ENABLED (CI/CD: $IS_CI)"
 echo "  ECR Repository: $ECR_REPOSITORY"
 echo "  API Root:       $API_ROOT"
 echo "  Project Root:   $PROJECT_ROOT"  
@@ -195,21 +256,34 @@ fi
 log_step "Step 6: Cleaning up local images"
 docker rmi "$IMAGE_NAME:$TAG" "$ECR_REPOSITORY:$DEPLOY_TAG" "$ECR_REPOSITORY:latest" >/dev/null 2>&1 || true
 
-# Update samconfig.yaml with new image URI
+# Update samconfig.yaml with new image URI and ECS Exec setting
 update_samconfig() {
     local environment=$1
     local new_image_uri=$2
+    local enable_ecs_exec=$3
     local samconfig_file="$API_ROOT/samconfig.yaml"
     
     log_info "Updating samconfig.yaml for environment: $environment"
+    log_info "Setting ImageId=$new_image_uri"
+    log_info "Setting EcsExecEnabled=$enable_ecs_exec"
     
-    # Use sed to update ImageId parameter for the environment
-    if sed -i.backup "/^$environment:/,/^[a-zA-Z]/ { /- ImageId=/s|ImageId=.*|ImageId=$new_image_uri|; }" "$samconfig_file"; then
-        rm -f "$samconfig_file.backup"
-        log_info "✅ Successfully updated samconfig.yaml"
+    # Create a backup
+    cp "$samconfig_file" "$samconfig_file.backup"
+    
+    # Update ImageId parameter for the environment
+    if sed -i "/^$environment:/,/^[a-zA-Z]/ { /- ImageId=/s|ImageId=.*|ImageId=$new_image_uri|; }" "$samconfig_file"; then
+        # Update EcsExecEnabled parameter for the environment
+        if sed -i "/^$environment:/,/^[a-zA-Z]/ { /- EcsExecEnabled=/s|EcsExecEnabled=.*|EcsExecEnabled=$enable_ecs_exec|; }" "$samconfig_file"; then
+            rm -f "$samconfig_file.backup"
+            log_info "✅ Successfully updated samconfig.yaml"
+        else
+            mv "$samconfig_file.backup" "$samconfig_file"
+            log_error "Failed to update EcsExecEnabled in samconfig.yaml"
+            return 1
+        fi
     else
-        [ -f "$samconfig_file.backup" ] && mv "$samconfig_file.backup" "$samconfig_file"
-        log_error "Failed to update samconfig.yaml"
+        mv "$samconfig_file.backup" "$samconfig_file"
+        log_error "Failed to update ImageId in samconfig.yaml"
         return 1
     fi
 }
@@ -218,21 +292,23 @@ update_samconfig() {
 if [ "$DEPLOY" = "true" ]; then
     log_step "Step 7: Deploying to $ENVIRONMENT environment"
     
-    # Get the correct samconfig environment name
-    SAMCONFIG_ENV=$(get_samconfig_env "$ENVIRONMENT")
-    log_info "Using samconfig environment: $SAMCONFIG_ENV"
+    # Get the correct samconfig environment name based on CI/CD detection
+    SAMCONFIG_ENV=$(get_samconfig_env "$ENVIRONMENT" "$IS_CI")
+    log_info "Using samconfig environment: $SAMCONFIG_ENV (CI/CD: $IS_CI)"
     
-    # Update samconfig.yaml with new unique image URI to force CloudFormation update
+    # Update samconfig.yaml with new unique image URI and ECS Exec setting
     NEW_IMAGE_URI="$ECR_REPOSITORY:$DEPLOY_TAG"
     log_info "Using unique image URI to force deployment: $NEW_IMAGE_URI"
     
-    if ! update_samconfig "$SAMCONFIG_ENV" "$NEW_IMAGE_URI"; then
+    if ! update_samconfig "$SAMCONFIG_ENV" "$NEW_IMAGE_URI" "$ECS_EXEC_ENABLED"; then
         log_error "Failed to update samconfig.yaml, skipping deployment"
         DEPLOYMENT_STATUS="❌ Config update failed"
     else
         # Deploy using SAM (change to API directory for template.yaml and samconfig.yaml)
         log_info "Deploying with SAM..."
         cd "$API_ROOT"
+        
+        log_info "Deploying with samconfig environment: $SAMCONFIG_ENV"
         sam deploy --config-env "$SAMCONFIG_ENV"
         
         if [ $? -eq 0 ]; then
@@ -268,20 +344,25 @@ if [ "$DEPLOY" = "true" ]; then
         echo "🔧 Next Steps:"
         echo "  1. Check deployment logs for errors"
         echo "  2. Verify samconfig.yaml configuration"
-        echo "  3. Try manual deployment: sam deploy --config-env $SAMCONFIG_ENV"
+        echo "  3. Try manual deployment: sam deploy --config-env $(get_samconfig_env $ENVIRONMENT $IS_CI)"
     fi
 else
     echo "🔧 Next Steps:"
-    echo "  1. Deploy manually using: sam deploy --config-env $(get_samconfig_env $ENVIRONMENT)"
+    echo "  1. Deploy manually using: sam deploy --config-env $(get_samconfig_env $ENVIRONMENT $IS_CI)"
     echo "  2. Monitor deployment in AWS Console"
     echo "  3. Or run this script with deployment: $0 $BASE_TAG $ENVIRONMENT true"
 fi
 
 echo ""
 echo "📋 Quick Commands:"
-echo "  Manual deploy: sam deploy --config-env $(get_samconfig_env $ENVIRONMENT)"
+MANUAL_SAMCONFIG_ENV=$(get_samconfig_env $ENVIRONMENT $IS_CI)
+echo "  Manual deploy: sam deploy --config-env $MANUAL_SAMCONFIG_ENV"
 echo "  Service status: aws ecs describe-services --services saga-sm-api-$ENVIRONMENT"
 echo "  Re-run: $0 $BASE_TAG $ENVIRONMENT true"
+if [ "$ECS_EXEC_ENABLED" = "true" ]; then
+    STACK_NAME=$(get_stack_name $ENVIRONMENT)
+    echo "  Connect to container: ./task_connect.sh --stack-name $STACK_NAME --container-name saga-sm-api"
+fi
 echo ""
 
 log_info "Done! 🎉"

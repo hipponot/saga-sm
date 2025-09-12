@@ -65,6 +65,7 @@ services:
       POSTGRES_DB: saga_sm
       POSTGRES_USER: saga_user
       POSTGRES_PASSWORD: password123
+      DATABASE_URL: postgresql://saga_user:password123@postgres:5432/saga_sm
       # Redis connection
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -80,6 +81,35 @@ services:
     volumes:
       # Mount source for development (optional)
       - ./apps/api/src:/app/apps/api/src:ro
+
+  # Database Setup Service
+  db-setup:
+    build:
+      context: ../
+      dockerfile: saga-sm/apps/api/Dockerfile
+      target: dependencies
+    container_name: saga-sm-db-setup
+    environment:
+      DATABASE_URL: postgresql://saga_user:password123@postgres:5432/saga_sm
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/saga_sm?authSource=admin
+    depends_on:
+      postgres:
+        condition: service_started
+      mongodb:
+        condition: service_started
+    networks:
+      - saga-sm-network
+    working_dir: /app/packages/database
+    command: >
+      sh -c "
+        echo 'Waiting for databases to be ready...' &&
+        sleep 10 &&
+        echo 'Pushing Prisma schema to PostgreSQL...' &&
+        npx prisma db push --schema ./prisma/schema.prisma --accept-data-loss &&
+        echo 'Database setup completed successfully!'
+      "
+    profiles:
+      - setup
 
   # Web Client
   web-client:

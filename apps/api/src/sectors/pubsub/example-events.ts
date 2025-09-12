@@ -1,13 +1,13 @@
 // Example-related PubSub event definitions
 export const EXAMPLE_EVENTS = {
     EXAMPLE_CREATED: 'example:created',
-    EXAMPLE_UPDATED: 'example:updated', 
+    EXAMPLE_UPDATED: 'example:updated',
     EXAMPLE_DELETED: 'example:deleted',
     EXAMPLE_STATUS_CHANGED: 'example:status_changed',
-    EXAMPLE_PRIORITY_CHANGED: 'example:priority_changed'
+    EXAMPLE_PRIORITY_CHANGED: 'example:priority_changed',
 } as const
 
-export type ExampleEventType = typeof EXAMPLE_EVENTS[keyof typeof EXAMPLE_EVENTS]
+export type ExampleEventType = (typeof EXAMPLE_EVENTS)[keyof typeof EXAMPLE_EVENTS]
 
 // Event payload interfaces
 export interface ExampleCreatedPayload {

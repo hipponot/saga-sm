@@ -15,12 +15,6 @@
         "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true
     },
-    "include": [
-        "generated/**/*",
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+    "include": ["generated/**/*", "src/**/*"],
+    "exclude": ["node_modules", "dist"]
 }

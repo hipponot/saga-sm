@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify'
 import type { ILogger } from '@hipponot/logger'
 import { EventEmitter } from 'events'
+import { randomUUID } from 'node:crypto'
 
 export interface PubSubEvent {
     id: string
@@ -43,12 +44,12 @@ export class PubSubService extends EventEmitter {
     }> {
         try {
             const event: PubSubEvent = {
-                id: eventData.clientEventId || crypto.randomUUID(),
+                id: eventData.clientEventId || randomUUID(),
                 name: eventData.name,
                 payload: eventData.payload,
                 channel: eventData.channel || 'default',
                 timestamp: new Date().toISOString(),
-                correlationId: eventData.correlationId
+                correlationId: eventData.correlationId,
             }
 
             // Store in history
@@ -58,16 +59,16 @@ export class PubSubService extends EventEmitter {
             if (event.name === 'ping:message') {
                 // Automatically create a pong response
                 const pongEvent: PubSubEvent = {
-                    id: crypto.randomUUID(),
+                    id: randomUUID(),
                     name: 'pong:response',
                     payload: {
                         reply: `Pong: ${event.payload.message}`,
                         originalMessage: event.payload.message,
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
                     },
                     channel: 'pingpong',
                     timestamp: new Date().toISOString(),
-                    correlationId: event.correlationId
+                    correlationId: event.correlationId,
                 }
 
                 // Emit the pong event to subscribers
@@ -77,13 +78,13 @@ export class PubSubService extends EventEmitter {
                 this.logger.info('Ping-pong event pair processed', {
                     pingId: event.id,
                     pongId: pongEvent.id,
-                    message: event.payload.message
+                    message: event.payload.message,
                 })
 
                 return {
                     status: 'success',
                     eventId: event.id,
-                    emittedEvents: [event, pongEvent]
+                    emittedEvents: [event, pongEvent],
                 }
             }
 
@@ -93,31 +94,39 @@ export class PubSubService extends EventEmitter {
             this.logger.info('Event sent successfully', {
                 eventId: event.id,
                 name: event.name,
-                channel: event.channel
+                channel: event.channel,
             })
 
             return {
                 status: 'success',
                 eventId: event.id,
-                emittedEvents: [event]
+                emittedEvents: [event],
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-            this.logger.error('Failed to send event', { error: errorMessage, eventData })
+            this.logger.error(
+                'Failed to send event',
+                error instanceof Error ? error : new Error(errorMessage),
+                { eventData }
+            )
             return {
                 status: 'error',
-                error: errorMessage
+                error: errorMessage,
             }
         }
     }
 
-    subscribe(channel: string, eventTypes: string[], callback: (event: PubSubEvent) => void): string {
-        const subscriptionId = crypto.randomUUID()
+    subscribe(
+        channel: string,
+        eventTypes: string[],
+        callback: (event: PubSubEvent) => void
+    ): string {
+        const subscriptionId = randomUUID()
         const subscription: EventSubscription = {
             id: subscriptionId,
             channel,
             eventTypes,
-            callback
+            callback,
         }
 
         this.subscriptions.set(subscriptionId, subscription)
@@ -130,7 +139,7 @@ export class PubSubService extends EventEmitter {
         this.logger.info('Subscription created', {
             subscriptionId,
             channel,
-            eventTypes
+            eventTypes,
         })
 
         return subscriptionId
@@ -160,41 +169,50 @@ export class PubSubService extends EventEmitter {
     getSubscriptionStats() {
         return {
             totalSubscriptions: this.subscriptions.size,
-            activeChannels: Array.from(new Set(Array.from(this.subscriptions.values()).map(s => s.channel))),
+            activeChannels: Array.from(
+                new Set(Array.from(this.subscriptions.values()).map(s => s.channel))
+            ),
             connectionStatus: 'connected',
-            lastActivity: this.eventHistory.length > 0
-                ? this.eventHistory[this.eventHistory.length - 1].timestamp
-                : new Date().toISOString()
+            lastActivity:
+                this.eventHistory.length > 0
+                    ? this.eventHistory[this.eventHistory.length - 1].timestamp
+                    : new Date().toISOString(),
         }
     }
 
     createSSEHandler(req: any, res: any) {
         const channel = req.query.channel || 'pingpong'
-        const eventTypes = req.query.eventTypes ? req.query.eventTypes.split(',') : ['ping:message', 'pong:response']
+        const eventTypes = req.query.eventTypes
+            ? req.query.eventTypes.split(',')
+            : ['ping:message', 'pong:response']
 
         // Set up SSE headers
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
+            Connection: 'keep-alive',
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Cache-Control'
+            'Access-Control-Allow-Headers': 'Cache-Control',
         })
 
         // Send initial connection event
-        res.write(`data: ${JSON.stringify({
-            type: 'connection',
-            message: 'Connected to Schedule API SSE stream',
-            channel,
-            timestamp: new Date().toISOString()
-        })}\n\n`)
+        res.write(
+            `data: ${JSON.stringify({
+                type: 'connection',
+                message: 'Connected to Schedule API SSE stream',
+                channel,
+                timestamp: new Date().toISOString(),
+            })}\n\n`
+        )
 
         // Subscribe to events
-        const subscriptionId = this.subscribe(channel, eventTypes, (event) => {
-            res.write(`data: ${JSON.stringify({
-                type: 'event',
-                event
-            })}\n\n`)
+        const subscriptionId = this.subscribe(channel, eventTypes, event => {
+            res.write(
+                `data: ${JSON.stringify({
+                    type: 'event',
+                    event,
+                })}\n\n`
+            )
         })
 
         // Handle client disconnect
@@ -205,10 +223,12 @@ export class PubSubService extends EventEmitter {
 
         // Send heartbeat every 30 seconds
         const heartbeat = setInterval(() => {
-            res.write(`data: ${JSON.stringify({
-                type: 'heartbeat',
-                timestamp: new Date().toISOString()
-            })}\n\n`)
+            res.write(
+                `data: ${JSON.stringify({
+                    type: 'heartbeat',
+                    timestamp: new Date().toISOString(),
+                })}\n\n`
+            )
         }, 30000)
 
         req.on('close', () => {

@@ -7,6 +7,7 @@ import { AbstractTRPCController } from '@hipponot/api-core/abstract-trpc-control
 import type { ILogger } from '@hipponot/logger'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { PubSubService } from './services/pubsub.service.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -46,12 +47,15 @@ async function bootstrap() {
         await trpcServer.mountToApp(app)
 
         // Mount SSE endpoint for real-time pubsub events
-        const pubsubService = container.get('PubSubService')
+        const pubsubService = container.get<PubSubService>('PubSubService')
         app.get('/events', async (req, res) => {
             try {
                 await pubsubService.createSSEHandler(req, res)
             } catch (error) {
-                logger.error('SSE handler error:', error)
+                logger.error(
+                    'SSE handler error',
+                    error instanceof Error ? error : new Error(String(error))
+                )
                 res.status(500).json({ error: 'SSE connection failed' })
             }
         })
@@ -66,14 +70,17 @@ async function bootstrap() {
 
         logger.info('saga-sm service started successfully')
     } catch (error) {
-        logger.error('Failed to start saga-sm service:', error instanceof Error ? error : new Error(String(error)))
+        logger.error(
+            'Failed to start saga-sm service:',
+            error instanceof Error ? error : new Error(String(error))
+        )
         process.exit(1)
     }
 }
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
-    const logger = container.get('ILogger')
+    const logger = container.get<ILogger>('ILogger')
     logger.info('Shutting down saga-sm service...')
     process.exit(0)
 })

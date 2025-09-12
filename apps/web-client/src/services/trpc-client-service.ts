@@ -84,14 +84,14 @@ export class TrpcClientService implements ServiceInterface {
                 success: true,
                 data: result,
                 timestamp: new Date().toISOString(),
-                duration: Date.now() - startTime
+                duration: Date.now() - startTime,
             }
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred',
                 timestamp: new Date().toISOString(),
-                duration: Date.now() - startTime
+                duration: Date.now() - startTime,
             }
         }
     }
@@ -114,7 +114,14 @@ export class TrpcClientService implements ServiceInterface {
             code += `const input = ${input}\n\n`
         }
 
-        const isQuery = ['queryExamples', 'getExampleById', 'getEventHistory', 'getChannelInfo', 'getServiceStatus', 'getSubscriptionStats'].some(method => endpoint.id.includes(method))
+        const isQuery = [
+            'queryExamples',
+            'getExampleById',
+            'getEventHistory',
+            'getChannelInfo',
+            'getServiceStatus',
+            'getSubscriptionStats',
+        ].some(method => endpoint.id.includes(method))
         const methodType = isQuery ? 'query' : 'mutate'
         const inputParam = hasInput ? '(input)' : '()'
 
