@@ -52,15 +52,9 @@ saga-sm/
 ### Prerequisites
 
 - **Node.js** >= 18
-- **pnpm** >= 8
-- **MongoDB** (local or remote)
+- **pnpm** >= 8  
+- **Docker** with Docker Compose (for databases)
 - **saga-soa repository** (must be cloned alongside this project)
-
-### AWS Deployment Prerequisites
-
-- **AWS CLI** configured with appropriate permissions
-- **Required AWS permissions**: Ensure your credentials include `amplify:CreateDeployment` for web client deployment
-- See [aws-deploy-permissions.json](./aws-deploy-permissions.json) for complete AWS permission requirements
 
 ### Required Directory Structure
 
@@ -70,7 +64,9 @@ dev/
 └── saga-sm/           # This project
 ```
 
-### Quick Setup
+### 🚀 One-Command Setup
+
+For new developers, we provide a comprehensive setup script that handles everything:
 
 **1. Clone both repositories:**
 ```bash
@@ -79,27 +75,67 @@ git clone [saga-soa-repo-url] saga-soa
 git clone [saga-sm-repo-url] saga-sm
 ```
 
-**2. Link saga-sm to saga-soa for concurrent development:**
+**2. Run the quick-start script:**
 ```bash
 cd saga-sm
-./scripts/setup-local-dev.sh
+./scripts/quick-start.sh
 ```
 
-**3. Configure environment:**
+This script will:
+- ✅ Check prerequisites (Node.js, pnpm, Docker)
+- ✅ Install dependencies and configure saga-soa integration  
+- ✅ Start database services (PostgreSQL, MongoDB, Redis)
+- ✅ Setup database schema with Prisma
+- ✅ Run tests to verify everything works
+
+**3. Start developing:**
 ```bash
-# Copy and customize API configuration
-cp apps/api/.env.example apps/api/.env
-# Update MongoDB URI and other settings as needed
+pnpm dev  # Starts API server (3000) and web client (3001)
 ```
 
-**4. Start development servers:**
+### ✅ Validate Your Setup
+
+To verify everything is working correctly:
+
 ```bash
-# Terminal 1: Start saga-soa packages (if using pnpm link)
-cd ../saga-soa && turbo run dev --filter='@hipponot/*'
-
-# Terminal 2: Start saga-sm applications
-cd saga-sm && pnpm dev
+./scripts/validate-setup.sh  # Comprehensive environment check
 ```
+
+This validation script checks:
+- Database connectivity (PostgreSQL, MongoDB, Redis)  
+- Build process functionality
+- Test suite execution
+- saga-soa integration status
+
+### Manual Setup (Alternative)
+
+If you prefer manual control or the quick-start script doesn't work:
+
+**1. Setup development environment:**
+```bash
+./scripts/dev-setup.sh local  # Configure saga-soa dependencies
+```
+
+**2. Start databases:**
+```bash
+docker compose up -d postgres mongodb redis
+```
+
+**3. Setup database schema:**
+```bash
+./scripts/setup-test-env.sh  # Setup Prisma schema and test environment
+```
+
+**4. Start applications:**
+```bash
+pnpm dev
+```
+
+### AWS Deployment Prerequisites
+
+- **AWS CLI** configured with appropriate permissions
+- **Required AWS permissions**: Ensure your credentials include `amplify:CreateDeployment` for web client deployment
+- See [aws-deploy-permissions.json](./aws-deploy-permissions.json) for complete AWS permission requirements
 
 ### Applications
 
