@@ -2,8 +2,9 @@ name: Act Test Workflow
 
 on:
   push:
-    branches: [main]
+    branches: [act-test]
   pull_request:
+    branches: [act-test]
 
 # Concurrency groups to prevent multiple runs from interfering
 concurrency:
