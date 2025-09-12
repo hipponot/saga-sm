@@ -22,6 +22,12 @@ env:
   ECR_REPOSITORY: 531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api
   AWS_DEPLOY_ROLE_ARN: arn:aws:iam::531314149529:role/github-actions-role/aws-github-actions-access-saga-sm-deploy-Role-bJ3kiYdI4Syc
 
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  packages: read
+
 jobs:
   deploy-ephemeral-api:
     runs-on: ubuntu-latest

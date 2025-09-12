@@ -21,11 +21,13 @@ env:
   ECS_CLUSTER_ARN: "arn:aws:ecs:us-west-2:531314149529:cluster/shared-dev-cluster-and-loadbalancer-Cluster-QuyVOhruiTXD"
   ECS_SERVICE_NAME: "saga-sm-api"
   ECR_REPOSITORY: "saga-sm-api"
+  AWS_DEPLOY_ROLE_ARN: arn:aws:iam::531314149529:role/github-actions-role/aws-github-actions-access-saga-sm-deploy-Role-bJ3kiYdI4Syc
 
 permissions:
   id-token: write # This is required for requesting the JWT
   contents: write # This is required for actions/checkout
   actions: read # This is required for actions/checkout
+  packages: read # This is required for pnpm install
 
 jobs:
   build_and_deploy:
@@ -64,7 +66,7 @@ jobs:
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/aws-github-actions-access-microservices-Role-11KE1BB99FYGU
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
 
