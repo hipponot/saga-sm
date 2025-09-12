@@ -162,10 +162,19 @@ setup_npmrc() {
         
         if [ "$DRY_RUN" = false ]; then
             # Create or update .npmrc for published packages
-            cat > "$npmrc_file" << EOF
+            if [ -n "$GITHUB_TOKEN" ]; then
+                # Use actual token value in CI
+                cat > "$npmrc_file" << EOF
+@hipponot:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN
+EOF
+            else
+                # Use environment variable placeholder for local development
+                cat > "$npmrc_file" << EOF
 @hipponot:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=\${GITHUB_TOKEN}
 EOF
+            fi
             log_success "Created .npmrc for GitHub Packages"
         else
             log_info "Would create .npmrc with GitHub Packages configuration"
