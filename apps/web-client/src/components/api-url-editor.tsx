@@ -63,7 +63,7 @@ export function ApiUrlEditor({
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
-            handleSubmit(e as any)
+            handleSubmit(e as React.FormEvent)
         } else if (e.key === 'Escape') {
             setInputValue(apiUrl)
             setIsTouched(false)

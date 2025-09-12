@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import styles from './page.module.css'
 import { TrpcClientService } from '@/services/trpc-client-service'
@@ -16,27 +16,27 @@ export default function EndpointsPage() {
     const [serviceType, setServiceType] = useState<'trpc' | 'curl'>('trpc')
     const [generatedCode, setGeneratedCode] = useState('')
 
-    const trpcService = new TrpcClientService()
-    const curlService = new TrpcCurlService()
+    const [trpcService] = useState(() => new TrpcClientService())
+    const [curlService] = useState(() => new TrpcCurlService())
 
     useEffect(() => {
         if (selectedEndpoint) {
             setInputValue(selectedEndpoint.sampleInput || '')
             generateCode()
         }
-    }, [selectedEndpoint, serviceType])
+    }, [selectedEndpoint, serviceType, generateCode])
 
     useEffect(() => {
         generateCode()
-    }, [inputValue])
+    }, [inputValue, generateCode])
 
-    const generateCode = () => {
+    const generateCode = useCallback(() => {
         if (!selectedEndpoint) return
 
         const service = serviceType === 'trpc' ? trpcService : curlService
         const code = service.generateCode(selectedEndpoint, inputValue)
         setGeneratedCode(code)
-    }
+    }, [selectedEndpoint, serviceType, inputValue, trpcService, curlService])
 
     const executeEndpoint = async () => {
         if (!selectedEndpoint) return
