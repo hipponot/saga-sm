@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import 'reflect-metadata'
 import { Container } from 'inversify'
-import { ExampleHelper, type IExampleHelper } from '../../helpers/example_helper.js'
+import { ExampleHelper, type IExampleHelper } from '../../helpers/example_helper.ts'
 
 describe('ExampleHelper', () => {
     let container: Container
