@@ -1,5 +1,5 @@
 # Optimized multi-stage Dockerfile for faster builds and smaller images
-# Build context should be run from the parent directory of saga-sm and saga-soa
+# Build context should be run from the saga-sm directory
 
 # Dependencies stage - for better layer caching
 FROM node:20-alpine AS dependencies
@@ -10,19 +10,17 @@ WORKDIR /app
 RUN npm install -g pnpm@8.15.4
 
 # Copy workspace configuration first (best layer caching)
-COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml saga-sm/turbo.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml turbo.json ./
 
 # Copy all package.json files for dependency resolution
-COPY saga-sm/apps/api/package.json ./apps/api/
-COPY saga-sm/apps/api/types/package.json ./apps/api/types/
-COPY saga-sm/packages/ ./packages/
+COPY apps/api/package.json apps/api/.npmrc ./apps/api/
+COPY apps/api/types/package.json apps/api/types/.npmrc ./apps/api/types/
+COPY packages/ ./packages/
 
-# Copy saga-soa packages (required dependencies)
-COPY saga-soa/ ./saga-soa/
+# Configure GitHub Packages registry for @hipponot packages
+RUN echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc
 
-# Fix package.json paths for Docker build environment
-RUN sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json && \
-    sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/types/package.json
+# No need to fix package.json paths since we're using published packages
 
 # Install ALL dependencies (this layer cached when package.json files don't change)
 RUN pnpm install --no-frozen-lockfile
@@ -31,13 +29,13 @@ RUN pnpm install --no-frozen-lockfile
 FROM dependencies AS builder
 
 # Copy source code only after dependencies are installed
-COPY saga-sm/apps/api/src/ ./apps/api/src/
-COPY saga-sm/apps/api/tsconfig.json saga-sm/apps/api/tsup.config.ts ./apps/api/
-COPY saga-sm/apps/api/types/src/ ./apps/api/types/src/
-COPY saga-sm/apps/api/types/tsconfig.json saga-sm/apps/api/types/tsup.config.ts saga-sm/apps/api/types/codegen.config.js ./apps/api/types/
+COPY apps/api/src/ ./apps/api/src/
+COPY apps/api/tsconfig.json apps/api/tsup.config.ts ./apps/api/
+COPY apps/api/types/src/ ./apps/api/types/src/
+COPY apps/api/types/tsconfig.json apps/api/types/tsup.config.ts apps/api/types/codegen.config.js ./apps/api/types/
 # Copy database sources and schema
-COPY saga-sm/packages/database/src/ ./packages/database/src/
-COPY saga-sm/packages/database/prisma/ ./packages/database/prisma/
+COPY packages/database/src/ ./packages/database/src/
+COPY packages/database/prisma/ ./packages/database/prisma/
 
 # Generate Prisma client and build with turbo
 WORKDIR /app
@@ -56,17 +54,15 @@ RUN apk add --no-cache curl
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S apiuser -u 1001 -G nodejs
 
-# Copy workspace files and saga-soa dependencies for production install
+# Copy workspace files for production install
 COPY --from=builder /app/pnpm-workspace.yaml /app/package.json /app/pnpm-lock.yaml ./
-COPY --from=builder /app/saga-soa/ ./saga-soa/
 COPY --from=builder /app/packages/ ./packages/
-COPY --from=builder /app/apps/api/package.json ./apps/api/
-COPY --from=builder /app/apps/api/types/package.json ./apps/api/types/
+COPY --from=builder /app/apps/api/package.json /app/apps/api/.npmrc ./apps/api/
+COPY --from=builder /app/apps/api/types/package.json /app/apps/api/types/.npmrc ./apps/api/types/
 
 # Install pnpm and production dependencies only
 RUN npm install -g pnpm@8.15.4 && \
-    sed -i 's|file:../../../saga-soa/|file:../../saga-soa/|g' ./apps/api/package.json && \
-    sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/types/package.json && \
+    echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc && \
     pnpm install --prod --no-frozen-lockfile
 
 # Copy built application and generated Prisma client

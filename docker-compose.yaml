@@ -49,8 +49,8 @@ services:
   # API Service
   api:
     build:
-      context: ../
-      dockerfile: saga-sm/apps/api/Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     container_name: saga-sm-api
     restart: unless-stopped
     environment:
@@ -85,8 +85,8 @@ services:
   # Database Setup Service
   db-setup:
     build:
-      context: ../
-      dockerfile: saga-sm/apps/api/Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
       target: dependencies
     container_name: saga-sm-db-setup
     environment:
@@ -114,8 +114,8 @@ services:
   # Web Client
   web-client:
     build:
-      context: ../
-      dockerfile: saga-sm/apps/web-client/Dockerfile
+      context: .
+      dockerfile: apps/web-client/Dockerfile
     container_name: saga-sm-web-client
     restart: unless-stopped
     environment:
