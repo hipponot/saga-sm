@@ -2,7 +2,6 @@ name: Deploy Ephemeral API Environment
 
 on:
   pull_request:
-    branches: [pause-deploy-ephemeral-api]
     types: [opened, synchronize, reopened]
     paths:
       - "apps/api/**"
@@ -21,6 +20,7 @@ on:
 env:
   AWS_REGION: us-west-2
   ECR_REPOSITORY: 531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api
+  AWS_DEPLOY_ROLE_ARN: arn:aws:iam::531314149529:role/github-actions-role/aws-github-actions-access-saga-sm-deploy-Role-bJ3kiYdI4Syc
 
 jobs:
   deploy-ephemeral-api:
