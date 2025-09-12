@@ -68,11 +68,23 @@ Parameters:
         Default: services.dev.wootmath.com
         Description: Base domain for the service endpoints
 
+    EcsExecEnabled:
+        Type: String
+        Default: 'false'
+        Description: Enable ECS Exec for SSH access to containers
+        AllowedValues:
+            - 'true'
+            - 'false'
+
 Conditions:
     IsEphemeralEnvironment: !Not
         - !Equals
           - !Ref BranchIdentifier
           - ''
+    
+    IsEcsExecEnabled: !Equals
+        - !Ref EcsExecEnabled
+        - 'true'
 
 Resources:
     TaskDefinition:
@@ -206,6 +218,10 @@ Resources:
                     SecurityGroups:
                         - !Ref AppSecurityGroupIdSSMParameter
                     Subnets: !Ref SubnetsSSMParameter
+            EnableExecuteCommand: !If
+                - IsEcsExecEnabled
+                - true
+                - false
             Tags:
                 - Key: Name
                   Value: !Ref AppName
@@ -294,6 +310,29 @@ Resources:
                                 - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-postgres*
                                 - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-mongodb*
                                 - !Sub arn:aws:logs:us-west-2:*:log-group:/ecs/${AppName}-redis*
+                - !If
+                  - IsEcsExecEnabled
+                  - PolicyName: ECSExecPolicy
+                    PolicyDocument:
+                        Statement:
+                            - Effect: Allow
+                              Action:
+                                  - ssmmessages:CreateControlChannel
+                                  - ssmmessages:CreateDataChannel
+                                  - ssmmessages:OpenControlChannel
+                                  - ssmmessages:OpenDataChannel
+                              Resource: '*'
+                            - Effect: Allow
+                              Action:
+                                  - logs:DescribeLogGroups
+                              Resource: '*'
+                            - Effect: Allow
+                              Action:
+                                  - logs:CreateLogStream
+                                  - logs:DescribeLogStreams
+                                  - logs:PutLogEvents
+                              Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/exec/*'
+                  - !Ref AWS::NoValue
             Tags:
                 - Key: Name
                   Value: !Sub ${AppName}-task-role

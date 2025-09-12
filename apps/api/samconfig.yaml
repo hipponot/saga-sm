@@ -19,6 +19,7 @@ default:
                 - LoadBalancerArnSSMParameter=/dev/services/services-alb-arn
                 - ListenerArnSSMParameter=/dev/services/services-alb-3000-listener-arn
                 - ClusterArnSSMParameter=/dev/ecs-cluster-arn
+                - EcsExecEnabled=false
             image_repositories: []
 
 qa:
@@ -40,6 +41,7 @@ qa:
                 - LoadBalancerArnSSMParameter=/qa/app/load-balancer-arn
                 - ListenerArnSSMParameter=/qa/app/alb-listener-arn
                 - ClusterArnSSMParameter=/qa/app/ecs-cluster-arn
+                - EcsExecEnabled=false
             image_repositories: []
 
 prod:
@@ -61,6 +63,7 @@ prod:
                 - LoadBalancerArnSSMParameter=/prod/app/load-balancer-arn
                 - ListenerArnSSMParameter=/prod/app/alb-listener-arn
                 - ClusterArnSSMParameter=/prod/app/ecs-cluster-arn
+                - EcsExecEnabled=false
             image_repositories: []
 
 ephemeral:
@@ -84,6 +87,7 @@ ephemeral:
                 - LoadBalancerArnSSMParameter=/dev/services/services-alb-arn
                 - ListenerArnSSMParameter=/dev/services/services-alb-3000-listener-arn
                 - ClusterArnSSMParameter=/dev/ecs-cluster-arn
+                - EcsExecEnabled=true
             image_repositories: []
             tags:
                 - Environment=ephemeral
