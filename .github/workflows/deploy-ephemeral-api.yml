@@ -2,6 +2,7 @@ name: Deploy Ephemeral API Environment
 
 on:
   pull_request:
+    branches: [pause-deploy-ephemeral-api]
     types: [opened, synchronize, reopened]
     paths:
       - "apps/api/**"

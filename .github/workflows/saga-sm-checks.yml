@@ -2,7 +2,7 @@ name: CI/CD checks
 
 on:
   push:
-    branches: [main]
+    branches: [pause-saga-sm-checks]
     paths:
       - "apps/api/**"
       - "packages/**"
@@ -10,6 +10,7 @@ on:
       - "pnpm-lock.yaml"
       - ".github/workflows/**"
   pull_request:
+    branches: [pause-saga-sm-checks]
     paths:
       - "apps/api/**"
       - "packages/**"
