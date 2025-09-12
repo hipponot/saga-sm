@@ -73,6 +73,11 @@ For published mode, set your GitHub token:
 export GITHUB_TOKEN=ghp_your_token_here
 ```
 
+**Getting your GitHub token:**
+- Quick setup: See `GITHUB_TOKEN_SETUP.md`
+- Full guide: See `DOCKER_AUTHENTICATION.md`
+- Command: `export GITHUB_TOKEN=$(gh auth token)` (requires GitHub CLI)
+
 ### Development Workflow
 
 #### Working on saga-sm only:
@@ -109,9 +114,14 @@ The GitHub Actions workflow automatically uses published packages:
 - Ensure saga-soa is cloned as `../saga-soa` relative to saga-sm
 - Or use published mode: `./scripts/dev-setup.sh ci`
 
-**"GITHUB_TOKEN required"**
-- Set the environment variable: `export GITHUB_TOKEN=your_token`
+**"GITHUB_TOKEN required"** or **"403 Forbidden"**
+- Set the environment variable: `export GITHUB_TOKEN=$(gh auth token)` 
+- Ensure token has `read:packages` scope: `gh auth refresh --hostname github.com --scopes "repo,read:packages"`
 - Or use local mode: `./scripts/dev-setup.sh local`
+
+**Docker build authentication issues**
+- For Docker builds: Ensure `GITHUB_TOKEN` is exported before running `docker-compose build`
+- See `DOCKER_AUTHENTICATION.md` for complete Docker setup guide
 
 **Dependency resolution errors**
 - Try clearing lock files: `rm pnpm-lock.yaml && pnpm install`

@@ -51,6 +51,8 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: saga-sm-api
     restart: unless-stopped
     environment:
@@ -88,6 +90,8 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
       target: dependencies
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: saga-sm-db-setup
     environment:
       DATABASE_URL: postgresql://saga_user:password123@postgres:5432/saga_sm
@@ -116,6 +120,8 @@ services:
     build:
       context: .
       dockerfile: apps/web-client/Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: saga-sm-web-client
     restart: unless-stopped
     environment:

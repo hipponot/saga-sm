@@ -1,6 +1,9 @@
 # Dependencies stage - for better layer caching
 FROM node:18-alpine AS dependencies
 
+# Accept GitHub token for private package access
+ARG GITHUB_TOKEN
+
 WORKDIR /app
 
 # Install pnpm (matching the version used in the project)
@@ -10,7 +13,12 @@ RUN npm install -g pnpm@8.15.4
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml turbo.json ./
 
 # Configure GitHub Packages registry for @hipponot packages
-RUN echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc
+RUN echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc && \
+    if [ -n "$GITHUB_TOKEN" ]; then \
+        echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \
+    else \
+        echo "//npm.pkg.github.com/:_authToken=\${GITHUB_TOKEN}" >> .npmrc; \
+    fi
 
 # Copy pre-built API types (dist folder only)
 COPY apps/api/types/dist/ ./apps/api/types/dist/
@@ -47,6 +55,9 @@ RUN npx turbo build --filter=@saga-sm/web-client
 # Production stage
 FROM node:18-alpine AS production
 
+# Accept GitHub token for private package access
+ARG GITHUB_TOKEN
+
 WORKDIR /app
 
 # Create non-root user
@@ -61,6 +72,11 @@ COPY --from=builder /app/apps/web-client/package.json /app/apps/web-client/.npmr
 # Recreate minimal package.json for API types and install dependencies
 RUN echo '{"name":"@saga-sm/api-types","version":"1.0.0","type":"module","private":true,"main":"./dist/index.js","types":"./dist/index.d.ts","exports":{".":{"types":"./dist/index.d.ts","default":"./dist/index.js"},"./schemas":{"types":"./dist/schemas/index.d.ts","default":"./dist/schemas/index.js"},"./generated":{"types":"./dist/generated/index.d.ts","default":"./dist/generated/index.js"}},"dependencies":{"zod":"^3.25.67"}}' > ./apps/api/types/package.json && \
     echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc && \
+    if [ -n "$GITHUB_TOKEN" ]; then \
+        echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \
+    else \
+        echo "//npm.pkg.github.com/:_authToken=\${GITHUB_TOKEN}" >> .npmrc; \
+    fi && \
     npm install -g pnpm@8.15.4 serve@14.2.3 && \
     pnpm install --prod --no-frozen-lockfile
 

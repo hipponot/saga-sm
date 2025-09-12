@@ -4,6 +4,9 @@
 # Dependencies stage - for better layer caching
 FROM node:20-alpine AS dependencies
 
+# Accept GitHub token for private package access
+ARG GITHUB_TOKEN
+
 WORKDIR /app
 
 # Install pnpm (matching the version used in the project)
@@ -18,7 +21,12 @@ COPY apps/api/types/package.json apps/api/types/.npmrc ./apps/api/types/
 COPY packages/ ./packages/
 
 # Configure GitHub Packages registry for @hipponot packages
-RUN echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc
+RUN echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc && \
+    if [ -n "$GITHUB_TOKEN" ]; then \
+        echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \
+    else \
+        echo "//npm.pkg.github.com/:_authToken=\${GITHUB_TOKEN}" >> .npmrc; \
+    fi
 
 # No need to fix package.json paths since we're using published packages
 
@@ -45,6 +53,9 @@ RUN cd packages/database && npx prisma generate && cd ../.. && \
 # Production stage - smaller base image
 FROM node:20-alpine AS production
 
+# Accept GitHub token for private package access
+ARG GITHUB_TOKEN
+
 WORKDIR /app
 
 # Install only curl for health checks (using latest stable version)
@@ -63,6 +74,11 @@ COPY --from=builder /app/apps/api/types/package.json /app/apps/api/types/.npmrc 
 # Install pnpm and production dependencies only
 RUN npm install -g pnpm@8.15.4 && \
     echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc && \
+    if [ -n "$GITHUB_TOKEN" ]; then \
+        echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \
+    else \
+        echo "//npm.pkg.github.com/:_authToken=\${GITHUB_TOKEN}" >> .npmrc; \
+    fi && \
     pnpm install --prod --no-frozen-lockfile
 
 # Copy built application and generated Prisma client

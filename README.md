@@ -282,8 +282,9 @@ The web client provides comprehensive testing tools:
 - Fix: Run `pnpm install` to recreate workspace symlinks
 - Or re-run: `./scripts/quick-start.sh`
 
-**"saga-soa packages not found"**
+**"saga-soa packages not found"** or **"403 Forbidden" from GitHub Packages**
 - Ensure saga-soa is cloned in the correct directory structure
+- For published packages: Set up GitHub token (see `GITHUB_TOKEN_SETUP.md`)
 - Re-run the setup script: `./scripts/setup-local-dev.sh`
 
 **"Database connection failed"**
@@ -297,6 +298,42 @@ The web client provides comprehensive testing tools:
 **"Hot reloading not working"**
 - Restart both terminal sessions
 - Verify saga-soa packages are building with `turbo run dev`
+
+## 🐳 Docker
+
+### Docker Compose Setup
+
+Build and run the full application stack using Docker:
+
+```bash
+# Set up GitHub token for package access
+export GITHUB_TOKEN=$(gh auth token)
+
+# Build all services
+docker-compose build
+
+# Start the full stack (databases + API + web client)
+docker-compose up -d
+
+# Or start specific services
+docker-compose up -d api web-client
+```
+
+### Authentication Requirements
+
+Docker builds require GitHub Packages access for @hipponot packages:
+
+- **Quick setup**: `export GITHUB_TOKEN=$(gh auth token)` 
+- **Detailed guide**: See `GITHUB_TOKEN_SETUP.md`
+- **Full authentication guide**: See `DOCKER_AUTHENTICATION.md`
+- **Fallback option**: Use local dependencies with `./scripts/switch-saga-soa-deps.sh local`
+
+### Services
+
+- **API**: `http://localhost:3000` (tRPC + REST endpoints)
+- **Web Client**: `http://localhost:3001` (Testing interface)  
+- **Database**: PostgreSQL (5432), MongoDB (27017), Redis (6379)
+- **Adminer**: `http://localhost:8080` (Database admin, dev mode only)
 
 ## 🚀 Deployment
 
