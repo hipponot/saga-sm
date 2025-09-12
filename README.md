@@ -113,7 +113,11 @@ If you prefer manual control or the quick-start script doesn't work:
 
 **1. Setup development environment:**
 ```bash
-./scripts/dev-setup.sh local  # Configure saga-soa dependencies
+# For local development (recommended for saga-soa development)
+./scripts/dev-setup.sh local
+
+# For CI-like environment (uses published packages, requires GitHub token)
+./scripts/dev-setup.sh ci
 ```
 
 **2. Start databases:**
@@ -129,6 +133,28 @@ docker compose up -d postgres mongodb redis
 **4. Start applications:**
 ```bash
 pnpm dev
+```
+
+### Dependency Management
+
+saga-sm can work with saga-soa dependencies in two modes:
+
+**🏠 Local Mode** (default):
+- Uses local file: dependencies for real-time saga-soa development
+- Requires saga-soa cloned as sibling directory
+
+**🌐 Published Mode**:
+- Uses published @hipponot packages from GitHub Packages
+- Requires `GITHUB_TOKEN` environment variable
+- Mirrors CI/CD environment exactly
+
+```bash
+# Switch between modes
+./scripts/switch-saga-soa-deps.sh local      # Local development
+./scripts/switch-saga-soa-deps.sh published  # Published packages
+
+# Check current status
+./scripts/dev-setup.sh status
 ```
 
 ### AWS Deployment Prerequisites
@@ -284,8 +310,8 @@ The web client provides comprehensive testing tools:
 
 **"saga-soa packages not found"** or **"403 Forbidden" from GitHub Packages**
 - Ensure saga-soa is cloned in the correct directory structure
-- For published packages: Set up GitHub token (see `GITHUB_TOKEN_SETUP.md`)
-- Re-run the setup script: `./scripts/setup-local-dev.sh`
+- For published packages: Set up GitHub token (see `ENVIRONMENT_SETUP.md`)
+- Re-run the setup script: `./scripts/dev-setup.sh local`
 
 **"Database connection failed"**
 - Check MongoDB is running locally or update `MONGODB_URI` in `apps/api/.env`
@@ -324,8 +350,7 @@ docker-compose up -d api web-client
 Docker builds require GitHub Packages access for @hipponot packages:
 
 - **Quick setup**: `export GITHUB_TOKEN=$(gh auth token)` 
-- **Detailed guide**: See `GITHUB_TOKEN_SETUP.md`
-- **Full authentication guide**: See `DOCKER_AUTHENTICATION.md`
+- **Detailed guide**: See `ENVIRONMENT_SETUP.md`
 - **Fallback option**: Use local dependencies with `./scripts/switch-saga-soa-deps.sh local`
 
 ### Services
