@@ -24,20 +24,20 @@ importers:
   apps/api:
     dependencies:
       '@hipponot/api-core':
-        specifier: file:../../../saga-soa/packages/api-core
-        version: file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2)(typescript@5.9.2)
+        specifier: ^1.0.4
+        version: 1.0.5(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2)(typescript@5.9.2)
       '@hipponot/config':
-        specifier: file:../../../saga-soa/packages/config
-        version: file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)
+        specifier: ^1.0.3
+        version: 1.0.4(class-transformer@0.5.1)(class-validator@0.14.2)
       '@hipponot/db':
-        specifier: file:../../../saga-soa/packages/db
-        version: file:../saga-soa/packages/db
+        specifier: ^1.0.3
+        version: 1.0.4
       '@hipponot/logger':
-        specifier: file:../../../saga-soa/packages/logger
-        version: file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2)
+        specifier: ^1.0.4
+        version: 1.0.5(class-transformer@0.5.1)(class-validator@0.14.2)
       '@hipponot/pubsub-core':
-        specifier: file:../../../saga-soa/packages/pubsub-core
-        version: file:../saga-soa/packages/pubsub-core
+        specifier: ^1.0.4
+        version: 1.0.5
       '@prisma/client':
         specifier: ^6.16.0
         version: 6.16.1(prisma@6.16.1)(typescript@5.9.2)
@@ -64,8 +64,8 @@ importers:
         specifier: ^10.0.0
         version: 10.0.0
       '@hipponot/trpc-codegen':
-        specifier: file:../../../saga-soa/packages/trpc-codegen
-        version: file:../saga-soa/packages/trpc-codegen
+        specifier: ^1.0.3
+        version: 1.0.4
       '@types/node':
         specifier: ^18.19.31
         version: 18.19.124
@@ -98,11 +98,11 @@ importers:
         version: 3.25.76
     devDependencies:
       '@hipponot/trpc-codegen':
-        specifier: file:../../../../saga-soa/packages/trpc-codegen
-        version: file:../saga-soa/packages/trpc-codegen
+        specifier: ^1.0.3
+        version: 1.0.4
       '@hipponot/zod2ts':
-        specifier: file:../../../../saga-soa/build-tools/zod2ts
-        version: file:../saga-soa/build-tools/zod2ts(typescript@5.8.2)
+        specifier: ^1.0.3
+        version: 1.0.4(typescript@5.8.2)
       '@trpc/client':
         specifier: ^11.5.1
         version: 11.5.1(@trpc/server@11.5.1)(typescript@5.8.2)
@@ -1214,6 +1214,117 @@ packages:
     requiresBuild: true
     dev: false
     optional: true
+
+  /@hipponot/api-core@1.0.5(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2)(typescript@5.9.2):
+    resolution: {integrity: sha512-FHRBBeiC3SY8kmK3H9ac4+Aw+T7lNVOx6STjXMz+ToB+XBDH+f7M9O2OGRFHwW1Cd9jckkvFNAwv3JkQ0+WSig==, tarball: https://npm.pkg.github.com/download/@hipponot/api-core/1.0.5/0be15397775d4139ee3bce05b00cd63e6d230094}
+    dependencies:
+      '@apollo/server': 4.12.2(graphql@16.11.0)
+      '@trpc/server': 11.5.1(typescript@5.9.2)
+      cors: 2.8.5
+      express: 4.21.2
+      fast-glob: 3.3.3
+      figlet: 1.9.1
+      graphql: 16.11.0
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      reflect-metadata: 0.2.2
+      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
+      trpc-playground: 1.0.4(@trpc/server@11.5.1)(@types/node@18.19.124)(express@4.21.2)(typescript@5.9.2)(zod@3.25.67)
+      type-graphql: 2.0.0-rc.2(class-validator@0.14.2)(graphql-scalars@1.24.2)(graphql@16.11.0)
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - '@types/node'
+      - class-transformer
+      - class-validator
+      - encoding
+      - fastify
+      - graphql-scalars
+      - h3
+      - koa
+      - less
+      - lightningcss
+      - sass
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - typescript
+    dev: false
+
+  /@hipponot/config@1.0.4(class-transformer@0.5.1)(class-validator@0.14.2):
+    resolution: {integrity: sha512-yOPIViVSTbxEg9q2xOgMK1gTr3AhY4t5TuM7OQ/26nSb0J1SSQq2/Sr00Cq7gwojQL0F4FnarIbl7M/xklEnlA==, tarball: https://npm.pkg.github.com/download/@hipponot/config/1.0.4/ad1141c443a9c5bfb26dabf6d4130fd79e429d78}
+    dependencies:
+      dotenv: 17.2.0
+      dotenv-flow: 4.1.0
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      reflect-metadata: 0.2.2
+      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - class-transformer
+      - class-validator
+      - supports-color
+    dev: false
+
+  /@hipponot/db@1.0.4:
+    resolution: {integrity: sha512-NF9WZysAy2Xj1rXUeHZt5h3+AcJCmxGweBwoVplTIsouMULBRRirQd54nBth4EVXwsGE673aUlUmr4P2aRtQjw==, tarball: https://npm.pkg.github.com/download/@hipponot/db/1.0.4/b393da867c5d6af6ab146fa2a3ee1cbcc35965fe}
+    dependencies:
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      mongodb: 5.9.2
+      mongodb-memory-server: 10.2.0
+      reflect-metadata: 0.2.2
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
+      - react-native-b4a
+      - snappy
+      - socks
+      - supports-color
+    dev: false
+
+  /@hipponot/logger@1.0.5(class-transformer@0.5.1)(class-validator@0.14.2):
+    resolution: {integrity: sha512-6I8CsEjsTQA5qV3zdQNGRtmnKs8mOitETUfa3uH4rv9mUG03HzEBd+qaRylHqYSGrkiJXpBcwMaCYsGrzDUubw==, tarball: https://npm.pkg.github.com/download/@hipponot/logger/1.0.5/6ca64e19ca4cbe1e66f8f6474aa449f4a1c1fbf4}
+    dependencies:
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      pino: 8.21.0
+      reflect-metadata: 0.2.2
+      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - class-transformer
+      - class-validator
+      - supports-color
+    dev: false
+
+  /@hipponot/pubsub-core@1.0.5:
+    resolution: {integrity: sha512-lc9PlNMWrhkkWQq2vhLCWoUxTDIkw/2/6vl5WPeqKIyJqi7jkljIpudO3eenXSWly5MmKVYGUn7PAehl7LXqHA==, tarball: https://npm.pkg.github.com/download/@hipponot/pubsub-core/1.0.5/f852b9688be43c6d88edf63583fe952db2635a6a}
+    dependencies:
+      uuid: 11.1.0
+      zod: 3.25.67
+    dev: false
+
+  /@hipponot/trpc-codegen@1.0.4:
+    resolution: {integrity: sha512-cSDiYt0+oO5nO91C5Y1ety6pbHJkFM4xCLg0inEPsB7cvToj4b+XHyJxUrJa4YXgQPYAxk8CHVxJgRWEl0wGaw==, tarball: https://npm.pkg.github.com/download/@hipponot/trpc-codegen/1.0.4/8cc2a9104cee1fb2a2513d4a1b237e5628e7b165}
+    hasBin: true
+    dependencies:
+      chokidar: 3.6.0
+      commander: 12.1.0
+      tsx: 4.20.5
+    dev: true
+
+  /@hipponot/zod2ts@1.0.4(typescript@5.8.2):
+    resolution: {integrity: sha512-nc4TVh+QuzCUzVKFcvt4taCOHT7BUxbu20sV+xlmJIbP3rLAiiAMX8t1F1UhlluDX1q0xLhH+rvVWculH+1MLg==, tarball: https://npm.pkg.github.com/download/@hipponot/zod2ts/1.0.4/399a7f863fccf102f3b1c72aaab83e355277f44c}
+    hasBin: true
+    dependencies:
+      commander: 12.1.0
+      zod: 3.25.67
+      zod-to-ts: 1.2.0(typescript@5.8.2)(zod@3.25.67)
+    transitivePeerDependencies:
+      - typescript
+    dev: true
 
   /@humanfs/core@0.19.1:
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -7787,128 +7898,6 @@ packages:
   /zod@4.1.8:
     resolution: {integrity: sha512-5R1P+WwQqmmMIEACyzSvo4JXHY5WiAFHRMg+zBZKgKS+Q1viRa0C1hmUKtHltoIFKtIdki3pRxkmpP74jnNYHQ==}
     dev: false
-
-  file:../saga-soa/build-tools/zod2ts(typescript@5.8.2):
-    resolution: {directory: ../saga-soa/build-tools/zod2ts, type: directory}
-    id: file:../saga-soa/build-tools/zod2ts
-    name: '@hipponot/zod2ts'
-    hasBin: true
-    dependencies:
-      commander: 12.1.0
-      zod: 3.25.67
-      zod-to-ts: 1.2.0(typescript@5.8.2)(zod@3.25.67)
-    transitivePeerDependencies:
-      - typescript
-    dev: true
-
-  file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2)(typescript@5.9.2):
-    resolution: {directory: ../saga-soa/packages/api-core, type: directory}
-    id: file:../saga-soa/packages/api-core
-    name: '@hipponot/api-core'
-    dependencies:
-      '@apollo/server': 4.12.2(graphql@16.11.0)
-      '@trpc/server': 11.5.1(typescript@5.9.2)
-      cors: 2.8.5
-      express: 4.21.2
-      fast-glob: 3.3.3
-      figlet: 1.9.1
-      graphql: 16.11.0
-      inversify: 6.2.2(reflect-metadata@0.2.2)
-      reflect-metadata: 0.2.2
-      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
-      trpc-playground: 1.0.4(@trpc/server@11.5.1)(@types/node@18.19.124)(express@4.21.2)(typescript@5.9.2)(zod@3.25.67)
-      type-graphql: 2.0.0-rc.2(class-validator@0.14.2)(graphql-scalars@1.24.2)(graphql@16.11.0)
-      zod: 3.25.67
-    transitivePeerDependencies:
-      - '@types/node'
-      - class-transformer
-      - class-validator
-      - encoding
-      - fastify
-      - graphql-scalars
-      - h3
-      - koa
-      - less
-      - lightningcss
-      - sass
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - typescript
-    dev: false
-
-  file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2):
-    resolution: {directory: ../saga-soa/packages/config, type: directory}
-    id: file:../saga-soa/packages/config
-    name: '@hipponot/config'
-    dependencies:
-      dotenv: 17.2.0
-      dotenv-flow: 4.1.0
-      inversify: 6.2.2(reflect-metadata@0.2.2)
-      reflect-metadata: 0.2.2
-      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
-      zod: 3.25.67
-    transitivePeerDependencies:
-      - class-transformer
-      - class-validator
-      - supports-color
-    dev: false
-
-  file:../saga-soa/packages/db:
-    resolution: {directory: ../saga-soa/packages/db, type: directory}
-    name: '@hipponot/db'
-    dependencies:
-      inversify: 6.2.2(reflect-metadata@0.2.2)
-      mongodb: 5.9.2
-      mongodb-memory-server: 10.2.0
-      reflect-metadata: 0.2.2
-      zod: 3.25.67
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-providers'
-      - '@mongodb-js/zstd'
-      - gcp-metadata
-      - kerberos
-      - mongodb-client-encryption
-      - react-native-b4a
-      - snappy
-      - socks
-      - supports-color
-    dev: false
-
-  file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2):
-    resolution: {directory: ../saga-soa/packages/logger, type: directory}
-    id: file:../saga-soa/packages/logger
-    name: '@hipponot/logger'
-    dependencies:
-      inversify: 6.2.2(reflect-metadata@0.2.2)
-      pino: 8.21.0
-      reflect-metadata: 0.2.2
-      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
-      zod: 3.25.67
-    transitivePeerDependencies:
-      - class-transformer
-      - class-validator
-      - supports-color
-    dev: false
-
-  file:../saga-soa/packages/pubsub-core:
-    resolution: {directory: ../saga-soa/packages/pubsub-core, type: directory}
-    name: '@hipponot/pubsub-core'
-    dependencies:
-      uuid: 11.1.0
-      zod: 3.25.67
-    dev: false
-
-  file:../saga-soa/packages/trpc-codegen:
-    resolution: {directory: ../saga-soa/packages/trpc-codegen, type: directory}
-    name: '@hipponot/trpc-codegen'
-    hasBin: true
-    dependencies:
-      chokidar: 3.6.0
-      commander: 12.1.0
-      tsx: 4.20.5
-    dev: true
 
   file:apps/api/types:
     resolution: {directory: apps/api/types, type: directory}

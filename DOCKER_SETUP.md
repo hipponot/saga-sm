@@ -165,11 +165,44 @@ This script will:
 
 ### Build Authentication Errors
 
-**403 Forbidden / 401 Unauthorized:**
-1. Check token: `gh auth status`
-2. Refresh scopes: `gh auth refresh --hostname github.com --scopes "repo,read:packages"`
-3. Export token: `export GITHUB_TOKEN=$(gh auth token)`
-4. Retry build: `docker-compose build api`
+**403 Forbidden / 401 Unauthorized accessing @hipponot packages:**
+
+This error occurs when the GitHub token is expired, invalid, or lacks proper scopes. Our build script now includes smart token validation to prevent unnecessary refreshes.
+
+#### Quick Fix:
+```bash
+# Refresh GitHub token with required scopes
+gh auth refresh -h github.com -s read:packages
+
+# Export the new token
+export GITHUB_TOKEN=$(gh auth token)
+
+# Retry the build
+./apps/api/scripts/build-push-deploy.sh
+```
+
+#### Manual Troubleshooting:
+1. **Check current authentication:** `gh auth status`
+2. **Test token validity:** 
+   ```bash
+   curl -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/user
+   ```
+3. **Test package access:**
+   ```bash
+   npm view @hipponot/api-core --registry=https://npm.pkg.github.com
+   ```
+4. **Refresh token with scopes:** `gh auth refresh -h github.com -s read:packages`
+5. **Update .npmrc if needed:**
+   ```bash
+   echo "@hipponot:registry=https://npm.pkg.github.com" > .npmrc
+   echo "//npm.pkg.github.com/:_authToken=$(gh auth token)" >> .npmrc
+   ```
+
+#### Important Notes:
+- The packages are public but still require GitHub authentication
+- Our build script now checks if existing tokens are valid before refreshing
+- Token issues most commonly occur after: system restarts, long idle periods, or scope changes
+- The build script defaults to published packages; use `--local` flag for local saga-soa development
 
 ### Services Won't Start
 

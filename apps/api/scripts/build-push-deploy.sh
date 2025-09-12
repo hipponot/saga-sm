@@ -95,6 +95,21 @@ check_prerequisites() {
 setup_github_auth() {
     log_step "Setting up GitHub authentication for published packages"
     
+    # Check if we already have a valid token in the environment
+    if [ -n "$GITHUB_TOKEN" ]; then
+        log_info "Checking existing GITHUB_TOKEN..."
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/orgs/hipponot/packages?package_type=npm")
+        
+        if [ "$HTTP_CODE" = "200" ]; then
+            log_info "✅ Existing token is valid, skipping refresh"
+            return 0
+        else
+            log_warning "Existing token is invalid (HTTP $HTTP_CODE), getting new token..."
+        fi
+    fi
+    
     # Check if GitHub CLI is authenticated
     if ! gh auth status >/dev/null 2>&1; then
         log_error "GitHub CLI is not authenticated"
@@ -111,9 +126,21 @@ setup_github_auth() {
         exit 1
     fi
     
-    # Verify token has package access by checking scopes
+    # Test the token first before potentially refreshing
+    log_info "Testing current GitHub token..."
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+        -H "Authorization: Bearer $GITHUB_TOKEN" \
+        "https://api.github.com/orgs/hipponot/packages?package_type=npm")
+    
+    if [ "$HTTP_CODE" = "200" ]; then
+        log_info "✅ Token is valid and working"
+        export GITHUB_TOKEN
+        return 0
+    fi
+    
+    # Token didn't work, check if it needs refresh
     if ! gh auth status 2>&1 | grep -q "read:packages"; then
-        log_warning "GitHub token may not have 'read:packages' scope"
+        log_warning "GitHub token lacks 'read:packages' scope"
         log_info "Refreshing token with correct scopes..."
         if ! gh auth refresh --hostname github.com --scopes "repo,read:packages" >/dev/null 2>&1; then
             log_error "Failed to refresh GitHub token"
@@ -121,6 +148,30 @@ setup_github_auth() {
             exit 1
         fi
         GITHUB_TOKEN=$(gh auth token)
+        
+        # Test the refreshed token
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/orgs/hipponot/packages?package_type=npm")
+    fi
+    
+    # Final validation
+    if [ "$HTTP_CODE" = "403" ]; then
+        log_error "GitHub token appears to be rate-limited or invalid (HTTP 403)"
+        log_info "This can happen if:"
+        log_info "  1. Token is expired - try: gh auth refresh --hostname github.com --scopes 'repo,read:packages'"
+        log_info "  2. Rate limit exceeded - wait a few minutes and try again"
+        log_info "  3. Token lacks permissions - ensure you have access to @hipponot packages"
+        exit 1
+    elif [ "$HTTP_CODE" = "401" ]; then
+        log_error "GitHub token is invalid or expired (HTTP 401)"
+        log_info "Please refresh: gh auth refresh --hostname github.com --scopes 'repo,read:packages'"
+        exit 1
+    elif [ "$HTTP_CODE" != "200" ]; then
+        log_warning "Unexpected response from GitHub API (HTTP $HTTP_CODE)"
+        log_info "Proceeding anyway, but build may fail..."
+    else
+        log_info "✅ Token validated successfully"
     fi
     
     # Export token for Docker build
@@ -154,6 +205,15 @@ setup_dependencies() {
             ./scripts/switch-saga-soa-deps.sh local
             if [ $? -eq 0 ]; then
                 log_info "✅ Switched to local dependency mode"
+                # Regenerate lockfile after switching dependencies
+                log_info "Regenerating lockfile for local dependencies..."
+                pnpm install >/dev/null 2>&1
+                if [ $? -eq 0 ]; then
+                    log_info "✅ Lockfile regenerated successfully"
+                else
+                    log_error "Failed to regenerate lockfile"
+                    exit 1
+                fi
             else
                 log_error "Failed to switch to local dependency mode"
                 exit 1
@@ -171,6 +231,24 @@ setup_dependencies() {
             ./scripts/switch-saga-soa-deps.sh published
             if [ $? -eq 0 ]; then
                 log_info "✅ Switched to published package mode"
+                # Regenerate lockfile after switching dependencies
+                log_info "Regenerating lockfile for published packages..."
+                # Add a small delay to avoid rate limiting after dependency switch
+                sleep 2
+                GITHUB_TOKEN="$GITHUB_TOKEN" pnpm install >/dev/null 2>&1
+                if [ $? -eq 0 ]; then
+                    log_info "✅ Lockfile regenerated successfully"
+                else
+                    log_warning "First attempt failed, retrying after delay..."
+                    sleep 5
+                    GITHUB_TOKEN="$GITHUB_TOKEN" pnpm install >/dev/null 2>&1
+                    if [ $? -eq 0 ]; then
+                        log_info "✅ Lockfile regenerated on retry"
+                    else
+                        log_error "Failed to regenerate lockfile after retry"
+                        exit 1
+                    fi
+                fi
             else
                 log_error "Failed to switch to published package mode"
                 exit 1
@@ -358,6 +436,13 @@ log_info "Dockerfile: $DOCKERFILE_PATH"
 # Pass GitHub token as build arg for published package mode
 if [ "$DEPENDENCY_MODE" = "published" ]; then
     log_info "Building with GitHub token for published packages"
+    # Refresh the token right before Docker build to ensure it's current
+    GITHUB_TOKEN=$(gh auth token 2>/dev/null)
+    if [ -z "$GITHUB_TOKEN" ]; then
+        log_error "Failed to get GitHub token for Docker build"
+        exit 1
+    fi
+    log_info "Token refreshed for Docker build (starts with: ${GITHUB_TOKEN:0:10}...)"
     docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME:$TAG" --build-arg GITHUB_TOKEN="$GITHUB_TOKEN" .
 else
     log_info "Building with local saga-soa dependencies"
