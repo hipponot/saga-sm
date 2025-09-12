@@ -7,6 +7,7 @@ import {
     DayRecurrenceRuleSet as PrismaDayRecurrenceRuleSet,
     TimeSlot as PrismaTimeSlot,
 } from '@repo/db'
+import { LocalDate, LocalDateTime } from '@js-joda/core';
 
 // Bell Schedule related types
 export type BellSchedule = PrismaBellSchedule & {
@@ -60,4 +61,20 @@ export type UpsertTimeSlotInput = Omit<PrismaTimeSlot, 'id'> & {
 }
 export interface DeleteTimeSlotInput {
     id: TimeSlot['id']
+}
+
+export interface CalculateMeetingTimesInput {
+    scheduleId: string;
+    dateRange: {
+        start: LocalDate;
+        end: LocalDate;
+    };
+}
+
+export interface MeetingTimes {
+    timeSlotId: string;
+    meetingTimes: {
+        start: LocalDateTime;
+        end: LocalDateTime;
+    }[];
 }

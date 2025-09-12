@@ -33,14 +33,14 @@ CREATE TABLE "public"."BellScheduleVariant" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Period" (
+CREATE TABLE "public"."TimeSlot" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "start" TEXT NOT NULL,
     "end" TEXT NOT NULL,
     "scheduleId" TEXT NOT NULL,
 
-    CONSTRAINT "Period_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "TimeSlot_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -74,11 +74,11 @@ CREATE TABLE "public"."PatternBasedRule" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."_BellScheduleDayToPeriod" (
+CREATE TABLE "public"."_BellScheduleDayToTimeSlot" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
 
-    CONSTRAINT "_BellScheduleDayToPeriod_AB_pkey" PRIMARY KEY ("A","B")
+    CONSTRAINT "_BellScheduleDayToTimeSlot_AB_pkey" PRIMARY KEY ("A","B")
 );
 
 -- CreateIndex
@@ -91,7 +91,7 @@ CREATE UNIQUE INDEX "DayOfWeekRule_ruleSetId_dayOfWeek_key" ON "public"."DayOfWe
 CREATE UNIQUE INDEX "PatternBasedRule_ruleSetId_patternPosition_key" ON "public"."PatternBasedRule"("ruleSetId", "patternPosition");
 
 -- CreateIndex
-CREATE INDEX "_BellScheduleDayToPeriod_B_index" ON "public"."_BellScheduleDayToPeriod"("B");
+CREATE INDEX "_BellScheduleDayToTimeSlot_B_index" ON "public"."_BellScheduleDayToTimeSlot"("B");
 
 -- AddForeignKey
 ALTER TABLE "public"."BellScheduleDay" ADD CONSTRAINT "BellScheduleDay_scheduleId_fkey" FOREIGN KEY ("scheduleId") REFERENCES "public"."BellSchedule"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -100,7 +100,7 @@ ALTER TABLE "public"."BellScheduleDay" ADD CONSTRAINT "BellScheduleDay_scheduleI
 ALTER TABLE "public"."BellScheduleVariant" ADD CONSTRAINT "BellScheduleVariant_scheduleDayId_fkey" FOREIGN KEY ("scheduleDayId") REFERENCES "public"."BellScheduleDay"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Period" ADD CONSTRAINT "Period_scheduleId_fkey" FOREIGN KEY ("scheduleId") REFERENCES "public"."BellSchedule"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."TimeSlot" ADD CONSTRAINT "TimeSlot_scheduleId_fkey" FOREIGN KEY ("scheduleId") REFERENCES "public"."BellSchedule"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."DayRecurrenceRuleSet" ADD CONSTRAINT "DayRecurrenceRuleSet_scheduleId_fkey" FOREIGN KEY ("scheduleId") REFERENCES "public"."BellSchedule"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -118,7 +118,7 @@ ALTER TABLE "public"."PatternBasedRule" ADD CONSTRAINT "PatternBasedRule_schedul
 ALTER TABLE "public"."PatternBasedRule" ADD CONSTRAINT "PatternBasedRule_ruleSetId_fkey" FOREIGN KEY ("ruleSetId") REFERENCES "public"."DayRecurrenceRuleSet"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."_BellScheduleDayToPeriod" ADD CONSTRAINT "_BellScheduleDayToPeriod_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."BellScheduleDay"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."_BellScheduleDayToTimeSlot" ADD CONSTRAINT "_BellScheduleDayToTimeSlot_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."BellScheduleDay"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."_BellScheduleDayToPeriod" ADD CONSTRAINT "_BellScheduleDayToPeriod_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."Period"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."_BellScheduleDayToTimeSlot" ADD CONSTRAINT "_BellScheduleDayToTimeSlot_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."TimeSlot"("id") ON DELETE CASCADE ON UPDATE CASCADE;
