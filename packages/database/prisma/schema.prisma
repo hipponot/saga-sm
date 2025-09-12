@@ -76,7 +76,7 @@ model DayRecurrenceRuleSet {
 
   // Pattern-based rules (only used if type is PATTERN_BASED)
   patternBasedRules PatternBasedRule[]
-  seedDate    DateTime? // Starting date for pattern calculation
+  seedDate    String? // Starting date for pattern calculation (YYYY-MM-DD)
 }
 
 // Day-of-week based recurrence rules
