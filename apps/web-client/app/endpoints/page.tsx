@@ -19,6 +19,14 @@ export default function EndpointsPage() {
     const [trpcService] = useState(() => new TrpcClientService())
     const [curlService] = useState(() => new TrpcCurlService())
 
+    const generateCode = useCallback(() => {
+        if (!selectedEndpoint) return
+
+        const service = serviceType === 'trpc' ? trpcService : curlService
+        const code = service.generateCode(selectedEndpoint, inputValue)
+        setGeneratedCode(code)
+    }, [selectedEndpoint, serviceType, inputValue, trpcService, curlService])
+
     useEffect(() => {
         if (selectedEndpoint) {
             setInputValue(selectedEndpoint.sampleInput || '')
@@ -29,14 +37,6 @@ export default function EndpointsPage() {
     useEffect(() => {
         generateCode()
     }, [inputValue, generateCode])
-
-    const generateCode = useCallback(() => {
-        if (!selectedEndpoint) return
-
-        const service = serviceType === 'trpc' ? trpcService : curlService
-        const code = service.generateCode(selectedEndpoint, inputValue)
-        setGeneratedCode(code)
-    }, [selectedEndpoint, serviceType, inputValue, trpcService, curlService])
 
     const executeEndpoint = async () => {
         if (!selectedEndpoint) return

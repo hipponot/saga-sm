@@ -45,7 +45,7 @@ export class TrpcClientService implements ServiceInterface {
         const startTime = Date.now()
 
         try {
-            let parsedInput: any = null
+            let parsedInput: unknown = null
 
             if (input.trim()) {
                 try {
@@ -55,26 +55,25 @@ export class TrpcClientService implements ServiceInterface {
                 }
             }
 
-            let result: any
+            let result: unknown
 
             // Parse the endpoint path to determine the method and procedure
-            const [namespace, procedure] = endpoint.id.split('.')
 
             switch (endpoint.id) {
                 case 'example.queryExamples':
-                    result = await this.client.example.queryExamples.query(parsedInput || {})
+                    result = await this.client.example.queryExamples.query(parsedInput as any || {})
                     break
                 case 'example.getExampleById':
-                    result = await this.client.example.getExampleById.query(parsedInput)
+                    result = await this.client.example.getExampleById.query(parsedInput as any)
                     break
                 case 'example.createExample':
-                    result = await this.client.example.createExample.mutate(parsedInput)
+                    result = await this.client.example.createExample.mutate(parsedInput as any)
                     break
                 case 'example.updateExample':
-                    result = await this.client.example.updateExample.mutate(parsedInput)
+                    result = await this.client.example.updateExample.mutate(parsedInput as any)
                     break
                 case 'example.deleteExample':
-                    result = await this.client.example.deleteExample.mutate(parsedInput)
+                    result = await this.client.example.deleteExample.mutate(parsedInput as any)
                     break
                 default:
                     throw new Error(`Unknown endpoint: ${endpoint.id}`)

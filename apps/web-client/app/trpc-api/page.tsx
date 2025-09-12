@@ -208,7 +208,7 @@ function RealPingPongSection() {
                             <strong>Timestamp:</strong>{' '}
                             {new Date(realPingResponse.pingEvent.timestamp).toLocaleString()}
                         </div>
-                        {realPingResponse.pubsubResult && (
+                        {realPingResponse.pubsubResult != null && (
                             <div className={styles.pubsubResult}>
                                 <strong>PubSub Result:</strong>
                                 <pre className={styles.codeBlock}>
@@ -291,11 +291,6 @@ export default function TRPCAPIPage() {
         lastActivity: new Date().toISOString(),
     })
 
-    useEffect(() => {
-        // Check connection status on mount
-        checkConnectionStatus()
-    }, [checkConnectionStatus])
-
     const checkConnectionStatus = useCallback(async () => {
         try {
             setConnectionStatus('connecting')
@@ -309,6 +304,11 @@ export default function TRPCAPIPage() {
             setConnectionStatus('disconnected')
         }
     }, [apiUrl])
+
+    useEffect(() => {
+        // Check connection status on mount
+        checkConnectionStatus()
+    }, [checkConnectionStatus])
 
     const testConnection = async () => {
         await checkConnectionStatus()
