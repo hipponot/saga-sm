@@ -2,10 +2,26 @@
 
 # Build, push, and optionally deploy Docker image for saga-sm API
 #
-# Usage: ./build-push-deploy.sh [TAG] [ENVIRONMENT] [DEPLOY]
+# Usage: ./build-push-deploy.sh [OPTIONS] [TAG] [ENVIRONMENT] [DEPLOY]
+#   --local     - Use local saga-soa dependencies (requires saga-soa as sibling directory)
 #   TAG         - Docker image base tag (default: latest)
 #   ENVIRONMENT - Deployment environment: dev|qa|prod|ephemeral (default: dev)  
 #   DEPLOY      - Whether to deploy after push: true|false (default: true)
+#
+# Prerequisites:
+#   - AWS CLI configured with appropriate permissions
+#   - Docker running and accessible
+#   - GitHub CLI (gh) authenticated with 'repo' and 'read:packages' scopes (for published mode)
+#
+# Dependency Modes:
+#   - Published Mode (default): Uses @hipponot packages from GitHub Packages (requires auth)
+#   - Local Mode (--local): Uses saga-soa as sibling directory (file: dependencies)
+#
+# GitHub Authentication:
+#   For published packages (default mode), the script requires GitHub CLI authentication:
+#   - Initial setup: gh auth login --hostname github.com --scopes 'repo,read:packages'
+#   - Token refresh: gh auth refresh --hostname github.com --scopes 'repo,read:packages'
+#   - The script will automatically handle token retrieval and Docker build args
 #
 # Environment Mapping:
 #   - dev       → uses 'default' section in samconfig.yaml
@@ -20,13 +36,18 @@
 #   - Example: 'v1.2.3' becomes 'v1.2.3-20241210-143022' for deployment
 #
 # Examples:
-#   ./build-push-deploy.sh                    # Build latest, deploy to dev
-#   ./build-push-deploy.sh v1.2.3             # Build v1.2.3, deploy to dev
-#   ./build-push-deploy.sh v1.2.3 qa          # Build v1.2.3, deploy to qa
-#   ./build-push-deploy.sh v1.2.3 qa false    # Build v1.2.3, push to ECR, skip deploy
+#   ./build-push-deploy.sh                    # Build latest with published packages, deploy to dev
+#   ./build-push-deploy.sh v1.2.3             # Build v1.2.3 with published packages, deploy to dev
+#   ./build-push-deploy.sh v1.2.3 qa          # Build v1.2.3 with published packages, deploy to qa
+#   ./build-push-deploy.sh v1.2.3 qa false    # Build v1.2.3 with published packages, push to ECR, skip deploy
+#   ./build-push-deploy.sh --local            # Build latest with local saga-soa, deploy to dev
+#   ./build-push-deploy.sh --local v1.2.3 qa  # Build v1.2.3 with local saga-soa, deploy to qa
 #   AWS_PROFILE=prod ./build-push-deploy.sh v1.2.3 prod  # Deploy to prod with specific AWS profile
 
 set -e
+
+# Trap to ensure cleanup on exit
+trap 'cleanup_dependencies' EXIT
 
 # Configuration
 AWS_REGION="us-west-2"
@@ -61,12 +82,114 @@ check_prerequisites() {
     command -v docker >/dev/null 2>&1 || missing+=("docker")
     docker info >/dev/null 2>&1 || missing+=("docker (not running)")
     aws sts get-caller-identity >/dev/null 2>&1 || missing+=("AWS credentials")
+    command -v gh >/dev/null 2>&1 || missing+=("GitHub CLI (gh)")
     
     if [ ${#missing[@]} -gt 0 ]; then
         log_error "Missing requirements: ${missing[*]}"
         log_error "See deployment guide for setup instructions"
         exit 1
     fi
+}
+
+# Setup GitHub authentication for published packages
+setup_github_auth() {
+    log_step "Setting up GitHub authentication for published packages"
+    
+    # Check if GitHub CLI is authenticated
+    if ! gh auth status >/dev/null 2>&1; then
+        log_error "GitHub CLI is not authenticated"
+        log_info "Please run: gh auth login --hostname github.com --scopes 'repo,read:packages'"
+        exit 1
+    fi
+    
+    # Get GitHub token
+    GITHUB_TOKEN=$(gh auth token 2>/dev/null)
+    if [ -z "$GITHUB_TOKEN" ]; then
+        log_error "Failed to get GitHub token"
+        log_info "Please refresh your GitHub token with package access:"
+        log_info "gh auth refresh --hostname github.com --scopes 'repo,read:packages'"
+        exit 1
+    fi
+    
+    # Verify token has package access by checking scopes
+    if ! gh auth status 2>&1 | grep -q "read:packages"; then
+        log_warning "GitHub token may not have 'read:packages' scope"
+        log_info "Refreshing token with correct scopes..."
+        if ! gh auth refresh --hostname github.com --scopes "repo,read:packages" >/dev/null 2>&1; then
+            log_error "Failed to refresh GitHub token"
+            log_info "Please run manually: gh auth refresh --hostname github.com --scopes 'repo,read:packages'"
+            exit 1
+        fi
+        GITHUB_TOKEN=$(gh auth token)
+    fi
+    
+    # Export token for Docker build
+    export GITHUB_TOKEN
+    log_info "✅ GitHub authentication configured for Docker build"
+}
+
+# Setup dependency mode based on command line flag
+setup_dependencies() {
+    log_step "Configuring dependency mode"
+    
+    # Track if we automatically switched modes
+    AUTO_SWITCHED_TO_PUBLISHED=false
+    
+    if [ "$USE_LOCAL_DEPENDENCIES" = "true" ]; then
+        log_info "Using local dependency mode (--local flag specified)"
+        DEPENDENCY_MODE="local"
+        
+        # Verify saga-soa directory exists for local mode
+        if [ ! -d "$SAGA_SOA_ROOT" ]; then
+            log_error "Local mode requires saga-soa directory as sibling: $SAGA_SOA_ROOT"
+            log_error "Please either:"
+            log_error "  1. Clone saga-soa as sibling directory: git clone https://github.com/hipponot/saga-soa.git $SAGA_SOA_ROOT"
+            log_error "  2. Remove --local flag to use published packages"
+            exit 1
+        fi
+        
+        # Switch to local dependencies if needed
+        cd "$PROJECT_ROOT"
+        if [ -x "./scripts/switch-saga-soa-deps.sh" ]; then
+            ./scripts/switch-saga-soa-deps.sh local
+            if [ $? -eq 0 ]; then
+                log_info "✅ Switched to local dependency mode"
+            else
+                log_error "Failed to switch to local dependency mode"
+                exit 1
+            fi
+        else
+            log_warning "switch-saga-soa-deps.sh not found - assuming dependencies are already local"
+        fi
+    else
+        log_info "Using published package mode (default)"
+        DEPENDENCY_MODE="published"
+        
+        # Switch to published mode and setup GitHub auth
+        cd "$PROJECT_ROOT"
+        if [ -x "./scripts/switch-saga-soa-deps.sh" ]; then
+            ./scripts/switch-saga-soa-deps.sh published
+            if [ $? -eq 0 ]; then
+                log_info "✅ Switched to published package mode"
+            else
+                log_error "Failed to switch to published package mode"
+                exit 1
+            fi
+        else
+            log_warning "switch-saga-soa-deps.sh not found - assuming dependencies are already published"
+        fi
+        
+        setup_github_auth
+    fi
+    
+    log_info "Dependency mode: $DEPENDENCY_MODE"
+}
+
+# Cleanup function (no longer needed with explicit flag-based mode selection)
+cleanup_dependencies() {
+    # With explicit --local flag, we don't automatically restore dependency modes
+    # Users should manually switch modes if needed using ./scripts/switch-saga-soa-deps.sh
+    return 0
 }
 
 # Function to map environment names to samconfig section names
@@ -135,6 +258,35 @@ get_stack_name() {
 }
 
 # Parse command line arguments
+USE_LOCAL_DEPENDENCIES="false"
+
+# Check for help flag
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $0 [OPTIONS] [TAG] [ENVIRONMENT] [DEPLOY]"
+    echo ""
+    echo "OPTIONS:"
+    echo "  --local     Use local saga-soa dependencies (requires saga-soa as sibling directory)"
+    echo "  --help, -h  Show this help message"
+    echo ""
+    echo "ARGUMENTS:"
+    echo "  TAG         Docker image base tag (default: latest)"
+    echo "  ENVIRONMENT Deployment environment: dev|qa|prod|ephemeral (default: dev)"
+    echo "  DEPLOY      Whether to deploy after push: true|false (default: true)"
+    echo ""
+    echo "EXAMPLES:"
+    echo "  $0                    # Build latest with published packages, deploy to dev"
+    echo "  $0 v1.2.3 qa         # Build v1.2.3 with published packages, deploy to qa"
+    echo "  $0 --local v1.2.3    # Build v1.2.3 with local saga-soa, deploy to dev"
+    echo "  $0 --local v1.2.3 qa false  # Build v1.2.3 with local saga-soa, push only"
+    exit 0
+fi
+
+# Check for --local flag
+if [ "$1" = "--local" ]; then
+    USE_LOCAL_DEPENDENCIES="true"
+    shift  # Remove --local from arguments
+fi
+
 BASE_TAG=${1:-latest}
 ENVIRONMENT=${2:-dev}
 DEPLOY=${3:-true}  # Set to false to skip deployment
@@ -161,6 +313,9 @@ TAG=$BASE_TAG
 echo "========================================="
 echo "🚀 Saga-SM API Build, Push & Deploy"
 echo "========================================="
+# Setup dependency mode and GitHub authentication
+setup_dependencies
+
 echo ""
 log_info "Configuration:"
 echo "  Image Name:     $IMAGE_NAME"
@@ -174,28 +329,54 @@ echo "  ECR Repository: $ECR_REPOSITORY"
 echo "  API Root:       $API_ROOT"
 echo "  Project Root:   $PROJECT_ROOT"  
 echo "  Dev Root:       $DEV_ROOT"
-echo "  Saga-SOA Root:  $SAGA_SOA_ROOT"
+echo "  Dependency Mode: $DEPENDENCY_MODE"
+if [ "$DEPENDENCY_MODE" = "local" ]; then
+    echo "  Saga-SOA Root:  $SAGA_SOA_ROOT"
+fi
 echo ""
 
-# Verify saga-soa exists
-if [ ! -d "$SAGA_SOA_ROOT" ]; then
-    log_error "Saga-SOA directory not found at: $SAGA_SOA_ROOT"
-    log_error "Please ensure saga-soa is available as a sibling directory"
-    exit 1
+# Set build context based on dependency mode
+if [ "$DEPENDENCY_MODE" = "local" ]; then
+    # Change to dev root for Docker build (needs both saga-sm and saga-soa)
+    BUILD_CONTEXT="$DEV_ROOT"
+    DOCKERFILE_PATH="saga-sm/apps/api/Dockerfile.local"
+    log_info "Using local dependency mode with Dockerfile.local - building from dev root"
+else
+    # Change to project root for published packages
+    BUILD_CONTEXT="$PROJECT_ROOT"
+    DOCKERFILE_PATH="apps/api/Dockerfile"
+    log_info "Using published package mode with standard Dockerfile - building from project root"
 fi
 
-# Change to dev root for Docker build (needs both saga-sm and saga-soa)
-cd "$DEV_ROOT"
+cd "$BUILD_CONTEXT"
 
 # Step 1: Build the Docker image
-log_step "Step 1: Building Docker image (from dev root with saga-soa)"
+log_step "Step 1: Building Docker image ($DEPENDENCY_MODE mode)"
 log_info "Building from: $(pwd)"
-log_info "Dockerfile: saga-sm/apps/api/Dockerfile"
-docker build -f saga-sm/apps/api/Dockerfile -t "$IMAGE_NAME:$TAG" .
+log_info "Dockerfile: $DOCKERFILE_PATH"
+
+# Pass GitHub token as build arg for published package mode
+if [ "$DEPENDENCY_MODE" = "published" ]; then
+    log_info "Building with GitHub token for published packages"
+    docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME:$TAG" --build-arg GITHUB_TOKEN="$GITHUB_TOKEN" .
+else
+    log_info "Building with local saga-soa dependencies"
+    docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME:$TAG" .
+fi
+
 if [ $? -eq 0 ]; then
     log_info "✅ Docker image built successfully"
 else
     log_error "Docker build failed"
+    log_error "Troubleshooting:"
+    if [ "$DEPENDENCY_MODE" = "published" ]; then
+        log_error "  • Check GitHub token: gh auth status"
+        log_error "  • Verify package access: gh auth refresh --hostname github.com --scopes 'repo,read:packages'"
+        log_error "  • Check package availability at: https://github.com/orgs/hipponot/packages"
+    else
+        log_error "  • Ensure saga-soa directory exists: $SAGA_SOA_ROOT"
+        log_error "  • Check saga-soa packages are built: cd ../saga-soa && pnpm build"
+    fi
     exit 1
 fi
 
@@ -364,5 +545,13 @@ if [ "$ECS_EXEC_ENABLED" = "true" ]; then
     echo "  Connect to container: ./task_connect.sh --stack-name $STACK_NAME --container-name saga-sm-api"
 fi
 echo ""
+
+if [ "$DEPENDENCY_MODE" = "published" ]; then
+    echo "🔧 GitHub Authentication Commands:"
+    echo "  Check auth status: gh auth status"
+    echo "  Refresh token: gh auth refresh --hostname github.com --scopes 'repo,read:packages'"
+    echo "  Switch to local: ../../../scripts/switch-saga-soa-deps.sh local"
+    echo ""
+fi
 
 log_info "Done! 🎉"

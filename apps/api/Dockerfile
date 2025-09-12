@@ -1,5 +1,6 @@
-# Optimized multi-stage Dockerfile for faster builds and smaller images
+# Dockerfile for published packages (@hipponot from GitHub Packages)
 # Build context should be run from the saga-sm directory
+# Usage: docker build -f apps/api/Dockerfile -t saga-sm-api:latest --build-arg GITHUB_TOKEN=your_token .
 
 # Dependencies stage - for better layer caching
 FROM node:20-alpine AS dependencies
