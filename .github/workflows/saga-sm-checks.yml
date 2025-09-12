@@ -17,16 +17,6 @@ on:
       - "pnpm-lock.yaml"
       - ".github/workflows/**"
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Version bump type"
-        required: true
-        default: "patch"
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
 
 # Concurrency groups to prevent multiple runs from interfering
 concurrency:
@@ -93,7 +83,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: 🏗️ Generate Prisma client
         run: |
@@ -160,7 +150,7 @@ jobs:
           MONGO_INITDB_ROOT_PASSWORD: password123
           MONGO_INITDB_DATABASE: saga_sm
         options: >-
-          --health-cmd mongosh --eval "db.runCommand('ping')"
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -209,7 +199,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: 🗄️ Setup database schema
         run: |
@@ -273,7 +263,7 @@ jobs:
           MONGO_INITDB_ROOT_PASSWORD: password123
           MONGO_INITDB_DATABASE: saga_sm
         options: >-
-          --health-cmd mongosh --eval "db.runCommand('ping')"
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -293,7 +283,7 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: 🏗️ Build all components
         run: |
