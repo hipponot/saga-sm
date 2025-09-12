@@ -22,6 +22,18 @@ This project provides:
 - **Type-safe API**: Full TypeScript support from API to client
 - **Interactive testing**: Web client for endpoint exploration and testing
 
+## 📖 Documentation Guide
+
+| Topic | Guide | Description |
+|-------|-------|-------------|
+| **Getting Started** | [README.md](README.md) | Project overview, quick start, architecture |
+| **Environment Setup** | [Environment Setup](ENVIRONMENT_SETUP.md) | .env files, database config, local development |
+| **GitHub Authentication** | [GitHub Setup](GITHUB_SETUP.md) | Personal access tokens, package registry access |
+| **Docker & Containers** | [Docker Setup](DOCKER_SETUP.md) | Container builds, authentication, troubleshooting |
+| **Dependency Management** | [Dependencies](DEPENDENCIES.md) | Local vs published packages, switching modes |
+| **Testing** | [Testing Guide](TESTING.md) | Unit tests, integration tests, database setup |
+| **Deployment** | [Web Client](apps/web-client/DEPLOYMENT_GUIDE.md) • [API](apps/api/DEPLOYMENT_GUIDE.md) | Production deployment guides |
+
 ## 📁 Project Structure
 
 ```
@@ -137,25 +149,17 @@ pnpm dev
 
 ### Dependency Management
 
-saga-sm can work with saga-soa dependencies in two modes:
-
-**🏠 Local Mode** (default):
-- Uses local file: dependencies for real-time saga-soa development
-- Requires saga-soa cloned as sibling directory
-
-**🌐 Published Mode**:
-- Uses published @hipponot packages from GitHub Packages
-- Requires `GITHUB_TOKEN` environment variable
-- Mirrors CI/CD environment exactly
+saga-sm works with saga-soa in **local** (file: dependencies) or **published** (@hipponot packages) modes:
 
 ```bash
-# Switch between modes
-./scripts/switch-saga-soa-deps.sh local      # Local development
-./scripts/switch-saga-soa-deps.sh published  # Published packages
+# Local development mode (default)
+./scripts/dev-setup.sh local
 
-# Check current status
-./scripts/dev-setup.sh status
+# Published packages mode (requires GitHub token)
+./scripts/dev-setup.sh ci
 ```
+
+**For detailed dependency management:** See [Dependencies Guide](DEPENDENCIES.md)
 
 ### AWS Deployment Prerequisites
 
@@ -310,7 +314,7 @@ The web client provides comprehensive testing tools:
 
 **"saga-soa packages not found"** or **"403 Forbidden" from GitHub Packages**
 - Ensure saga-soa is cloned in the correct directory structure
-- For published packages: Set up GitHub token (see `ENVIRONMENT_SETUP.md`)
+- For published packages: Set up GitHub token (see [GitHub Setup](GITHUB_SETUP.md))
 - Re-run the setup script: `./scripts/dev-setup.sh local`
 
 **"Database connection failed"**
@@ -350,7 +354,8 @@ docker-compose up -d api web-client
 Docker builds require GitHub Packages access for @hipponot packages:
 
 - **Quick setup**: `export GITHUB_TOKEN=$(gh auth token)` 
-- **Detailed guide**: See `ENVIRONMENT_SETUP.md`
+- **Docker guide**: See [Docker Setup](DOCKER_SETUP.md)
+- **GitHub tokens**: See [GitHub Setup](GITHUB_SETUP.md)
 - **Fallback option**: Use local dependencies with `./scripts/switch-saga-soa-deps.sh local`
 
 ### Services

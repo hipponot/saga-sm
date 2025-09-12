@@ -108,57 +108,14 @@ All services use these consistent credentials:
 - **MongoDB**: `27017`
 - **Redis**: `6379`
 
-## GitHub Token Setup
+## GitHub Token (Required for published packages)
 
-### Quick Setup (Recommended)
+For Docker builds and published package mode:
 ```bash
-# If you have GitHub CLI:
-gh auth refresh --hostname github.com --scopes "repo,read:packages"
 export GITHUB_TOKEN=$(gh auth token)
-
-# Test it works:
-docker-compose build api
 ```
 
-### Manual Token Creation
-1. Go to https://github.com/settings/personal-access-tokens/tokens
-2. Generate new token with `repo` + `read:packages` scopes
-3. Export: `export GITHUB_TOKEN="your_token_here"`
-
-### Token Management Commands
-```bash
-# Check current token status
-gh auth status
-
-# Get current token
-gh auth token
-
-# Refresh token with correct scopes
-gh auth refresh --hostname github.com --scopes "repo,read:packages"
-```
-
-## Docker Authentication
-
-### Build with Authentication
-```bash
-# Option 1: Environment variable (recommended)
-export GITHUB_TOKEN=$(gh auth token)
-docker-compose build
-
-# Option 2: Inline variable
-GITHUB_TOKEN="your_token" docker-compose build
-
-# Option 3: Add to .env file
-echo "GITHUB_TOKEN=$(gh auth token)" >> .env
-docker-compose build
-```
-
-### Fallback: Local Dependencies
-```bash
-# Switch to local saga-soa dependencies (no token needed)
-./scripts/switch-saga-soa-deps.sh local
-docker-compose build
-```
+**For detailed setup:** See [GitHub Setup](GITHUB_SETUP.md)
 
 ## Troubleshooting
 
@@ -175,17 +132,10 @@ pnpm build
 3. Wait for services to fully start (can take 10-30 seconds)
 
 ### GitHub token errors during build
-**Common Errors & Solutions:**
-- **401 Unauthorized** → Token missing: `export GITHUB_TOKEN=$(gh auth token)`
-- **403 Forbidden** → Wrong scopes: `gh auth refresh --hostname github.com --scopes "repo,read:packages"`
-- **Docker build fails** → Export token before building: `export GITHUB_TOKEN=$(gh auth token)`
-
-**Troubleshooting Steps:**
-1. Verify token has correct scopes: `gh auth status`
-2. Test token works: `gh auth token`
-3. Export token: `export GITHUB_TOKEN=$(gh auth token)`
-4. Test Docker build: `docker-compose build api`
-5. **Fallback**: Use local mode: `./scripts/switch-saga-soa-deps.sh local`
+**Quick fixes:**
+- **401/403 errors**: `export GITHUB_TOKEN=$(gh auth token)`
+- **Docker build fails**: See [Docker Setup](DOCKER_SETUP.md)
+- **Dependency issues**: See [Dependencies](DEPENDENCIES.md)
 
 ## Development Workflow
 
@@ -210,6 +160,7 @@ pnpm build
 
 ## Related Documentation
 
-- [README.md](README.md) - Main project documentation with setup and dependency management
-- [Web Client Environment Variables](apps/web-client/ENVIRONMENT_VARIABLES.md) - Deployment-focused environment management
+- [GitHub Setup](GITHUB_SETUP.md) - GitHub token setup and authentication
+- [Docker Setup](DOCKER_SETUP.md) - Docker builds and container management
+- [Dependencies](DEPENDENCIES.md) - Local vs published dependency management
 - [Testing Guide](TESTING.md) - Comprehensive testing setup and execution
