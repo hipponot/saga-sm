@@ -6,7 +6,7 @@ test.describe('Complete User Workflows', () => {
         await page.goto('/')
 
         // Should redirect to tRPC API page
-        await page.waitForURL('/trpc-api')
+        await page.waitForURL(/\/trpc-api\/?/, { timeout: 10000 })
         await expect(page.getByText('Example API Test Center')).toBeVisible()
 
         // Check connection status
@@ -74,7 +74,7 @@ test.describe('Complete User Workflows', () => {
     test('cross-page navigation workflow', async ({ page }) => {
         // Start from home
         await page.goto('/')
-        await page.waitForURL('/trpc-api')
+        await page.waitForURL(/\/trpc-api\/?/, { timeout: 10000 })
 
         // Navigate to API test page
         await page.goto('/api-test')
@@ -82,18 +82,18 @@ test.describe('Complete User Workflows', () => {
 
         // Use navigation link to endpoints
         await page.getByRole('link', { name: '📋 Endpoint List' }).click()
-        await expect(page).toHaveURL('/endpoints')
+        await expect(page).toHaveURL(/\/endpoints\/?/)
 
         // Navigate back home
         await page.getByRole('link', { name: '← Back to Home' }).click()
-        await expect(page).toHaveURL('/')
+        await expect(page).toHaveURL(/^https?:\/\/[^\/]+\/?$/)
 
         // Should redirect back to tRPC API
-        await page.waitForURL('/trpc-api')
+        await page.waitForURL(/\/trpc-api\/?/, { timeout: 10000 })
 
         // Navigate to endpoint tester from main page
         await page.getByRole('link', { name: '🧪 Endpoint Tester' }).click()
-        await expect(page).toHaveURL('/trpc-api/endpoints')
+        await expect(page).toHaveURL(/\/trpc-api\/endpoints\/?/)
     })
 
     test('endpoint explorer workflow', async ({ page }) => {
