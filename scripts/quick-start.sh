@@ -92,7 +92,7 @@ setup_development() {
     # Run dev setup script
     if [ -x "./scripts/dev-setup.sh" ]; then
         log_info "Running development environment setup..."
-        ./scripts/dev-setup.sh local
+        ./scripts/dev-setup.sh published
     else
         log_warning "dev-setup.sh not found, running manual setup..."
         

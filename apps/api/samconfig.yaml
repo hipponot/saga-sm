@@ -12,7 +12,7 @@ default:
             parameter_overrides:
                 - AppName=saga-sm-api
                 - Environment=dev
-                - ImageId=531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api:latest-20250912-141529
+                - ImageId=531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api:latest-20250912-142805
                 - VpcIdSSMParameter=/dev/app/vpc-id
                 - SubnetsSSMParameter=/dev/app/private-subnet-ids
                 - AppSecurityGroupIdSSMParameter=/dev/app/app-sg-id

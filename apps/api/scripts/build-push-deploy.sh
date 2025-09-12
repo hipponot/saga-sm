@@ -95,18 +95,23 @@ check_prerequisites() {
 setup_github_auth() {
     log_step "Setting up GitHub authentication for published packages"
     
-    # Check if we already have a valid token in the environment
+    # Always prefer keyring token over environment variable for reliability
+    # Environment tokens often lack proper scopes or are expired
     if [ -n "$GITHUB_TOKEN" ]; then
-        log_info "Checking existing GITHUB_TOKEN..."
+        log_info "Found GITHUB_TOKEN in environment, testing validity..."
+        
+        # Test the current token
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             "https://api.github.com/orgs/hipponot/packages?package_type=npm")
         
         if [ "$HTTP_CODE" = "200" ]; then
-            log_info "✅ Existing token is valid, skipping refresh"
+            log_info "✅ Environment token is valid and has package access"
             return 0
         else
-            log_warning "Existing token is invalid (HTTP $HTTP_CODE), getting new token..."
+            log_warning "Environment token failed (HTTP $HTTP_CODE)"
+            log_info "Clearing environment token and using keyring token for reliability..."
+            unset GITHUB_TOKEN
         fi
     fi
     
@@ -138,16 +143,31 @@ setup_github_auth() {
         return 0
     fi
     
-    # Token didn't work, check if it needs refresh
-    if ! gh auth status 2>&1 | grep -q "read:packages"; then
-        log_warning "GitHub token lacks 'read:packages' scope"
+    # Token didn't work, check scopes and refresh if needed
+    log_info "Checking token scopes and refreshing if needed..."
+    
+    # Check if current active token has read:packages scope
+    AUTH_STATUS=$(gh auth status 2>&1)
+    ACTIVE_TOKEN_LINE=$(echo "$AUTH_STATUS" | grep -A4 "Active account: true")
+    
+    if ! echo "$ACTIVE_TOKEN_LINE" | grep -q "read:packages"; then
+        log_warning "Active GitHub token lacks 'read:packages' scope"
         log_info "Refreshing token with correct scopes..."
+        
+        # If we have an environment token that's blocking, clear it first
+        if [ -n "$GITHUB_TOKEN" ]; then
+            log_info "Clearing environment token to allow keyring refresh..."
+            unset GITHUB_TOKEN
+        fi
+        
         if ! gh auth refresh --hostname github.com --scopes "repo,read:packages" >/dev/null 2>&1; then
             log_error "Failed to refresh GitHub token"
             log_info "Please run manually: gh auth refresh --hostname github.com --scopes 'repo,read:packages'"
             exit 1
         fi
+        
         GITHUB_TOKEN=$(gh auth token)
+        log_info "✅ Token refreshed with read:packages scope"
         
         # Test the refreshed token
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
