@@ -3,8 +3,8 @@ import { AbstractTRPCController, router } from '@hipponot/api-core/abstract-trpc
 import type { ILogger } from '@hipponot/logger'
 import { z } from 'zod'
 import { randomUUID } from 'node:crypto'
-import { PingMessageSchema, type PingMessageZ } from './schema/pubsub-schemas.js'
-import type { PubSubService } from '../../../services/pubsub.service.js'
+import { PingMessageSchema, type PingMessageZ } from './schema/pubsub-schemas.ts'
+import type { PubSubService } from '../../../services/pubsub.service.ts'
 
 @injectable()
 export class PubSubController extends AbstractTRPCController {

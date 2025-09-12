@@ -2,7 +2,7 @@
 # Build context should be run from the parent directory of saga-sm and saga-soa
 
 # Dependencies stage - for better layer caching
-FROM node:18-alpine AS dependencies
+FROM node:20-alpine AS dependencies
 
 WORKDIR /app
 
@@ -15,6 +15,7 @@ COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml sag
 # Copy all package.json files for dependency resolution
 COPY saga-sm/apps/api/package.json ./apps/api/
 COPY saga-sm/apps/api/types/package.json ./apps/api/types/
+COPY saga-sm/packages/ ./packages/
 
 # Copy saga-soa packages (required dependencies)
 COPY saga-soa/ ./saga-soa/
@@ -34,13 +35,17 @@ COPY saga-sm/apps/api/src/ ./apps/api/src/
 COPY saga-sm/apps/api/tsconfig.json saga-sm/apps/api/tsup.config.ts ./apps/api/
 COPY saga-sm/apps/api/types/src/ ./apps/api/types/src/
 COPY saga-sm/apps/api/types/tsconfig.json saga-sm/apps/api/types/tsup.config.ts saga-sm/apps/api/types/codegen.config.js ./apps/api/types/
+# Copy database sources and schema
+COPY saga-sm/packages/database/src/ ./packages/database/src/
+COPY saga-sm/packages/database/prisma/ ./packages/database/prisma/
 
-# Use turbo to build with optimized dependency resolution
+# Generate Prisma client and build with turbo
 WORKDIR /app
-RUN npx turbo build --filter=@saga-sm/api
+RUN cd packages/database && npx prisma generate && cd ../.. && \
+    npx turbo build --filter=@saga-sm/api
 
 # Production stage - smaller base image
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
@@ -54,6 +59,7 @@ RUN addgroup -g 1001 -S nodejs && \
 # Copy workspace files and saga-soa dependencies for production install
 COPY --from=builder /app/pnpm-workspace.yaml /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/saga-soa/ ./saga-soa/
+COPY --from=builder /app/packages/ ./packages/
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/types/package.json ./apps/api/types/
 
@@ -63,8 +69,10 @@ RUN npm install -g pnpm@8.15.4 && \
     sed -i 's|file:../../../../saga-soa/|file:../../../saga-soa/|g' ./apps/api/types/package.json && \
     pnpm install --prod --no-frozen-lockfile
 
-# Copy built application
+# Copy built application and generated Prisma client
 COPY --from=builder --chown=apiuser:nodejs /app/apps/api/dist ./apps/api/dist
+COPY --from=builder --chown=apiuser:nodejs /app/packages/database/generated ./packages/database/generated
+COPY --from=builder --chown=apiuser:nodejs /app/packages/database/dist ./packages/database/dist
 
 # Switch to non-root user
 USER apiuser

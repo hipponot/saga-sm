@@ -8,7 +8,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://saga:saga@localhost:5432/saga_sm"
+  url      = env("DATABASE_URL")
 }
 
 model BellSchedule {

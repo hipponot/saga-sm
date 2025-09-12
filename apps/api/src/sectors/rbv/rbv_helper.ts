@@ -8,7 +8,7 @@ import {
   UpsertBellScheduleInput,
 } from './rbv.types';
 import { Guid } from 'guid-typescript';
-import { type ILogger } from '@saga-soa/logger';
+import { type ILogger } from '@hipponot/logger';
 
 import { prisma } from "@repo/db";
 

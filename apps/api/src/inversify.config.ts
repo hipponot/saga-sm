@@ -10,9 +10,9 @@ import { TRPCServer } from '@hipponot/api-core/trpc-server'
 import { ControllerLoader } from '@hipponot/api-core/utils/controller-loader'
 // import { ConfigProvider, IConfigProvider } from '@hipponot/config'
 
-import { PubSubService } from './services/pubsub.service.js'
-import { ExampleHelper, type IExampleHelper } from './sectors/example/helpers/example_helper.js'
-import { RBVHelper } from './sectors/rbv/rbv_helper.js'
+import { PubSubService } from './services/pubsub.service.ts'
+import { ExampleHelper, type IExampleHelper } from './sectors/example/helpers/example_helper.ts'
+import { RBVHelper } from './sectors/rbv/rbv_helper.ts'
 
 const container = new Container()
 

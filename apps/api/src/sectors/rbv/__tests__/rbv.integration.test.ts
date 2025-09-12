@@ -5,7 +5,7 @@ import { RBVHelper } from '../rbv_helper';
 import { UpsertBellScheduleVariantInputFactory, UpsertBellScheduleInputFactory } from './builders/rbv_builders';
 import { BellSchedule } from '../rbv.types';
 import { prisma } from '@repo/db';
-import { ILogger } from '@saga-soa/logger';
+import { ILogger } from '@hipponot/logger';
 import { faker } from '@faker-js/faker';
 
 const mockLogger: ILogger = {
@@ -41,7 +41,7 @@ describe('RBVHelper', () => {
     describe('Bell Schedule Retrieval', () => {
       it('retrieves a bell schedule by id', async () => {
         // ARRANGE
-        const schedule = UpsertBellScheduleInputFactory.build( { id: faker.string.uuid() } );
+        const schedule = UpsertBellScheduleInputFactory.build({ id: faker.string.uuid() });
         await prisma.bellSchedule.create({ data: schedule });
 
         // ACT
@@ -109,7 +109,7 @@ describe('RBVHelper', () => {
 
       it('Updates an existing bell schedule without modifying the variants', async () => {
         // ARRANGE
-        const schedule = UpsertBellScheduleInputFactory.build( { id: faker.string.uuid() } );
+        const schedule = UpsertBellScheduleInputFactory.build({ id: faker.string.uuid() });
         await prisma.bellSchedule.create({ data: schedule });
 
         // ACT
@@ -133,7 +133,7 @@ describe('RBVHelper', () => {
     describe('Bell Schedule Deletion', () => {
       it('deletes a bell schedule by id', async () => {
         // ARRANGE
-        const schedule = UpsertBellScheduleInputFactory.build( { id: faker.string.uuid() } );
+        const schedule = UpsertBellScheduleInputFactory.build({ id: faker.string.uuid() });
         await prisma.bellSchedule.create({ data: schedule });
 
         // ACT
@@ -153,7 +153,7 @@ describe('RBVHelper', () => {
     let schedule: BellSchedule;
 
     beforeEach(async () => {
-      const schedule_input = UpsertBellScheduleInputFactory.build( { id: faker.string.uuid() } );
+      const schedule_input = UpsertBellScheduleInputFactory.build({ id: faker.string.uuid() });
       await prisma.bellSchedule.create({ data: schedule_input });
 
       schedule = {

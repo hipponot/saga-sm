@@ -1,1 +1,1 @@
-export * from './example-events.js'
+export * from './example-events.ts'
