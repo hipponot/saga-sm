@@ -2,14 +2,14 @@ name: SM2 Web Client - Amplify Deployment
 
 on:
   pull_request:
+    branches: [pause-sm-web-client-deploy]
     paths:
       - "apps/web-client/**"
       - ".github/workflows/sm-web-client-deploy.yaml"
     types: [opened, synchronize, reopened, closed]
   push:
     branches:
-      - main
-      - for_deploy
+      - pause-sm-web-client-deploy
     paths:
       - "apps/web-client/**"
       - ".github/workflows/sm-web-client-deploy.yaml"

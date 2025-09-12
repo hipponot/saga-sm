@@ -2,6 +2,7 @@ name: Cleanup Ephemeral API Environment
 
 on:
   pull_request:
+    branches: [pause-cleanup-ephemeral-api]
     types: [closed]
     paths:
       - "apps/api/**"
@@ -102,5 +103,3 @@ jobs:
           else
             echo "- **Action**: No cleanup needed (stack did not exist)" >> $GITHUB_STEP_SUMMARY
           fi
-
-
