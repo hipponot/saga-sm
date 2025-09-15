@@ -150,14 +150,28 @@ export class RBVHelper {
                 }
                 let seedDate = LocalDate.parse(schedule.recurrenceRuleSet.seedDate.toISOString());
 
-                // Use the seed date to determine the first index of the pattern for the start date
-                let index = ChronoUnit.DAYS.between(seedDate, input.dateRange.start);
+                // Count only active days when advancing through the pattern
+                const activeDaysSet = new Set(schedule.activeDaysOfWeek);
                 const pattern_length = ruleSet.length;
-                while (index <= ChronoUnit.DAYS.between(seedDate, input.dateRange.end)) {
-                    const patternIndex = index % pattern_length;
-                    const dayId = ruleSet[patternIndex].scheduleDayId;
-                    dayMap.set(input.dateRange.start.plusDays(index), dayId);
-                    index++;
+
+                // Find the first active day on or after the start date
+                let currentDate = input.dateRange.start;
+
+                // Calculate how many active days have passed since the seed date mathematically
+                const activeDaysSinceSeed = this.calculateActiveDaysBetween(seedDate, currentDate, activeDaysSet);
+                let patternIndex = activeDaysSinceSeed % pattern_length;
+
+                // Iterate through the date range, only advancing pattern on active days
+                while (!currentDate.isAfter(input.dateRange.end)) {
+                    const dayOfWeek = currentDate.dayOfWeek().value() % 7; // Convert to 0-6 (Sunday=0)
+
+                    if (activeDaysSet.has(dayOfWeek)) {
+                        const dayId = ruleSet[patternIndex].scheduleDayId;
+                        dayMap.set(currentDate, dayId);
+                        patternIndex = (patternIndex + 1) % pattern_length;
+                    }
+
+                    currentDate = currentDate.plusDays(1);
                 }
                 break;
         }
@@ -169,5 +183,34 @@ export class RBVHelper {
         // 5. Return the meeting times
 
         return { success: true, data: null as unknown as MeetingTimes }
+    }
+
+    /**
+     * Efficiently calculates the number of active days between two dates using mathematical approach
+     * instead of iterating through each day.
+     */
+    private calculateActiveDaysBetween(startDate: LocalDate, endDate: LocalDate, activeDaysSet: Set<number>): number {
+        if (!startDate.isBefore(endDate)) {
+            return 0;
+        }
+
+        const totalDays = ChronoUnit.DAYS.between(startDate, endDate);
+        const fullWeeks = Math.floor(totalDays / 7);
+        const remainingDays = totalDays % 7;
+
+        // Count active days in full weeks
+        let activeDaysCount = fullWeeks * activeDaysSet.size;
+
+        // Count active days in the remaining partial week
+        let currentDate = startDate.plusWeeks(fullWeeks);
+        for (let i = 0; i < remainingDays; i++) {
+            const dayOfWeek = currentDate.dayOfWeek().value() % 7; // Convert to 0-6 (Sunday=0)
+            if (activeDaysSet.has(dayOfWeek)) {
+                activeDaysCount++;
+            }
+            currentDate = currentDate.plusDays(1);
+        }
+
+        return activeDaysCount;
     }
 }

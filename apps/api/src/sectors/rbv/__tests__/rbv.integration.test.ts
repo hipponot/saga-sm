@@ -5,7 +5,8 @@ import { RBVHelper } from '../rbv_helper'
 import {
     UpsertBellScheduleVariantInputFactory,
     UpsertBellScheduleInputFactory,
-} from './builders/rbv_builders'
+    BellScheduleFactory,
+} from './builders/rbv_factories'
 import { BellSchedule } from '../rbv.types'
 import { prisma } from '@repo/db'
 import { ILogger } from '@hipponot/logger'
@@ -177,6 +178,16 @@ describe('RBVHelper', () => {
         describe('Bell Schedule Variant Creation', () => {
             it('Adds a new variant to a bell schedule', async () => {
                 expect(true).toBe(true)
+            })
+        })
+    })
+
+    describe('Meeting Time Calculations', () => {
+        describe('Day-Based Day Rules', () => {
+            it('calculates the meeting times for a given date range', async () => {
+                // ARRANGE
+                const schedule = BellScheduleFactory.build();
+                expect(true).toBe(true);
             })
         })
     })
