@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../microservices/services/assistant_llm"
+		},
+		{
+			"path": "../microservices/services/session_resource_page"
+		},
+		{
+			"path": "../microservices/.github/workflows"
+		}
+	],
+	"settings": {}
+}

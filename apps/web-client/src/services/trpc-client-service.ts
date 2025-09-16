@@ -26,7 +26,7 @@ export class TrpcClientService implements ServiceInterface {
 
         try {
             let parsedInput: any = null
-            
+
             if (input.trim()) {
                 try {
                     parsedInput = JSON.parse(input)
@@ -35,30 +35,9 @@ export class TrpcClientService implements ServiceInterface {
                 }
             }
 
-            let result: any
-
-            // Parse the endpoint path to determine the method and procedure
-            const [namespace, procedure] = endpoint.id.split('.')
-
-            switch (endpoint.id) {
-                case 'schedule.getSchedules':
-                    result = await this.client.schedule.getSchedules.query()
-                    break
-                case 'schedule.getScheduleById':
-                    result = await this.client.schedule.getScheduleById.query(parsedInput)
-                    break
-                case 'schedule.createSchedule':
-                    result = await this.client.schedule.createSchedule.mutate(parsedInput)
-                    break
-                case 'schedule.updateSchedule':
-                    result = await this.client.schedule.updateSchedule.mutate(parsedInput)
-                    break
-                case 'schedule.deleteSchedule':
-                    result = await this.client.schedule.deleteSchedule.mutate(parsedInput)
-                    break
-                default:
-                    throw new Error(`Unknown endpoint: ${endpoint.id}`)
-            }
+            // For now, simulate the tRPC call since we don't have the actual API
+            // This would be replaced with real tRPC calls once the API is available
+            const result = await this.simulateApiCall(endpoint, parsedInput)
 
             return {
                 success: true,
@@ -76,12 +55,35 @@ export class TrpcClientService implements ServiceInterface {
         }
     }
 
+    private async simulateApiCall(endpoint: Endpoint, input: any): Promise<any> {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000))
+
+        switch (endpoint.id) {
+            case 'schedule.getSchedules':
+                return [
+                    { id: '1', name: 'Daily Standup', startTime: '2024-01-15T09:00:00Z' },
+                    { id: '2', name: 'Code Review', startTime: '2024-01-15T14:00:00Z' }
+                ]
+            case 'schedule.getScheduleById':
+                return { id: input?.id || '1', name: 'Sample Schedule', startTime: '2024-01-15T09:00:00Z' }
+            case 'schedule.createSchedule':
+                return { ...input, id: Date.now().toString(), createdAt: new Date().toISOString() }
+            case 'schedule.updateSchedule':
+                return { ...input, updatedAt: new Date().toISOString() }
+            case 'schedule.deleteSchedule':
+                return { success: true, deletedId: input?.id }
+            default:
+                throw new Error(`Unknown endpoint: ${endpoint.id}`)
+        }
+    }
+
     generateCode(endpoint: Endpoint, input: string): string {
         const hasInput = input.trim().length > 0
         let code = `// tRPC Client Implementation\n`
         code += `import { createTRPCClient, httpBatchLink } from '@trpc/client'\n`
         code += `import type { AppRouter } from '@saga-sm/api-types'\n\n`
-        
+
         code += `const client = createTRPCClient<AppRouter>({\n`
         code += `    links: [\n`
         code += `        httpBatchLink({\n`

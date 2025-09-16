@@ -6,11 +6,12 @@
     "scripts": {
         "dev": "next dev --turbopack --port 3001",
         "build": "next build",
+        "export": "next build && next export",
         "start": "next start",
         "lint": "next lint --max-warnings 0",
         "typecheck": "tsc --noEmit",
         "check": "pnpm run build && pnpm run lint && pnpm run typecheck",
-        "clean": "rm -rf .next"
+        "clean": "rm -rf .next out"
     },
     "dependencies": {
         "next": "^15.4.0",

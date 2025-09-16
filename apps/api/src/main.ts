@@ -41,10 +41,10 @@ async function bootstrap() {
 
         // Initialize the tRPC server with tRPC controllers
         await trpcServer.init(container, trpcControllers)
-        
+
         // Mount tRPC middleware
         await trpcServer.mountToApp(app)
-        
+
         // Mount SSE endpoint for real-time pubsub events
         const pubsubService = container.get('PubSubService')
         app.get('/events', async (req, res) => {
@@ -60,7 +60,7 @@ async function bootstrap() {
         app.get('/health', (req, res) => {
             res.json({ status: 'ok', service: 'saga-sm API' })
         })
-        
+
         // Start Express server
         expressServer.start()
 

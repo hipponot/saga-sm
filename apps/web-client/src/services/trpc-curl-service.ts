@@ -7,7 +7,7 @@ export class TrpcCurlService implements ServiceInterface {
 
         try {
             const url = `${TRPC_ENDPOINT}/${endpoint.id}`
-            
+
             let body: any = {}
             if (input.trim()) {
                 try {
@@ -18,7 +18,7 @@ export class TrpcCurlService implements ServiceInterface {
             }
 
             const isQuery = ['getSchedules', 'getScheduleById'].some(method => endpoint.id.includes(method))
-            
+
             // For queries, we need to send input as URL parameters or in a different format
             // For mutations, we send as POST body
             const requestConfig: RequestInit = {
@@ -30,7 +30,7 @@ export class TrpcCurlService implements ServiceInterface {
             }
 
             const response = await fetch(url, requestConfig)
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`)
             }
@@ -56,9 +56,9 @@ export class TrpcCurlService implements ServiceInterface {
     generateCode(endpoint: Endpoint, input: string): string {
         const hasInput = input.trim().length > 0
         const url = `${TRPC_ENDPOINT}/${endpoint.id}`
-        
+
         let code = `# cURL Implementation\n`
-        
+
         if (hasInput) {
             code += `# Input data\n`
             code += `INPUT='${input}'\n\n`
@@ -70,13 +70,13 @@ export class TrpcCurlService implements ServiceInterface {
         code += `curl -X POST \\\n`
         code += `  '${url}' \\\n`
         code += `  -H 'Content-Type: application/json' \\\n`
-        
+
         if (hasInput) {
             code += `  -d "${bodyData}" \\\n`
         } else {
             code += `  -d '{}' \\\n`
         }
-        
+
         code += `  | jq '.'`
 
         return code

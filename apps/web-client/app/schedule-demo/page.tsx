@@ -15,7 +15,7 @@ interface Schedule {
 }
 
 export default function ScheduleDemoPage() {
-    const [schedules, setSchedules] = useState&lt;Schedule[]&gt;([
+    const [schedules, setSchedules] = useState<Schedule[]>([
         {
             id: '1',
             name: 'Daily Standup',
@@ -57,8 +57,8 @@ export default function ScheduleDemoPage() {
                 ...newSchedule,
                 status: 'active'
             }
-            
-            setSchedules(prev =&gt; [...prev, schedule])
+
+            setSchedules(prev => [...prev, schedule])
             setNewSchedule({
                 name: '',
                 description: '',
@@ -71,7 +71,7 @@ export default function ScheduleDemoPage() {
     }
 
     const handleDeleteSchedule = (id: string) => {
-        setSchedules(prev =&gt; prev.filter(s =&gt; s.id !== id))
+        setSchedules(prev => prev.filter(s => s.id !== id))
     }
 
     const formatDateTime = (isoString: string) => {
@@ -79,132 +79,132 @@ export default function ScheduleDemoPage() {
     }
 
     return (
-        &lt;div className={styles.container}&gt;
-            &lt;header className={styles.header}&gt;
-                &lt;Link href="/" className={styles.backLink}&gt;← Back to Home&lt;/Link&gt;
-                &lt;h1&gt;Schedule Management Demo&lt;/h1&gt;
-                &lt;p&gt;Interactive demonstration of schedule creation and management&lt;/p&gt;
-            &lt;/header&gt;
+        <div className={styles.container}>
+            <header className={styles.header}>
+                <Link href="/" className={styles.backLink}>← Back to Home</Link>
+                <h1>Schedule Management Demo</h1>
+                <p>Interactive demonstration of schedule creation and management</p>
+            </header>
 
-            &lt;main className={styles.main}&gt;
-                &lt;div className={styles.createSection}&gt;
-                    &lt;h2&gt;Create New Schedule&lt;/h2&gt;
-                    &lt;form onSubmit={handleCreateSchedule} className={styles.form}&gt;
-                        &lt;div className={styles.formGroup}&gt;
-                            &lt;label&gt;Schedule Name *&lt;/label&gt;
-                            &lt;input
+            <main className={styles.main}>
+                <div className={styles.createSection}>
+                    <h2>Create New Schedule</h2>
+                    <form onSubmit={handleCreateSchedule} className={styles.form}>
+                        <div className={styles.formGroup}>
+                            <label>Schedule Name *</label>
+                            <input
                                 type="text"
                                 required
                                 value={newSchedule.name}
-                                onChange={(e) =&gt; setNewSchedule(prev =&gt; ({ ...prev, name: e.target.value }))}
+                                onChange={(e) => setNewSchedule(prev => ({ ...prev, name: e.target.value }))}
                                 placeholder="Enter schedule name"
-                            /&gt;
-                        &lt;/div&gt;
+                            />
+                        </div>
 
-                        &lt;div className={styles.formGroup}&gt;
-                            &lt;label&gt;Description&lt;/label&gt;
-                            &lt;textarea
+                        <div className={styles.formGroup}>
+                            <label>Description</label>
+                            <textarea
                                 value={newSchedule.description}
-                                onChange={(e) =&gt; setNewSchedule(prev =&gt; ({ ...prev, description: e.target.value }))}
+                                onChange={(e) => setNewSchedule(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="Optional description"
                                 rows={3}
-                            /&gt;
-                        &lt;/div&gt;
+                            />
+                        </div>
 
-                        &lt;div className={styles.formRow}&gt;
-                            &lt;div className={styles.formGroup}&gt;
-                                &lt;label&gt;Start Time *&lt;/label&gt;
-                                &lt;input
+                        <div className={styles.formRow}>
+                            <div className={styles.formGroup}>
+                                <label>Start Time *</label>
+                                <input
                                     type="datetime-local"
                                     required
                                     value={newSchedule.startTime}
-                                    onChange={(e) =&gt; setNewSchedule(prev =&gt; ({ ...prev, startTime: e.target.value }))}
-                                /&gt;
-                            &lt;/div&gt;
+                                    onChange={(e) => setNewSchedule(prev => ({ ...prev, startTime: e.target.value }))}
+                                />
+                            </div>
 
-                            &lt;div className={styles.formGroup}&gt;
-                                &lt;label&gt;End Time *&lt;/label&gt;
-                                &lt;input
+                            <div className={styles.formGroup}>
+                                <label>End Time *</label>
+                                <input
                                     type="datetime-local"
                                     required
                                     value={newSchedule.endTime}
-                                    onChange={(e) =&gt; setNewSchedule(prev =&gt; ({ ...prev, endTime: e.target.value }))}
-                                /&gt;
-                            &lt;/div&gt;
-                        &lt;/div&gt;
+                                    onChange={(e) => setNewSchedule(prev => ({ ...prev, endTime: e.target.value }))}
+                                />
+                            </div>
+                        </div>
 
-                        &lt;div className={styles.formGroup}&gt;
-                            &lt;label className={styles.checkboxLabel}&gt;
-                                &lt;input
+                        <div className={styles.formGroup}>
+                            <label className={styles.checkboxLabel}>
+                                <input
                                     type="checkbox"
                                     checked={newSchedule.recurring}
-                                    onChange={(e) =&gt; setNewSchedule(prev =&gt; ({ ...prev, recurring: e.target.checked }))}
-                                /&gt;
+                                    onChange={(e) => setNewSchedule(prev => ({ ...prev, recurring: e.target.checked }))}
+                                />
                                 Recurring Schedule
-                            &lt;/label&gt;
-                        &lt;/div&gt;
+                            </label>
+                        </div>
 
-                        &lt;button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className="btn-primary"
                             disabled={isCreating}
-                        &gt;
+                        >
                             {isCreating ? 'Creating...' : 'Create Schedule'}
-                        &lt;/button&gt;
-                    &lt;/form&gt;
-                &lt;/div&gt;
+                        </button>
+                    </form>
+                </div>
 
-                &lt;div className={styles.scheduleList}&gt;
-                    &lt;h2&gt;Active Schedules ({schedules.length})&lt;/h2&gt;
-                    
+                <div className={styles.scheduleList}>
+                    <h2>Active Schedules ({schedules.length})</h2>
+
                     {schedules.length === 0 ? (
-                        &lt;div className={styles.emptyState}&gt;
-                            &lt;p&gt;No schedules created yet. Create your first schedule above!&lt;/p&gt;
-                        &lt;/div&gt;
+                        <div className={styles.emptyState}>
+                            <p>No schedules created yet. Create your first schedule above!</p>
+                        </div>
                     ) : (
-                        &lt;div className={styles.scheduleGrid}&gt;
-                            {schedules.map((schedule) =&gt; (
-                                &lt;div key={schedule.id} className={styles.scheduleCard}&gt;
-                                    &lt;div className={styles.scheduleHeader}&gt;
-                                        &lt;h3&gt;{schedule.name}&lt;/h3&gt;
-                                        &lt;div className={styles.scheduleActions}&gt;
-                                            &lt;span className={`${styles.status} ${styles[schedule.status]}`}&gt;
+                        <div className={styles.scheduleGrid}>
+                            {schedules.map((schedule) => (
+                                <div key={schedule.id} className={styles.scheduleCard}>
+                                    <div className={styles.scheduleHeader}>
+                                        <h3>{schedule.name}</h3>
+                                        <div className={styles.scheduleActions}>
+                                            <span className={`${styles.status} ${styles[schedule.status]}`}>
                                                 {schedule.status}
-                                            &lt;/span&gt;
-                                            &lt;button 
+                                            </span>
+                                            <button
                                                 className="btn-danger"
-                                                onClick={() =&gt; handleDeleteSchedule(schedule.id)}
-                                            &gt;
+                                                onClick={() => handleDeleteSchedule(schedule.id)}
+                                            >
                                                 Delete
-                                            &lt;/button&gt;
-                                        &lt;/div&gt;
-                                    &lt;/div&gt;
-                                    
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     {schedule.description && (
-                                        &lt;p className={styles.scheduleDescription}&gt;
+                                        <p className={styles.scheduleDescription}>
                                             {schedule.description}
-                                        &lt;/p&gt;
+                                        </p>
                                     )}
-                                    
-                                    &lt;div className={styles.scheduleDetails}&gt;
-                                        &lt;div className={styles.timeInfo}&gt;
-                                            &lt;strong&gt;Start:&lt;/strong&gt; {formatDateTime(schedule.startTime)}
-                                        &lt;/div&gt;
-                                        &lt;div className={styles.timeInfo}&gt;
-                                            &lt;strong&gt;End:&lt;/strong&gt; {formatDateTime(schedule.endTime)}
-                                        &lt;/div&gt;
+
+                                    <div className={styles.scheduleDetails}>
+                                        <div className={styles.timeInfo}>
+                                            <strong>Start:</strong> {formatDateTime(schedule.startTime)}
+                                        </div>
+                                        <div className={styles.timeInfo}>
+                                            <strong>End:</strong> {formatDateTime(schedule.endTime)}
+                                        </div>
                                         {schedule.recurring && (
-                                            &lt;div className={styles.recurringBadge}&gt;
+                                            <div className={styles.recurringBadge}>
                                                 🔄 Recurring
-                                            &lt;/div&gt;
+                                            </div>
                                         )}
-                                    &lt;/div&gt;
-                                &lt;/div&gt;
+                                    </div>
+                                </div>
                             ))}
-                        &lt;/div&gt;
+                        </div>
                     )}
-                &lt;/div&gt;
-            &lt;/main&gt;
-        &lt;/div&gt;
+                </div>
+            </main>
+        </div>
     )
 }

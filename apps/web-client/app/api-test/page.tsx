@@ -43,7 +43,7 @@ export default function ApiTestPage() {
         try {
             const service = useTrpcClient ? trpcService : curlService
             const result: ApiResponse = await service.executeEndpoint(selectedEndpoint, inputData)
-            
+
             if (result.success) {
                 setResponse(JSON.stringify(result.data, null, 2))
             } else {
@@ -188,7 +188,7 @@ export default function ApiTestPage() {
                             </button>
                         )}
                     </div>
-                    
+
                     {selectedEndpoint ? (
                         <div className={styles.terminalBox}>
                             <pre className={styles.codeBlock}>
