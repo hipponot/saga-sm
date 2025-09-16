@@ -3,14 +3,14 @@ export type ID = string
 export type StatusResponse = SuccessResponse | ErrorResponse
 
 export interface SuccessResponse {
-    success: true
-    message?: string
+  success: true
+  message?: string
 }
 
 export interface ErrorResponse {
-    success: false
-    message: string
-    code?: string
+  success: false
+  message: string
+  code?: string
 }
 
 /**

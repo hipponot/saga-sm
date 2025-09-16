@@ -20,31 +20,31 @@ const container = new Container()
 
 // Configuration
 const pinoLoggerConfig: PinoLoggerConfig = {
-    configType: 'PINO_LOGGER',
-    level: 'info',
-    isExpressContext: false,
-    prettyPrint: false,
+  configType: 'PINO_LOGGER',
+  level: 'info',
+  isExpressContext: false,
+  prettyPrint: false,
 }
 
 const mongoConfig: MongoProviderConfig = {
-    configType: 'MONGO',
-    instanceName: 'saga-sm-db',
-    host: 'localhost',
-    port: 27017,
-    database: 'saga-sm',
+  configType: 'MONGO',
+  instanceName: 'saga-sm-db',
+  host: 'localhost',
+  port: 27017,
+  database: 'saga-sm',
 }
 
 const expressConfig: ExpressServerConfig = {
-    configType: 'EXPRESS_SERVER',
-    port: 3000,
-    logLevel: 'info',
-    name: 'saga-sm-api',
+  configType: 'EXPRESS_SERVER',
+  port: 3000,
+  logLevel: 'info',
+  name: 'saga-sm-api',
 }
 
 const trpcConfig: TRPCServerConfig = {
-    configType: 'TRPC_SERVER',
-    name: 'saga-sm-trpc',
-    basePath: '/trpc',
+  configType: 'TRPC_SERVER',
+  name: 'saga-sm-trpc',
+  basePath: '/trpc',
 }
 
 container.bind('PinoLoggerConfig').toConstantValue(pinoLoggerConfig)
