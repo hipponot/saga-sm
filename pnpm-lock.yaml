@@ -23,19 +23,19 @@ importers:
 
   apps/api:
     dependencies:
-      '@hipponot/api-core':
+      '@hipponot/soa-api-core':
         specifier: file:../../../saga-soa/packages/api-core
         version: '@saga-soa/api-core@file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2(graphql@16.11.0))(typescript@5.8.2)'
-      '@hipponot/config':
+      '@hipponot/soa-config':
         specifier: file:../../../saga-soa/packages/config
         version: '@saga-soa/config@file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)'
-      '@hipponot/db':
+      '@hipponot/soa-db':
         specifier: file:../../../saga-soa/packages/db
         version: '@saga-soa/db@file:../saga-soa/packages/db(socks@2.8.7)'
-      '@hipponot/logger':
+      '@hipponot/soa-logger':
         specifier: file:../../../saga-soa/packages/logger
         version: '@saga-soa/logger@file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2)'
-      '@hipponot/pubsub-core':
+      '@hipponot/soa-pubsub-core':
         specifier: file:../../../saga-soa/packages/pubsub-core
         version: '@saga-soa/pubsub-core@file:../saga-soa/packages/pubsub-core'
       '@js-joda/core':
@@ -66,7 +66,7 @@ importers:
       '@faker-js/faker':
         specifier: ^10.0.0
         version: 10.0.0
-      '@hipponot/trpc-codegen':
+      '@hipponot/soa-trpc-codegen':
         specifier: file:../../../saga-soa/packages/trpc-codegen
         version: '@saga-soa/trpc-codegen@file:../saga-soa/packages/trpc-codegen'
       '@types/node':
@@ -100,10 +100,10 @@ importers:
         specifier: ^3.25.67
         version: 3.25.76
     devDependencies:
-      '@hipponot/trpc-codegen':
+      '@hipponot/soa-trpc-codegen':
         specifier: file:../../../../saga-soa/packages/trpc-codegen
         version: '@saga-soa/trpc-codegen@file:../saga-soa/packages/trpc-codegen'
-      '@hipponot/zod2ts':
+      '@hipponot/soa-zod2ts':
         specifier: file:../../../../saga-soa/build-tools/zod2ts
         version: '@saga-soa/zod2ts@file:../saga-soa/build-tools/zod2ts(typescript@5.8.2)'
       '@trpc/client':

@@ -2,6 +2,7 @@ name: Cleanup Ephemeral API Environment
 
 on:
   pull_request:
+    branches: [pause-cleanup-ephemeral-api]
     types: [closed]
     paths:
       - "apps/api/**"
@@ -12,8 +13,15 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  packages: read
+
 env:
   AWS_REGION: us-west-2
+  AWS_DEPLOY_ROLE_ARN: arn:aws:iam::531314149529:role/github-actions-role/aws-github-actions-access-saga-sm-deploy-Role-bJ3kiYdI4Syc
 
 jobs:
   cleanup-ephemeral-api:
@@ -31,7 +39,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActions-CleanupEphemeral
 
@@ -102,5 +110,3 @@ jobs:
           else
             echo "- **Action**: No cleanup needed (stack did not exist)" >> $GITHUB_STEP_SUMMARY
           fi
-
-

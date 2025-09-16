@@ -81,7 +81,7 @@ Conditions:
         - !Equals
           - !Ref BranchIdentifier
           - ''
-    
+
     IsEcsExecEnabled: !Equals
         - !Ref EcsExecEnabled
         - 'true'

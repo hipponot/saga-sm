@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Container } from 'inversify'
 import { ExampleController } from '../example-router'
 import { ExampleHelper } from '../../helpers/example_helper'
-import type { ILogger } from '@hipponot/logger'
+import type { ILogger } from '@hipponot/soa-logger'
 import type { IExampleHelper } from '../../helpers/example_helper'
 import 'reflect-metadata'
 

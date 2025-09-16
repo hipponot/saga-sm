@@ -2,14 +2,14 @@ name: SM2 Web Client - Amplify Deployment
 
 on:
   pull_request:
+    branches: [pause-sm-web-client-deploy]
     paths:
       - "apps/web-client/**"
       - ".github/workflows/sm-web-client-deploy.yaml"
     types: [opened, synchronize, reopened, closed]
   push:
     branches:
-      - main
-      - for_deploy
+      - pause-sm-web-client-deploy
     paths:
       - "apps/web-client/**"
       - ".github/workflows/sm-web-client-deploy.yaml"
@@ -21,11 +21,13 @@ env:
   NODE_VERSION: 18
   AWS_ACCOUNT_ID: 531314149529
   AMPLIFY_APP_ID: "" # To be filled after Amplify app creation
+  AWS_DEPLOY_ROLE_ARN: arn:aws:iam::531314149529:role/github-actions-role/aws-github-actions-access-saga-sm-deploy-Role-bJ3kiYdI4Syc
 
 permissions:
   id-token: write # Required for OIDC authentication
   contents: read # Required for checkout
   pull-requests: write # Required for PR comments
+  packages: read # Required for pnpm install
 
 jobs:
   detect-changes:
@@ -222,7 +224,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/aws-github-actions-access-microservices-Role-11KE1BB99FYGU
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Deploy to Amplify
@@ -402,7 +404,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/aws-github-actions-access-microservices-Role-11KE1BB99FYGU
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Delete Amplify branch

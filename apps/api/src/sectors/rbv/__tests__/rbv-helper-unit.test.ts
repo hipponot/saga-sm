@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Container } from 'inversify'
 import { RBVHelper } from '../rbv_helper'
-import type { ILogger } from '@hipponot/logger'
+import type { ILogger } from '@hipponot/soa-logger'
 import { mockPrisma, mockBellScheduleFactory } from '@tests/setup/database-mock'
 import 'reflect-metadata'
 

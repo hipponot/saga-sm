@@ -19,8 +19,12 @@
             "persistent": true
         },
         "test": {
-            "dependsOn": ["build", "db:generate", "db:migrate"],
+            "dependsOn": ["build", "db:generate"],
             "inputs": ["$TURBO_DEFAULT$", "src/**/*.test.*", "src/**/*.spec.*"]
+        },
+        "test:integration": {
+            "dependsOn": ["build", "db:generate", "db:migrate"],
+            "inputs": ["$TURBO_DEFAULT$", "src/**/*.integration.*", "src/**/*.e2e.*"]
         },
         "lint": {
             "inputs": [

@@ -52,7 +52,7 @@ test.describe('tRPC API Endpoints Page', () => {
         await endpointTesterLink.click()
 
         // Should navigate to the endpoints page
-        await expect(page).toHaveURL('/trpc-api/endpoints')
+        await expect(page).toHaveURL(/\/trpc-api\/endpoints\/?/)
     })
 
     test('handles non-existent page gracefully', async ({ page }) => {

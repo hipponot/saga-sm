@@ -10,7 +10,7 @@ import {
     MeetingTimes,
 } from './rbv.types.js'
 import { Guid } from 'guid-typescript'
-import { type ILogger } from '@hipponot/logger'
+import { type ILogger } from '@hipponot/soa-logger'
 
 import { DayOfWeekRule, PatternBasedRule, prisma, RecurrenceRuleType } from '@repo/db'
 import { ChronoUnit, LocalDate } from '@js-joda/core'

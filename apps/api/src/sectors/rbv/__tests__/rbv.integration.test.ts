@@ -10,7 +10,7 @@ import {
 } from './builders/rbv.factories'
 import { BellSchedule } from '../rbv.types'
 import { prisma } from '@repo/db'
-import { ILogger } from '@hipponot/logger'
+import { ILogger } from '@hipponot/soa-logger'
 import { faker } from '@faker-js/faker'
 
 const mockLogger: ILogger = {

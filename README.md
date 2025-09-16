@@ -22,6 +22,18 @@ This project provides:
 - **Type-safe API**: Full TypeScript support from API to client
 - **Interactive testing**: Web client for endpoint exploration and testing
 
+## 📖 Documentation Guide
+
+| Topic | Guide | Description |
+|-------|-------|-------------|
+| **Getting Started** | [README.md](README.md) | Project overview, quick start, architecture |
+| **Environment Setup** | [Environment Setup](ENVIRONMENT_SETUP.md) | .env files, database config, local development |
+| **GitHub Authentication** | [GitHub Setup](GITHUB_SETUP.md) | Personal access tokens, package registry access |
+| **Docker & Containers** | [Docker Setup](DOCKER_SETUP.md) | Container builds, authentication, troubleshooting |
+| **Dependency Management** | [Dependencies](DEPENDENCIES.md) | Local vs published packages, switching modes |
+| **Testing** | [Testing Guide](TESTING.md) | Unit tests, integration tests, database setup |
+| **Deployment** | [Web Client](apps/web-client/DEPLOYMENT_GUIDE.md) • [API](apps/api/DEPLOYMENT_GUIDE.md) | Production deployment guides |
+
 ## 📁 Project Structure
 
 ```
@@ -52,15 +64,9 @@ saga-sm/
 ### Prerequisites
 
 - **Node.js** >= 18
-- **pnpm** >= 8
-- **MongoDB** (local or remote)
+- **pnpm** >= 8  
+- **Docker** with Docker Compose (for databases)
 - **saga-soa repository** (must be cloned alongside this project)
-
-### AWS Deployment Prerequisites
-
-- **AWS CLI** configured with appropriate permissions
-- **Required AWS permissions**: Ensure your credentials include `amplify:CreateDeployment` for web client deployment
-- See [aws-deploy-permissions.json](./aws-deploy-permissions.json) for complete AWS permission requirements
 
 ### Required Directory Structure
 
@@ -70,7 +76,9 @@ dev/
 └── saga-sm/           # This project
 ```
 
-### Quick Setup
+### 🚀 One-Command Setup
+
+For new developers, we provide a comprehensive setup script that handles everything:
 
 **1. Clone both repositories:**
 ```bash
@@ -79,27 +87,85 @@ git clone [saga-soa-repo-url] saga-soa
 git clone [saga-sm-repo-url] saga-sm
 ```
 
-**2. Link saga-sm to saga-soa for concurrent development:**
+**2. Run the quick-start script:**
 ```bash
 cd saga-sm
-./scripts/setup-local-dev.sh
+./scripts/quick-start.sh
 ```
 
-**3. Configure environment:**
+This script will:
+- ✅ Check prerequisites (Node.js, pnpm, Docker)
+- ✅ Install dependencies and configure saga-soa integration  
+- ✅ Start database services (PostgreSQL, MongoDB, Redis)
+- ✅ Setup database schema with Prisma
+- ✅ Run tests to verify everything works
+
+**3. Start developing:**
 ```bash
-# Copy and customize API configuration
-cp apps/api/.env.example apps/api/.env
-# Update MongoDB URI and other settings as needed
+pnpm dev  # Starts API server (3000) and web client (3001)
 ```
 
-**4. Start development servers:**
+### ✅ Validate Your Setup
+
+To verify everything is working correctly:
+
 ```bash
-# Terminal 1: Start saga-soa packages (if using pnpm link)
-cd ../saga-soa && turbo run dev --filter='@hipponot/*'
-
-# Terminal 2: Start saga-sm applications
-cd saga-sm && pnpm dev
+./scripts/validate-setup.sh  # Comprehensive environment check
 ```
+
+This validation script checks:
+- Database connectivity (PostgreSQL, MongoDB, Redis)  
+- Build process functionality
+- Test suite execution
+- saga-soa integration status
+
+### Manual Setup (Alternative)
+
+If you prefer manual control or the quick-start script doesn't work:
+
+**1. Setup development environment:**
+```bash
+# For local development (recommended for saga-soa development)
+./scripts/dev-setup.sh local
+
+# For CI-like environment (uses published packages, requires GitHub token)
+./scripts/dev-setup.sh ci
+```
+
+**2. Start databases:**
+```bash
+docker compose up -d postgres mongodb redis
+```
+
+**3. Setup database schema:**
+```bash
+./scripts/setup-test-env.sh  # Setup Prisma schema and test environment
+```
+
+**4. Start applications:**
+```bash
+pnpm dev
+```
+
+### Dependency Management
+
+saga-sm works with saga-soa in **local** (file: dependencies) or **published** (@hipponot packages) modes:
+
+```bash
+# Local development mode (default)
+./scripts/dev-setup.sh local
+
+# Published packages mode (requires GitHub token)
+./scripts/dev-setup.sh ci
+```
+
+**For detailed dependency management:** See [Dependencies Guide](DEPENDENCIES.md)
+
+### AWS Deployment Prerequisites
+
+- **AWS CLI** configured with appropriate permissions
+- **Required AWS permissions**: Ensure your credentials include `amplify:CreateDeployment` for web client deployment
+- See [aws-deploy-permissions.json](./aws-deploy-permissions.json) for complete AWS permission requirements
 
 ### Applications
 
@@ -119,10 +185,16 @@ cd saga-sm && pnpm dev
 ```bash
 pnpm dev          # Run both API and web client
 pnpm build        # Build all applications  
-pnpm test         # Run all tests
+pnpm test         # Run unit tests (API, types)
 pnpm check        # Full validation (build + test + lint + typecheck)
 pnpm lint         # Lint all code
 pnpm typecheck    # TypeScript validation
+
+# End-to-End Testing
+pnpm playwright         # Run E2E tests (headless)
+pnpm playwright:headed  # Run E2E tests (with browser UI)
+pnpm playwright:ui      # Run E2E tests (interactive UI)
+pnpm playwright:debug   # Debug E2E tests
 
 # Deployment (from anywhere in monorepo)
 pnpm run deploy:web     # Deploy web client to Amplify
@@ -235,9 +307,15 @@ The web client provides comprehensive testing tools:
 
 ### Common Issues
 
-**"saga-soa packages not found"**
+**"Cannot find module '@saga-sm/api-types'" or similar dependency errors**
+- This happens after `git clean` or when workspace symlinks are broken
+- Fix: Run `pnpm install` to recreate workspace symlinks
+- Or re-run: `./scripts/quick-start.sh`
+
+**"saga-soa packages not found"** or **"403 Forbidden" from GitHub Packages**
 - Ensure saga-soa is cloned in the correct directory structure
-- Re-run the setup script: `./scripts/setup-local-dev.sh`
+- For published packages: Set up GitHub token (see [GitHub Setup](GITHUB_SETUP.md))
+- Re-run the setup script: `./scripts/dev-setup.sh local`
 
 **"Database connection failed"**
 - Check MongoDB is running locally or update `MONGODB_URI` in `apps/api/.env`
@@ -250,6 +328,42 @@ The web client provides comprehensive testing tools:
 **"Hot reloading not working"**
 - Restart both terminal sessions
 - Verify saga-soa packages are building with `turbo run dev`
+
+## 🐳 Docker
+
+### Docker Compose Setup
+
+Build and run the full application stack using Docker:
+
+```bash
+# Set up GitHub token for package access
+export GITHUB_TOKEN=$(gh auth token)
+
+# Build all services
+docker-compose build
+
+# Start the full stack (databases + API + web client)
+docker-compose up -d
+
+# Or start specific services
+docker-compose up -d api web-client
+```
+
+### Authentication Requirements
+
+Docker builds require GitHub Packages access for @hipponot packages:
+
+- **Quick setup**: `export GITHUB_TOKEN=$(gh auth token)` 
+- **Docker guide**: See [Docker Setup](DOCKER_SETUP.md)
+- **GitHub tokens**: See [GitHub Setup](GITHUB_SETUP.md)
+- **Fallback option**: Use local dependencies with `./scripts/switch-saga-soa-deps.sh local`
+
+### Services
+
+- **API**: `http://localhost:3000` (tRPC + REST endpoints)
+- **Web Client**: `http://localhost:3001` (Testing interface)  
+- **Database**: PostgreSQL (5432), MongoDB (27017), Redis (6379)
+- **Adminer**: `http://localhost:8080` (Database admin, dev mode only)
 
 ## 🚀 Deployment
 

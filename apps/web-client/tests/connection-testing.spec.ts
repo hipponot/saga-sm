@@ -107,12 +107,8 @@ test.describe('Connection Testing and Ping/Pong Functionality', () => {
 
     test('statistics show initial values', async ({ page }) => {
         // Check that statistics display initial values
-        const statsSection = page
-            .locator('.statsGrid, [class*="statsGrid"], [class*="statCard"]')
-            .first()
-
         // The exact selectors depend on CSS classes, but we can check for basic stat presence
-        await expect(page.getByText('0', { exact: true })).toBeVisible() // Some stats should show 0
+        await expect(page.getByText('0', { exact: true }).first()).toBeVisible() // Some stats should show 0
         await expect(page.getByText('100%')).toBeVisible() // Success rate should be 100%
     })
 
@@ -121,6 +117,6 @@ test.describe('Connection Testing and Ping/Pong Functionality', () => {
         await expect(endpointTesterLink).toBeVisible()
 
         await endpointTesterLink.click()
-        await expect(page).toHaveURL('/trpc-api/endpoints')
+        await expect(page).toHaveURL(/\/trpc-api\/endpoints\/?/)
     })
 })
