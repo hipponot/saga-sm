@@ -162,8 +162,8 @@ show_status() {
     # Show some key dependency versions
     log_info "📦 Key package versions:"
     if [ -f "$PROJECT_ROOT/apps/api/package.json" ]; then
-        echo "  @hipponot/api-core: $(jq -r '.dependencies."@hipponot/api-core" // "not found"' "$PROJECT_ROOT/apps/api/package.json")"
-        echo "  @hipponot/logger: $(jq -r '.dependencies."@hipponot/logger" // "not found"' "$PROJECT_ROOT/apps/api/package.json")"
+        echo "  @hipponot/soa-api-core: $(jq -r '.dependencies."@hipponot/soa-api-core" // "not found"' "$PROJECT_ROOT/apps/api/package.json")"
+        echo "  @hipponot/soa-logger: $(jq -r '.dependencies."@hipponot/soa-logger" // "not found"' "$PROJECT_ROOT/apps/api/package.json")"
     fi
     
     # Show .npmrc status
