@@ -21,9 +21,7 @@ export default {
     },
 
     // Zod2ts configuration
-    // Disabled due to ES module loading issue - "Unexpected token 'export'"
-    // The zod2ts tool needs to be updated to use dynamic import() instead of require()
-    // Core type generation with Z suffix naming is working correctly
+    // Disabled - we handle type generation separately by transpiling to JS first
     zod2ts: {
         enabled: false,
         outputDir: './types',
