@@ -13,7 +13,7 @@ export default defineConfig({
         exclude: [
             'node_modules',
             'dist',
-            // 'src/**/*.integration.{test,spec}.ts', // Exclude integration tests
+            'src/**/*.integration.{test,spec}.ts', // Exclude integration tests
         ],
 
         coverage: {
