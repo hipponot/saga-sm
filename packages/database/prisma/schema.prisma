@@ -36,7 +36,7 @@ model BellScheduleDay {
   variants      BellScheduleVariant[]
   timeSlots     TimeSlot[]
 
-  // Relations to recurrence rules
+  // Back-references for rules (but rules are owned by DayRecurrenceRuleSet)
   dayOfWeekRules     DayOfWeekRule[]
   patternBasedRules  PatternBasedRule[]
 }

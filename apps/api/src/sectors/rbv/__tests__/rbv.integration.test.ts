@@ -1,12 +1,13 @@
 // rbv.unit.test.ts
-import { describe, it, expect, beforeEach, beforeAll, afterAll, afterEach } from 'vitest'
+import { test, describe, it, expect, beforeEach, beforeAll, afterAll, afterEach } from 'vitest'
 import { Container } from 'inversify'
 import { RBVHelper } from '../rbv_helper'
 import {
     UpsertBellScheduleVariantInputFactory,
     UpsertBellScheduleInputFactory,
     BellScheduleFactory,
-} from './builders/rbv_factories'
+    BellScheduleDayFactory,
+} from './builders/rbv.factories'
 import { BellSchedule } from '../rbv.types'
 import { prisma } from '@repo/db'
 import { ILogger } from '@hipponot/logger'
@@ -19,7 +20,7 @@ const mockLogger: ILogger = {
     debug: console.log,
 }
 
-describe('RBVHelper', () => {
+describe.sequential('RBVHelper', () => {
     let container: Container
     let rbv_helper: RBVHelper
 
@@ -187,6 +188,7 @@ describe('RBVHelper', () => {
             it('calculates the meeting times for a given date range', async () => {
                 // ARRANGE
                 const schedule = BellScheduleFactory.build();
+                const schedule_day = BellScheduleDayFactory.build();
                 expect(true).toBe(true);
             })
         })

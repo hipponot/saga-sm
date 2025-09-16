@@ -12,5 +12,8 @@ export default defineConfig({
             DATABASE_URL: 'postgresql://saga_user:password123@localhost:5432/saga_sm',
             MONGODB_URI: 'mongodb://admin:password123@localhost:27017/saga_sm?authSource=admin',
         },
+        sequence: {
+            concurrent: false,
+        }
     },
 })

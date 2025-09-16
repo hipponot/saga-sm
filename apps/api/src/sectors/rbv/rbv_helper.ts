@@ -148,7 +148,7 @@ export class RBVHelper {
                 if (!schedule.recurrenceRuleSet.seedDate) {
                     return { success: false, message: 'Schedule is pattern-based but has no seed date' }
                 }
-                let seedDate = LocalDate.parse(schedule.recurrenceRuleSet.seedDate.toISOString());
+                let seedDate = LocalDate.parse(schedule.recurrenceRuleSet.seedDate);
 
                 // Count only active days when advancing through the pattern
                 const activeDaysSet = new Set(schedule.activeDaysOfWeek);

@@ -24,9 +24,8 @@ export interface DeleteBellScheduleInput {
 export type BellScheduleDay = PrismaBellScheduleDay & {
     variants: BellScheduleVariant[]
     timeSlots: TimeSlot[]
-
-    dayOfWeekRules: DayOfWeekRule[]
-    patternBasedRules: PatternBasedRule[]
+    // Note: Rules are owned by DayRecurrenceRuleSet, not by individual days
+    // The back-references exist for Prisma relations but shouldn't be used in business logic
 }
 export type UpsertBellScheduleDayInput = Omit<PrismaBellScheduleDay, 'id'> & {
     id?: BellScheduleDay['id']
