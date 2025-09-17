@@ -12,9 +12,9 @@ import type { TRPCServerConfig } from '@hipponot/soa-api-core/trpc-server-schema
 import { ControllerLoader } from '@hipponot/soa-api-core/utils/controller-loader';
 // import { ConfigProvider, IConfigProvider } from '@hipponot/soa-config'
 
-import { PubSubService } from './services/pubsub.service.ts';
-import { ExampleHelper, type IExampleHelper } from './sectors/example/helpers/example_helper.ts';
-import { RBVHelper } from './sectors/rbv/rbv_helper.ts';
+import { PubSubService } from './services/pubsub.service.js'
+import { ExampleHelper, type IExampleHelper } from './sectors/example/helpers/example_helper.js'
+import { RBVHelper } from './sectors/rbv/rbv_helper.js'
 
 const container = new Container();
 
