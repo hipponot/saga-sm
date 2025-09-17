@@ -25,19 +25,19 @@ importers:
     dependencies:
       '@hipponot/soa-api-core':
         specifier: file:../../../saga-soa/packages/api-core
-        version: '@saga-soa/api-core@file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2(graphql@16.11.0))(typescript@5.8.2)'
+        version: file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2(graphql@16.11.0))(typescript@5.8.2)
       '@hipponot/soa-config':
         specifier: file:../../../saga-soa/packages/config
-        version: '@saga-soa/config@file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)'
+        version: file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)
       '@hipponot/soa-db':
         specifier: file:../../../saga-soa/packages/db
-        version: '@saga-soa/db@file:../saga-soa/packages/db(socks@2.8.7)'
+        version: file:../saga-soa/packages/db(socks@2.8.7)
       '@hipponot/soa-logger':
         specifier: file:../../../saga-soa/packages/logger
-        version: '@saga-soa/logger@file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2)'
+        version: file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2)
       '@hipponot/soa-pubsub-core':
         specifier: file:../../../saga-soa/packages/pubsub-core
-        version: '@saga-soa/pubsub-core@file:../saga-soa/packages/pubsub-core'
+        version: file:../saga-soa/packages/pubsub-core
       '@js-joda/core':
         specifier: ^5.6.5
         version: 5.6.5
@@ -68,7 +68,7 @@ importers:
         version: 10.0.0
       '@hipponot/soa-trpc-codegen':
         specifier: file:../../../saga-soa/packages/trpc-codegen
-        version: '@saga-soa/trpc-codegen@file:../saga-soa/packages/trpc-codegen'
+        version: file:../saga-soa/packages/trpc-codegen
       '@types/node':
         specifier: ^18.19.31
         version: 18.19.124
@@ -102,10 +102,10 @@ importers:
     devDependencies:
       '@hipponot/soa-trpc-codegen':
         specifier: file:../../../../saga-soa/packages/trpc-codegen
-        version: '@saga-soa/trpc-codegen@file:../saga-soa/packages/trpc-codegen'
+        version: file:../saga-soa/packages/trpc-codegen
       '@hipponot/soa-zod2ts':
         specifier: file:../../../../saga-soa/build-tools/zod2ts
-        version: '@saga-soa/zod2ts@file:../saga-soa/build-tools/zod2ts(typescript@5.8.2)'
+        version: file:../saga-soa/build-tools/zod2ts
       '@trpc/client':
         specifier: ^11.5.1
         version: 11.5.1(@trpc/server@11.5.1(typescript@5.8.2))(typescript@5.8.2)
@@ -812,6 +812,29 @@ packages:
   '@hapi/bourne@3.0.0':
     resolution: {integrity: sha512-Waj1cwPXJDucOib4a3bAISsKJVb15MKi9IvmTI/7ssVEm6sywXGjVJDhl6/umt1pK1ZS7PacXU3A1PmFKHEZ2w==}
 
+  '@hipponot/soa-api-core@file:../saga-soa/packages/api-core':
+    resolution: {directory: ../saga-soa/packages/api-core, type: directory}
+
+  '@hipponot/soa-config@file:../saga-soa/packages/config':
+    resolution: {directory: ../saga-soa/packages/config, type: directory}
+
+  '@hipponot/soa-db@file:../saga-soa/packages/db':
+    resolution: {directory: ../saga-soa/packages/db, type: directory}
+
+  '@hipponot/soa-logger@file:../saga-soa/packages/logger':
+    resolution: {directory: ../saga-soa/packages/logger, type: directory}
+
+  '@hipponot/soa-pubsub-core@file:../saga-soa/packages/pubsub-core':
+    resolution: {directory: ../saga-soa/packages/pubsub-core, type: directory}
+
+  '@hipponot/soa-trpc-codegen@file:../saga-soa/packages/trpc-codegen':
+    resolution: {directory: ../saga-soa/packages/trpc-codegen, type: directory}
+    hasBin: true
+
+  '@hipponot/soa-zod2ts@file:../saga-soa/build-tools/zod2ts':
+    resolution: {directory: ../saga-soa/build-tools/zod2ts, type: directory}
+    hasBin: true
+
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -1265,29 +1288,6 @@ packages:
 
   '@rushstack/eslint-patch@1.12.0':
     resolution: {integrity: sha512-5EwMtOqvJMMa3HbmxLlF74e+3/HhwBTMcvt3nqVJgGCozO6hzIPOBlwm8mGVNR9SN2IJpxSnlxczyDjcn7qIyw==}
-
-  '@saga-soa/api-core@file:../saga-soa/packages/api-core':
-    resolution: {directory: ../saga-soa/packages/api-core, type: directory}
-
-  '@saga-soa/config@file:../saga-soa/packages/config':
-    resolution: {directory: ../saga-soa/packages/config, type: directory}
-
-  '@saga-soa/db@file:../saga-soa/packages/db':
-    resolution: {directory: ../saga-soa/packages/db, type: directory}
-
-  '@saga-soa/logger@file:../saga-soa/packages/logger':
-    resolution: {directory: ../saga-soa/packages/logger, type: directory}
-
-  '@saga-soa/pubsub-core@file:../saga-soa/packages/pubsub-core':
-    resolution: {directory: ../saga-soa/packages/pubsub-core, type: directory}
-
-  '@saga-soa/trpc-codegen@file:../saga-soa/packages/trpc-codegen':
-    resolution: {directory: ../saga-soa/packages/trpc-codegen, type: directory}
-    hasBin: true
-
-  '@saga-soa/zod2ts@file:../saga-soa/build-tools/zod2ts':
-    resolution: {directory: ../saga-soa/build-tools/zod2ts, type: directory}
-    hasBin: true
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -1819,6 +1819,10 @@ packages:
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
+
+  chalk@5.6.2:
+    resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
+    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   check-error@1.0.3:
     resolution: {integrity: sha512-iKEoDYaRmd1mxM90a2OEfWhjsjPpYPuQ+lMYsoxB126+t8fw7ySEO48nmDg5COTjxDI65/Y2OWpeEHk3ZOe8zg==}
@@ -4696,6 +4700,101 @@ snapshots:
   '@hapi/bourne@3.0.0':
     optional: true
 
+  '@hipponot/soa-api-core@file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2(graphql@16.11.0))(typescript@5.8.2)':
+    dependencies:
+      '@apollo/server': 4.12.2(graphql@16.11.0)
+      '@trpc/server': 11.5.1(typescript@5.8.2)
+      cors: 2.8.5
+      express: 4.21.2
+      fast-glob: 3.3.3
+      figlet: 1.9.1
+      graphql: 16.11.0
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      reflect-metadata: 0.2.2
+      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
+      trpc-playground: 1.0.4(@trpc/server@11.5.1(typescript@5.8.2))(@types/node@18.19.124)(express@4.21.2)(typescript@5.8.2)(zod@3.25.67)
+      type-graphql: 2.0.0-rc.2(class-validator@0.14.2)(graphql-scalars@1.24.2(graphql@16.11.0))(graphql@16.11.0)
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - '@types/node'
+      - class-transformer
+      - class-validator
+      - encoding
+      - fastify
+      - graphql-scalars
+      - h3
+      - koa
+      - less
+      - lightningcss
+      - sass
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - typescript
+
+  '@hipponot/soa-config@file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)':
+    dependencies:
+      dotenv: 17.2.0
+      dotenv-flow: 4.1.0
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      reflect-metadata: 0.2.2
+      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - class-transformer
+      - class-validator
+      - supports-color
+
+  '@hipponot/soa-db@file:../saga-soa/packages/db(socks@2.8.7)':
+    dependencies:
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      mongodb: 5.9.2
+      mongodb-memory-server: 10.2.0(socks@2.8.7)
+      reflect-metadata: 0.2.2
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
+      - react-native-b4a
+      - snappy
+      - socks
+      - supports-color
+
+  '@hipponot/soa-logger@file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2)':
+    dependencies:
+      inversify: 6.2.2(reflect-metadata@0.2.2)
+      pino: 8.21.0
+      reflect-metadata: 0.2.2
+      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - class-transformer
+      - class-validator
+      - supports-color
+
+  '@hipponot/soa-pubsub-core@file:../saga-soa/packages/pubsub-core':
+    dependencies:
+      uuid: 11.1.0
+      zod: 3.25.67
+
+  '@hipponot/soa-trpc-codegen@file:../saga-soa/packages/trpc-codegen':
+    dependencies:
+      chokidar: 3.6.0
+      commander: 12.1.0
+      tsx: 4.20.5
+
+  '@hipponot/soa-zod2ts@file:../saga-soa/build-tools/zod2ts':
+    dependencies:
+      chalk: 5.6.2
+      commander: 12.1.0
+      typescript: 5.9.2
+      zod: 3.25.67
+      zod-to-ts: 1.2.0(typescript@5.9.2)(zod@3.25.67)
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -5051,101 +5150,6 @@ snapshots:
   '@rtsao/scc@1.1.0': {}
 
   '@rushstack/eslint-patch@1.12.0': {}
-
-  '@saga-soa/api-core@file:../saga-soa/packages/api-core(@types/node@18.19.124)(class-transformer@0.5.1)(class-validator@0.14.2)(graphql-scalars@1.24.2(graphql@16.11.0))(typescript@5.8.2)':
-    dependencies:
-      '@apollo/server': 4.12.2(graphql@16.11.0)
-      '@trpc/server': 11.5.1(typescript@5.8.2)
-      cors: 2.8.5
-      express: 4.21.2
-      fast-glob: 3.3.3
-      figlet: 1.9.1
-      graphql: 16.11.0
-      inversify: 6.2.2(reflect-metadata@0.2.2)
-      reflect-metadata: 0.2.2
-      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
-      trpc-playground: 1.0.4(@trpc/server@11.5.1(typescript@5.8.2))(@types/node@18.19.124)(express@4.21.2)(typescript@5.8.2)(zod@3.25.67)
-      type-graphql: 2.0.0-rc.2(class-validator@0.14.2)(graphql-scalars@1.24.2(graphql@16.11.0))(graphql@16.11.0)
-      zod: 3.25.67
-    transitivePeerDependencies:
-      - '@types/node'
-      - class-transformer
-      - class-validator
-      - encoding
-      - fastify
-      - graphql-scalars
-      - h3
-      - koa
-      - less
-      - lightningcss
-      - sass
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - typescript
-
-  '@saga-soa/config@file:../saga-soa/packages/config(class-transformer@0.5.1)(class-validator@0.14.2)':
-    dependencies:
-      dotenv: 17.2.0
-      dotenv-flow: 4.1.0
-      inversify: 6.2.2(reflect-metadata@0.2.2)
-      reflect-metadata: 0.2.2
-      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
-      zod: 3.25.67
-    transitivePeerDependencies:
-      - class-transformer
-      - class-validator
-      - supports-color
-
-  '@saga-soa/db@file:../saga-soa/packages/db(socks@2.8.7)':
-    dependencies:
-      inversify: 6.2.2(reflect-metadata@0.2.2)
-      mongodb: 5.9.2
-      mongodb-memory-server: 10.2.0(socks@2.8.7)
-      reflect-metadata: 0.2.2
-      zod: 3.25.67
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-providers'
-      - '@mongodb-js/zstd'
-      - gcp-metadata
-      - kerberos
-      - mongodb-client-encryption
-      - react-native-b4a
-      - snappy
-      - socks
-      - supports-color
-
-  '@saga-soa/logger@file:../saga-soa/packages/logger(class-transformer@0.5.1)(class-validator@0.14.2)':
-    dependencies:
-      inversify: 6.2.2(reflect-metadata@0.2.2)
-      pino: 8.21.0
-      reflect-metadata: 0.2.2
-      routing-controllers: 0.11.3(class-transformer@0.5.1)(class-validator@0.14.2)
-      zod: 3.25.67
-    transitivePeerDependencies:
-      - class-transformer
-      - class-validator
-      - supports-color
-
-  '@saga-soa/pubsub-core@file:../saga-soa/packages/pubsub-core':
-    dependencies:
-      uuid: 11.1.0
-      zod: 3.25.67
-
-  '@saga-soa/trpc-codegen@file:../saga-soa/packages/trpc-codegen':
-    dependencies:
-      chokidar: 3.6.0
-      commander: 12.1.0
-      tsx: 4.20.5
-
-  '@saga-soa/zod2ts@file:../saga-soa/build-tools/zod2ts(typescript@5.8.2)':
-    dependencies:
-      commander: 12.1.0
-      zod: 3.25.67
-      zod-to-ts: 1.2.0(typescript@5.8.2)(zod@3.25.67)
-    transitivePeerDependencies:
-      - typescript
 
   '@sinclair/typebox@0.27.8': {}
 
@@ -5783,6 +5787,8 @@ snapshots:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
+
+  chalk@5.6.2: {}
 
   check-error@1.0.3:
     dependencies:
@@ -8702,6 +8708,11 @@ snapshots:
   zod-to-ts@1.2.0(typescript@5.8.2)(zod@3.25.67):
     dependencies:
       typescript: 5.8.2
+      zod: 3.25.67
+
+  zod-to-ts@1.2.0(typescript@5.9.2)(zod@3.25.67):
+    dependencies:
+      typescript: 5.9.2
       zod: 3.25.67
 
   zod@3.25.67: {}

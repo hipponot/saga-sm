@@ -59,37 +59,37 @@ describe('BellScheduleBuilder', () => {
 
   test('builds a bell schedule with time slots and schedule days', async () => {
     // ARRANGE
-    const scheduleId = 'test-schedule-id'
+    const scheduleId = 'test-schedule-id-2';
     const schedule = BellScheduleFactory.build({
       id: scheduleId,
       recurrenceRuleSet: null,
-    })
+    });
 
     // ACT
-    const builder = new BellScheduleBuilder(schedule, prisma)
-    const result = await builder.build()
+    const builder = new BellScheduleBuilder(schedule, prisma);
+    const result = await builder.build();
 
     // ASSERT
-    expect(result).toBeDefined()
+    expect(result).toBeDefined();
 
     // Verify time slots were created
     const timeSlots = await prisma.timeSlot.findMany({
       where: { scheduleId: result.id },
-    })
-    expect(timeSlots.length).toBe(schedule.timeSlots.length)
+    });
+    expect(timeSlots.length).toBe(schedule.timeSlots.length);
 
     // Verify schedule days were created
     const scheduleDays = await prisma.bellScheduleDay.findMany({
       where: { scheduleId: result.id },
-    })
-    expect(scheduleDays.length).toBe(schedule.days.length)
-  })
+    });
+    expect(scheduleDays.length).toBe(schedule.days.length);
+  });
 
   test('builds a bell schedule with day-of-week recurrence rules', async () => {
     // ARRANGE
-    const scheduleId = 'test-schedule-id'
-    const dayId1 = 'day-1-id'
-    const dayId2 = 'day-2-id'
+    const scheduleId = 'test-schedule-id-3';
+    const dayId1 = 'day-1-id';
+    const dayId2 = 'day-2-id';
 
     // First create a base schedule to get the structure
     const baseSchedule = BellScheduleFactory.build({
