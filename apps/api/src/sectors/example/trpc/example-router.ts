@@ -8,12 +8,14 @@ import {
   GetExampleSchema,
   QueryExamplesSchema,
   DeleteExampleSchema,
+  DiscriminatedUnionSchema,
   type CreateExampleZ,
   type UpdateExampleZ,
   type GetExampleZ,
   type QueryExamplesZ,
   type DeleteExampleZ,
   type ExampleDataZ,
+  type DiscriminatedUnionZ,
 } from './schema/example-schemas.js'
 
 @injectable()
@@ -110,6 +112,19 @@ export class ExampleController extends AbstractTRPCController {
             message: 'Example deleted successfully',
           };
         }),
+
+      // Get discriminated union example for testing trpc-codegen
+      getDiscriminatedUnion: t.query(async (): Promise<DiscriminatedUnionZ> => {
+        // Return a mock discriminated union object
+        const mockDiscriminatedUnion: DiscriminatedUnionZ = {
+          type: 'user',
+          id: 'user-123',
+          name: 'John Doe',
+          email: 'john.doe@example.com',
+          role: 'admin',
+        };
+        return mockDiscriminatedUnion;
+      }),
     });
   }
 }

@@ -56,6 +56,32 @@ export const DeleteExampleSchema = z.object({
   id: z.string().min(1, 'Example ID is required'),
 });
 
+// Discriminated union schema for testing trpc-codegen
+export const DiscriminatedUnionSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('user'),
+    id: z.string(),
+    name: z.string(),
+    email: z.string().email(),
+    role: z.enum(['admin', 'user', 'guest']),
+  }),
+  z.object({
+    type: z.literal('product'),
+    id: z.string(),
+    name: z.string(),
+    price: z.number().positive(),
+    category: z.enum(['electronics', 'clothing', 'books']),
+  }),
+  z.object({
+    type: z.literal('order'),
+    id: z.string(),
+    userId: z.string(),
+    productIds: z.array(z.string()),
+    status: z.enum(['pending', 'shipped', 'delivered', 'cancelled']),
+    total: z.number().positive(),
+  }),
+]);
+
 // TypeScript types derived from schemas
 export type ExampleDataZ = z.infer<typeof ExampleDataSchema>;
 export type CreateExampleZ = z.infer<typeof CreateExampleSchema>;
@@ -63,3 +89,4 @@ export type UpdateExampleZ = z.infer<typeof UpdateExampleSchema>;
 export type GetExampleZ = z.infer<typeof GetExampleSchema>;
 export type QueryExamplesZ = z.infer<typeof QueryExamplesSchema>;
 export type DeleteExampleZ = z.infer<typeof DeleteExampleSchema>;
+export type DiscriminatedUnionZ = z.infer<typeof DiscriminatedUnionSchema>;
