@@ -25,6 +25,10 @@ model BellSchedule {
   // Each schedule has exactly one recurrence rule set
   dayLabelRuleSet  DayLabelRuleSet?
   variantRuleSet   VariantRuleSet?
+
+  // Back-references for rules that reference this schedule
+  dayOfWeekRules     DayOfWeekRule[]
+  patternBasedRules  PatternBasedRule[]
 }
 
 model BellScheduleGroup {
@@ -34,6 +38,9 @@ model BellScheduleGroup {
 
   scheduleId    String
   schedule      BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  dayId String
+  day   BellScheduleDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
 }
 
 model BellScheduleDay {
@@ -41,12 +48,17 @@ model BellScheduleDay {
   name          String
   description   String?
 
+  groups        BellScheduleGroup[]
+
   scheduleId    String
   schedule      BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   // Back-references for rules (but rules are owned by DayRecurrenceRuleSet)
   dayOfWeekRules     DayOfWeekRule[]
   patternBasedRules  PatternBasedRule[]
+
+  // Composite unique constraint to enable composite FK from rules
+  @@unique([scheduleId, id])
 }
 
 model BellScheduleVariant {
@@ -106,11 +118,15 @@ model DayOfWeekRule {
 
   // Reference to the schedule day this rule applies
   scheduleDayId String
-  scheduleDay   BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
+  scheduleDay   BellScheduleDay @relation(fields: [scheduleId, scheduleDayId], references: [scheduleId, id], onDelete: Cascade)
 
   // Reference to the rule set
   ruleSetId   String
   ruleSet     DayLabelRuleSet @relation(fields: [ruleSetId], references: [id], onDelete: Cascade)
+
+  // Schedule reference for data integrity - must match scheduleDay.scheduleId
+  scheduleId String
+  schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@unique([ruleSetId, dayOfWeek]) // Ensure one rule per day of week per rule set
 }
@@ -125,11 +141,15 @@ model PatternBasedRule {
 
   // Reference to the schedule day this rule applies
   scheduleDayId String
-  scheduleDay   BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
+  scheduleDay   BellScheduleDay @relation(fields: [scheduleId, scheduleDayId], references: [scheduleId, id], onDelete: Cascade)
 
   // Reference to the rule set
   ruleSetId   String
   ruleSet     DayLabelRuleSet @relation(fields: [ruleSetId], references: [id], onDelete: Cascade)
+
+  // Schedule reference for data integrity - must match scheduleDay.scheduleId
+  scheduleId String
+  schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@unique([ruleSetId, patternPosition]) // Ensure unique positions within a pattern
 }

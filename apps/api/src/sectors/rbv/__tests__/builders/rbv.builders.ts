@@ -1,10 +1,8 @@
 import { PrismaClient } from '@repo/db';
 import {
   BellSchedule,
-  BellScheduleVariant,
-  DayLabelRuleSet,
 } from '../../rbv.types';
-import { DayOfWeekRule, PatternBasedRule, BellScheduleDay, TimeSlot } from '@repo/db';
+import { DayOfWeekRule, PatternBasedRule } from '@repo/db';
 
 type TransactionClient = Omit<
   PrismaClient,
@@ -101,6 +99,7 @@ export class BellScheduleBuilder {
         this.createdScheduleDayIds.get(rule.scheduleDayId) || rule.scheduleDayId;
 
       return {
+        scheduleId: this.schedule.id,
         dayOfWeek: rule.dayOfWeek,
         scheduleDayId: scheduleDayId,
         ruleSetId: ruleSetId,
@@ -123,6 +122,7 @@ export class BellScheduleBuilder {
         this.createdScheduleDayIds.get(rule.scheduleDayId) || rule.scheduleDayId;
 
       return {
+        scheduleId: this.schedule.id,
         patternPosition: rule.patternPosition,
         scheduleDayId: scheduleDayId,
         ruleSetId: ruleSetId,

@@ -59,6 +59,7 @@ export const DayLabelRuleSetFactory = Factory.define<DayLabelRuleSet>(() => ({
 
 export const DayOfWeekRuleFactory = Factory.define<DayOfWeekRule>(() => ({
   id: faker.string.uuid(),
+  scheduleId: faker.string.uuid(),
   dayOfWeek: faker.number.int({ min: 0, max: 6 }),
   scheduleDayId: faker.string.uuid(),
   ruleSetId: faker.string.uuid(),
