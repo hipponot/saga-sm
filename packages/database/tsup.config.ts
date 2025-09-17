@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
     entry: ['src/index.ts', 'src/client.ts'],
     format: ['esm'],
-    dts: false,  // Disable DTS generation due to Prisma's complex TypeScript syntax
+    dts: false,  // We'll handle types manually
     clean: true,
     sourcemap: false,
     // Mark everything from generated as external to prevent bundling
@@ -33,5 +33,19 @@ export default defineConfig({
     // Don't bundle, just transpile
     bundle: false,
     // Keep the ESM format
-    splitting: false
+    splitting: false,
+    // Copy declaration files
+    onSuccess: async () => {
+        const fs = await import('fs')
+        const path = await import('path')
+
+        // Copy our manual .d.ts files to dist
+        const srcFiles = ['src/client.d.ts', 'src/index.d.ts']
+        for (const srcFile of srcFiles) {
+            if (fs.existsSync(srcFile)) {
+                const destFile = path.join('dist', path.basename(srcFile))
+                fs.copyFileSync(srcFile, destFile)
+            }
+        }
+    }
 });

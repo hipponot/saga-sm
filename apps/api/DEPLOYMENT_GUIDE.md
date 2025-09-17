@@ -250,37 +250,37 @@ aws ecs update-service \
 ### Common Issues
 
 1. **Service Won't Start**
-    - Check CloudWatch logs: `/ecs/saga-sm-api`
-    - Verify image exists in ECR: `saga-sm-api:latest`
-    - Check security group allows port 3000
-    - Ensure container has access to required SSM parameters
+   - Check CloudWatch logs: `/ecs/saga-sm-api`
+   - Verify image exists in ECR: `saga-sm-api:latest`
+   - Check security group allows port 3000
+   - Ensure container has access to required SSM parameters
 
 2. **Docker Build Failures**
-    - Verify `saga-soa` directory exists as sibling to `saga-sm`
-    - Check workspace structure: `dev/saga-sm` and `dev/saga-soa`
-    - Ensure all saga-soa packages are available
-    - Run build from correct directory (dev root)
+   - Verify `saga-soa` directory exists as sibling to `saga-sm`
+   - Check workspace structure: `dev/saga-sm` and `dev/saga-soa`
+   - Ensure all saga-soa packages are available
+   - Run build from correct directory (dev root)
 
 3. **Health Check Failures**
-    - Ensure `/health` endpoint is implemented in API
-    - Check application is binding to port 3000
-    - Verify container health check passes
-    - Check if dependencies (DB, external services) are available
+   - Ensure `/health` endpoint is implemented in API
+   - Check application is binding to port 3000
+   - Verify container health check passes
+   - Check if dependencies (DB, external services) are available
 
 4. **Load Balancer Issues**
-    - Check listener rule priority conflicts (API uses priority 10)
-    - Verify path patterns match your routes (`/trpc/*`, `/health/*`, `/api/*`)
-    - Check target group health in ECS console
+   - Check listener rule priority conflicts (API uses priority 10)
+   - Verify path patterns match your routes (`/trpc/*`, `/health/*`, `/api/*`)
+   - Check target group health in ECS console
 
 5. **ECR Authentication Issues**
-    - Script handles `aws ecr get-login-password` automatically
-    - Check AWS credentials have ECR permissions
-    - Verify region is set correctly (us-west-2)
+   - Script handles `aws ecr get-login-password` automatically
+   - Check AWS credentials have ECR permissions
+   - Verify region is set correctly (us-west-2)
 
 6. **CloudFormation Deployment Failures**
-    - Check SSM parameters exist for environment
-    - Verify VPC and subnet IDs are correct in SSM
-    - Check ECS cluster ARN is valid
+   - Check SSM parameters exist for environment
+   - Verify VPC and subnet IDs are correct in SSM
+   - Check ECS cluster ARN is valid
 
 ### Debug Commands
 
@@ -318,14 +318,14 @@ If needed, you can enable execute command access:
 1. Uncomment `EnableExecuteCommand: true` in template.yaml
 2. Redeploy the service
 3. Access container:
-    ```bash
-    aws ecs execute-command \
-      --cluster <cluster> \
-      --task <task-id> \
-      --container saga-sm-api \
-      --interactive \
-      --command "/bin/sh"
-    ```
+   ```bash
+   aws ecs execute-command \
+     --cluster <cluster> \
+     --task <task-id> \
+     --container saga-sm-api \
+     --interactive \
+     --command "/bin/sh"
+   ```
 
 ## Cleanup
 
@@ -373,121 +373,115 @@ To run the deployment scripts successfully, your AWS credentials need these perm
 
 ```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "ECRManagement",
-            "Effect": "Allow",
-            "Action": [
-                "ecr:GetAuthorizationToken",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-                "ecr:DescribeRepositories",
-                "ecr:CreateRepository",
-                "ecr:InitiateLayerUpload",
-                "ecr:UploadLayerPart",
-                "ecr:CompleteLayerUpload",
-                "ecr:PutImage",
-                "ecr:ListImages",
-                "ecr:BatchDeleteImage",
-                "ecr:DeleteRepository"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "ECSDeployment",
-            "Effect": "Allow",
-            "Action": [
-                "ecs:DescribeServices",
-                "ecs:DescribeTaskDefinition",
-                "ecs:ListTasks",
-                "ecs:UpdateService",
-                "ecs:RegisterTaskDefinition",
-                "ecs:DescribeTasks",
-                "ecs:ListTaskDefinitions"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "CloudFormationSAM",
-            "Effect": "Allow",
-            "Action": [
-                "cloudformation:CreateStack",
-                "cloudformation:UpdateStack",
-                "cloudformation:DeleteStack",
-                "cloudformation:DescribeStacks",
-                "cloudformation:DescribeStackEvents",
-                "cloudformation:DescribeStackResources",
-                "cloudformation:GetTemplate",
-                "cloudformation:ListStacks",
-                "cloudformation:ValidateTemplate"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "SSMParameterStore",
-            "Effect": "Allow",
-            "Action": [
-                "ssm:GetParameter",
-                "ssm:GetParameters",
-                "ssm:GetParametersByPath",
-                "ssm:PutParameter",
-                "ssm:DeleteParameter"
-            ],
-            "Resource": "arn:aws:ssm:*:*:parameter/*/app/*"
-        },
-        {
-            "Sid": "IAMRoleManagement",
-            "Effect": "Allow",
-            "Action": [
-                "iam:CreateRole",
-                "iam:DeleteRole",
-                "iam:GetRole",
-                "iam:AttachRolePolicy",
-                "iam:DetachRolePolicy",
-                "iam:PutRolePolicy",
-                "iam:DeleteRolePolicy",
-                "iam:PassRole"
-            ],
-            "Resource": [
-                "arn:aws:iam::*:role/saga-sm-*",
-                "arn:aws:iam::*:role/aws-sam-cli-managed-*"
-            ]
-        },
-        {
-            "Sid": "CloudWatchLogs",
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:DeleteLogGroup",
-                "logs:DescribeLogGroups",
-                "logs:DescribeLogStreams",
-                "logs:GetLogEvents",
-                "logs:FilterLogEvents",
-                "logs:StartQuery",
-                "logs:StopQuery",
-                "logs:GetQueryResults"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "S3ForSAM",
-            "Effect": "Allow",
-            "Action": [
-                "s3:CreateBucket",
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject",
-                "s3:ListBucket",
-                "s3:GetBucketLocation"
-            ],
-            "Resource": [
-                "arn:aws:s3:::aws-sam-cli-managed-*",
-                "arn:aws:s3:::aws-sam-cli-managed-*/*"
-            ]
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ECRManagement",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:DescribeRepositories",
+        "ecr:CreateRepository",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage",
+        "ecr:ListImages",
+        "ecr:BatchDeleteImage",
+        "ecr:DeleteRepository"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ECSDeployment",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeServices",
+        "ecs:DescribeTaskDefinition",
+        "ecs:ListTasks",
+        "ecs:UpdateService",
+        "ecs:RegisterTaskDefinition",
+        "ecs:DescribeTasks",
+        "ecs:ListTaskDefinitions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudFormationSAM",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:UpdateStack",
+        "cloudformation:DeleteStack",
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:DescribeStackResources",
+        "cloudformation:GetTemplate",
+        "cloudformation:ListStacks",
+        "cloudformation:ValidateTemplate"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SSMParameterStore",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath",
+        "ssm:PutParameter",
+        "ssm:DeleteParameter"
+      ],
+      "Resource": "arn:aws:ssm:*:*:parameter/*/app/*"
+    },
+    {
+      "Sid": "IAMRoleManagement",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:GetRole",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:PassRole"
+      ],
+      "Resource": ["arn:aws:iam::*:role/saga-sm-*", "arn:aws:iam::*:role/aws-sam-cli-managed-*"]
+    },
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:DeleteLogGroup",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:StartQuery",
+        "logs:StopQuery",
+        "logs:GetQueryResults"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3ForSAM",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": ["arn:aws:s3:::aws-sam-cli-managed-*", "arn:aws:s3:::aws-sam-cli-managed-*/*"]
+    }
+  ]
 }
 ```
 
@@ -497,21 +491,21 @@ If you need to set up SSM parameters and infrastructure from scratch:
 
 ```json
 {
-    "Sid": "InfrastructureSetup",
-    "Effect": "Allow",
-    "Action": [
-        "ec2:DescribeVpcs",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeSecurityGroups",
-        "elasticloadbalancing:DescribeLoadBalancers",
-        "elasticloadbalancing:DescribeTargetGroups",
-        "elasticloadbalancing:CreateTargetGroup",
-        "elasticloadbalancing:DeleteTargetGroup",
-        "elasticloadbalancing:CreateListener",
-        "elasticloadbalancing:DeleteListener",
-        "elasticloadbalancing:ModifyListener"
-    ],
-    "Resource": "*"
+  "Sid": "InfrastructureSetup",
+  "Effect": "Allow",
+  "Action": [
+    "ec2:DescribeVpcs",
+    "ec2:DescribeSubnets",
+    "ec2:DescribeSecurityGroups",
+    "elasticloadbalancing:DescribeLoadBalancers",
+    "elasticloadbalancing:DescribeTargetGroups",
+    "elasticloadbalancing:CreateTargetGroup",
+    "elasticloadbalancing:DeleteTargetGroup",
+    "elasticloadbalancing:CreateListener",
+    "elasticloadbalancing:DeleteListener",
+    "elasticloadbalancing:ModifyListener"
+  ],
+  "Resource": "*"
 }
 ```
 
