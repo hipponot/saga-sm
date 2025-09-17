@@ -37,7 +37,7 @@
     "@hipponot/soa-pubsub-core": "file:../../../saga-soa/packages/pubsub-core",
     "@prisma/client": "^6.16.0",
     "@repo/db": "workspace:*",
-    "@saga-sm/api-types": "file:./types",
+    "@saga-sm/api-types": "file:./api-types",
     "guid-typescript": "^1.0.9",
     "inversify": "^6.0.2",
     "reflect-metadata": "^0.2.2",
