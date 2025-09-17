@@ -1,5 +1,5 @@
-import { vi } from 'vitest'
-import type { PrismaClient } from '@repo/db'
+import { vi } from 'vitest';
+import type { PrismaClient } from '@repo/db';
 
 // Mock Prisma client with comprehensive database operations
 export const createMockPrismaClient = () => {
@@ -99,10 +99,10 @@ export const createMockPrismaClient = () => {
       deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
       count: vi.fn().mockResolvedValue(0),
     },
-  } as any
+  } as any;
 
-  return mockPrisma
-}
+  return mockPrisma;
+};
 
 // Mock factory functions for creating test data
 export const mockBellScheduleFactory = {
@@ -113,7 +113,7 @@ export const mockBellScheduleFactory = {
     activeDaysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
     ...overrides,
   }),
-}
+};
 
 export const mockBellScheduleDayFactory = {
   build: (overrides: Partial<any> = {}) => ({
@@ -123,7 +123,7 @@ export const mockBellScheduleDayFactory = {
     scheduleId: 'schedule-1',
     ...overrides,
   }),
-}
+};
 
 export const mockTimeSlotFactory = {
   build: (overrides: Partial<any> = {}) => ({
@@ -134,10 +134,10 @@ export const mockTimeSlotFactory = {
     scheduleId: 'schedule-1',
     ...overrides,
   }),
-}
+};
 
 // Global Prisma mock that can be imported
-export const mockPrisma = createMockPrismaClient()
+export const mockPrisma = createMockPrismaClient();
 
 // Helper function to reset all mocks
 export const resetDatabaseMocks = () => {
@@ -145,9 +145,9 @@ export const resetDatabaseMocks = () => {
     if (typeof model === 'object' && model !== null) {
       Object.values(model).forEach(method => {
         if (vi.isMockFunction(method)) {
-          method.mockClear()
+          method.mockClear();
         }
-      })
+      });
     }
-  })
-}
+  });
+};

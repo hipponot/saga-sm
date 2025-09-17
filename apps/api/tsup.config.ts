@@ -1,4 +1,4 @@
-import { defineConfig, type Options } from 'tsup'
+import { defineConfig, type Options } from 'tsup';
 
 export default defineConfig((options: Options) => ({
   entry: [
@@ -21,4 +21,4 @@ export default defineConfig((options: Options) => ({
   minify: false,
   treeshake: true,
   ...options,
-}))
+}));

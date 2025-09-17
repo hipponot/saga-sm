@@ -1,16 +1,21 @@
 // rbv.unit.test.ts
-import { test, describe, it, expect, beforeEach, beforeAll, afterAll, afterEach } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+} from 'vitest'
 import { Container } from 'inversify'
 import { RBVHelper } from '../rbv_helper'
 import {
-  UpsertBellScheduleVariantInputFactory,
   UpsertBellScheduleInputFactory,
   BellScheduleFactory,
   BellScheduleDayFactory,
 } from './builders/rbv.factories'
 import { BellSchedule } from '../rbv.types'
 import { prisma } from '@repo/db'
-import { ILogger } from '@hipponot/soa-logger'
+import type { ILogger } from '@hipponot/soa-logger'
 import { faker } from '@faker-js/faker'
 
 const mockLogger: ILogger = {
@@ -33,7 +38,7 @@ describe.sequential('RBVHelper', () => {
     // Clean up all test data
     await prisma.bellScheduleVariant.deleteMany()
     await prisma.bellSchedule.deleteMany()
-    await prisma.dayRecurrenceRuleSet.deleteMany()
+    await prisma.dayLabelRuleSet.deleteMany()
     await prisma.dayOfWeekRule.deleteMany()
     await prisma.patternBasedRule.deleteMany()
   })
@@ -171,8 +176,10 @@ describe.sequential('RBVHelper', () => {
         ...schedule_input,
         id: schedule_input.id!,
         days: [],
-        timeSlots: [],
-        recurrenceRuleSet: null,
+        variants: [],
+        groups: [],
+        dayLabelRuleSet: null,
+        variantRuleSet: null,
       }
     })
 
@@ -194,3 +201,22 @@ describe.sequential('RBVHelper', () => {
     })
   })
 })
+
+function create_bladensburg_schedule() {
+  const schedule_id = faker.string.uuid()
+  const ADay = BellScheduleDayFactory.build({
+    name: 'A Day',
+    scheduleId: schedule_id,
+  })
+  const BDay = BellScheduleDayFactory.build({
+    name: 'B Day',
+    scheduleId: schedule_id,
+  })
+  const schedule = BellScheduleFactory.build({
+    id: schedule_id,
+    name: 'Bladensburg',
+    description: 'Bladensburg schedule',
+    days: [ADay, BDay],
+  })
+  return schedule
+}

@@ -1,46 +1,46 @@
-import { injectable, inject } from 'inversify'
-import type { ILogger } from '@hipponot/soa-logger'
-import { EventEmitter } from 'events'
-import { randomUUID } from 'node:crypto'
+import { injectable, inject } from 'inversify';
+import type { ILogger } from '@hipponot/soa-logger';
+import { EventEmitter } from 'events';
+import { randomUUID } from 'node:crypto';
 
 export interface PubSubEvent {
-  id: string
-  name: string
-  payload: any
-  channel: string
-  timestamp: string
-  correlationId?: string
+  id: string;
+  name: string;
+  payload: any;
+  channel: string;
+  timestamp: string;
+  correlationId?: string;
 }
 
 export interface EventSubscription {
-  id: string
-  channel: string
-  eventTypes: string[]
-  callback: (event: PubSubEvent) => void
+  id: string;
+  channel: string;
+  eventTypes: string[];
+  callback: (event: PubSubEvent) => void;
 }
 
 @injectable()
 export class PubSubService extends EventEmitter {
-  private logger: ILogger
-  private subscriptions = new Map<string, EventSubscription>()
-  private eventHistory: PubSubEvent[] = []
+  private logger: ILogger;
+  private subscriptions = new Map<string, EventSubscription>();
+  private eventHistory: PubSubEvent[] = [];
 
   constructor(@inject('ILogger') logger: ILogger) {
-    super()
-    this.logger = logger
+    super();
+    this.logger = logger;
   }
 
   async sendEvent(eventData: {
-    name: string
-    payload: any
-    clientEventId?: string
-    correlationId?: string
-    channel?: string
+    name: string;
+    payload: any;
+    clientEventId?: string;
+    correlationId?: string;
+    channel?: string;
   }): Promise<{
-    status: 'success' | 'error'
-    eventId?: string
-    error?: string
-    emittedEvents?: PubSubEvent[]
+    status: 'success' | 'error';
+    eventId?: string;
+    error?: string;
+    emittedEvents?: PubSubEvent[];
   }> {
     try {
       const event: PubSubEvent = {
@@ -50,10 +50,10 @@ export class PubSubService extends EventEmitter {
         channel: eventData.channel || 'default',
         timestamp: new Date().toISOString(),
         correlationId: eventData.correlationId,
-      }
+      };
 
       // Store in history
-      this.eventHistory.push(event)
+      this.eventHistory.push(event);
 
       // Handle ping-pong logic
       if (event.name === 'ping:message') {
@@ -69,97 +69,97 @@ export class PubSubService extends EventEmitter {
           channel: 'pingpong',
           timestamp: new Date().toISOString(),
           correlationId: event.correlationId,
-        }
+        };
 
         // Emit the pong event to subscribers
-        this.emit('pong:response', pongEvent)
-        this.eventHistory.push(pongEvent)
+        this.emit('pong:response', pongEvent);
+        this.eventHistory.push(pongEvent);
 
         this.logger.info('Ping-pong event pair processed', {
           pingId: event.id,
           pongId: pongEvent.id,
           message: event.payload.message,
-        })
+        });
 
         return {
           status: 'success',
           eventId: event.id,
           emittedEvents: [event, pongEvent],
-        }
+        };
       }
 
       // Emit event to subscribers
-      this.emit(event.name, event)
+      this.emit(event.name, event);
 
       this.logger.info('Event sent successfully', {
         eventId: event.id,
         name: event.name,
         channel: event.channel,
-      })
+      });
 
       return {
         status: 'success',
         eventId: event.id,
         emittedEvents: [event],
-      }
+      };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
         'Failed to send event',
         error instanceof Error ? error : new Error(errorMessage),
         { eventData }
-      )
+      );
       return {
         status: 'error',
         error: errorMessage,
-      }
+      };
     }
   }
 
   subscribe(channel: string, eventTypes: string[], callback: (event: PubSubEvent) => void): string {
-    const subscriptionId = randomUUID()
+    const subscriptionId = randomUUID();
     const subscription: EventSubscription = {
       id: subscriptionId,
       channel,
       eventTypes,
       callback,
-    }
+    };
 
-    this.subscriptions.set(subscriptionId, subscription)
+    this.subscriptions.set(subscriptionId, subscription);
 
     // Register listeners for each event type
     eventTypes.forEach(eventType => {
-      this.on(eventType, callback)
-    })
+      this.on(eventType, callback);
+    });
 
     this.logger.info('Subscription created', {
       subscriptionId,
       channel,
       eventTypes,
-    })
+    });
 
-    return subscriptionId
+    return subscriptionId;
   }
 
   unsubscribe(subscriptionId: string): boolean {
-    const subscription = this.subscriptions.get(subscriptionId)
+    const subscription = this.subscriptions.get(subscriptionId);
     if (!subscription) {
-      return false
+      return false;
     }
 
     // Remove listeners
     subscription.eventTypes.forEach(eventType => {
-      this.removeListener(eventType, subscription.callback)
-    })
+      this.removeListener(eventType, subscription.callback);
+    });
 
-    this.subscriptions.delete(subscriptionId)
+    this.subscriptions.delete(subscriptionId);
 
-    this.logger.info('Subscription removed', { subscriptionId })
-    return true
+    this.logger.info('Subscription removed', { subscriptionId });
+    return true;
   }
 
   getEventHistory(limit = 50): PubSubEvent[] {
-    return this.eventHistory.slice(-limit)
+    return this.eventHistory.slice(-limit);
   }
 
   getSubscriptionStats() {
@@ -173,14 +173,14 @@ export class PubSubService extends EventEmitter {
         this.eventHistory.length > 0
           ? this.eventHistory[this.eventHistory.length - 1].timestamp
           : new Date().toISOString(),
-    }
+    };
   }
 
   createSSEHandler(req: any, res: any) {
-    const channel = req.query.channel || 'pingpong'
+    const channel = req.query.channel || 'pingpong';
     const eventTypes = req.query.eventTypes
       ? req.query.eventTypes.split(',')
-      : ['ping:message', 'pong:response']
+      : ['ping:message', 'pong:response'];
 
     // Set up SSE headers
     res.writeHead(200, {
@@ -189,7 +189,7 @@ export class PubSubService extends EventEmitter {
       Connection: 'keep-alive',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Cache-Control',
-    })
+    });
 
     // Send initial connection event
     res.write(
@@ -199,7 +199,7 @@ export class PubSubService extends EventEmitter {
         channel,
         timestamp: new Date().toISOString(),
       })}\n\n`
-    )
+    );
 
     // Subscribe to events
     const subscriptionId = this.subscribe(channel, eventTypes, event => {
@@ -208,14 +208,14 @@ export class PubSubService extends EventEmitter {
           type: 'event',
           event,
         })}\n\n`
-      )
-    })
+      );
+    });
 
     // Handle client disconnect
     req.on('close', () => {
-      this.unsubscribe(subscriptionId)
-      this.logger.info('SSE client disconnected', { subscriptionId })
-    })
+      this.unsubscribe(subscriptionId);
+      this.logger.info('SSE client disconnected', { subscriptionId });
+    });
 
     // Send heartbeat every 30 seconds
     const heartbeat = setInterval(() => {
@@ -224,11 +224,11 @@ export class PubSubService extends EventEmitter {
           type: 'heartbeat',
           timestamp: new Date().toISOString(),
         })}\n\n`
-      )
-    }, 30000)
+      );
+    }, 30000);
 
     req.on('close', () => {
-      clearInterval(heartbeat)
-    })
+      clearInterval(heartbeat);
+    });
   }
 }

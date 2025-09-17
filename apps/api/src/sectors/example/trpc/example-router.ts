@@ -1,7 +1,7 @@
-import { injectable, inject } from 'inversify'
-import { AbstractTRPCController, router } from '@hipponot/soa-api-core/abstract-trpc-controller'
-import type { ILogger } from '@hipponot/soa-logger'
-import type { IExampleHelper } from '../helpers/example_helper'
+import { injectable, inject } from 'inversify';
+import { AbstractTRPCController, router } from '@hipponot/soa-api-core/abstract-trpc-controller';
+import type { ILogger } from '@hipponot/soa-logger';
+import type { IExampleHelper } from '../helpers/example_helper';
 import {
   CreateExampleSchema,
   UpdateExampleSchema,
@@ -14,21 +14,21 @@ import {
   type QueryExamplesZ,
   type DeleteExampleZ,
   type ExampleDataZ,
-} from './schema/example-schemas'
+} from './schema/example-schemas';
 
 @injectable()
 export class ExampleController extends AbstractTRPCController {
-  readonly sectorName = 'example'
+  readonly sectorName = 'example';
 
   constructor(
     @inject('ILogger') logger: ILogger,
     @inject('IExampleHelper') private exampleHelper: IExampleHelper
   ) {
-    super(logger)
+    super(logger);
   }
 
   createRouter(): ReturnType<typeof router> {
-    const t = this.createProcedure()
+    const t = this.createProcedure();
 
     return router({
       // Query all examples with filters
@@ -36,13 +36,13 @@ export class ExampleController extends AbstractTRPCController {
         .input(QueryExamplesSchema)
         .query(async ({ input }: { input: QueryExamplesZ }) => {
           // TODO: Implement example querying logic with filters
-          const mockData: ExampleDataZ[] = []
+          const mockData: ExampleDataZ[] = [];
           return {
             data: mockData,
             total: 0,
             limit: input.limit,
             offset: input.offset,
-          }
+          };
         }),
 
       // Get example by ID
@@ -57,8 +57,8 @@ export class ExampleController extends AbstractTRPCController {
           metadata: {},
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        }
-        return mockExample
+        };
+        return mockExample;
       }),
 
       // Create new example
@@ -66,7 +66,7 @@ export class ExampleController extends AbstractTRPCController {
         .input(CreateExampleSchema)
         .mutation(async ({ input }: { input: CreateExampleZ }) => {
           if (!this.exampleHelper.validateStatus(input.status)) {
-            throw new Error(`Invalid status: ${input.status}`)
+            throw new Error(`Invalid status: ${input.status}`);
           }
 
           const newExample: ExampleDataZ = {
@@ -76,8 +76,8 @@ export class ExampleController extends AbstractTRPCController {
             priority: this.exampleHelper.calculatePriority(input.tags || []),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-          }
-          return newExample
+          };
+          return newExample;
         }),
 
       // Update example
@@ -85,7 +85,7 @@ export class ExampleController extends AbstractTRPCController {
         .input(UpdateExampleSchema)
         .mutation(async ({ input }: { input: UpdateExampleZ }) => {
           if (input.status && !this.exampleHelper.validateStatus(input.status)) {
-            throw new Error(`Invalid status: ${input.status}`)
+            throw new Error(`Invalid status: ${input.status}`);
           }
 
           const updatedExample: Partial<ExampleDataZ> = {
@@ -95,8 +95,8 @@ export class ExampleController extends AbstractTRPCController {
               priority: this.exampleHelper.calculatePriority(input.tags),
             }),
             updatedAt: new Date().toISOString(),
-          }
-          return updatedExample
+          };
+          return updatedExample;
         }),
 
       // Delete example
@@ -108,8 +108,8 @@ export class ExampleController extends AbstractTRPCController {
             success: true,
             deletedId: input.id,
             message: 'Example deleted successfully',
-          }
+          };
         }),
-    })
+    });
   }
 }

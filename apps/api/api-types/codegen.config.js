@@ -20,10 +20,10 @@ export default {
       /createRouter\(\s*\):\s*[^{]*\{[\s\S]*?return\s+router\(\s*\{([\s\S]*?)\}\s*\)\s*;?\s*\}/,
   },
 
-    // Zod2ts configuration
-    // Disabled - we handle type generation separately by transpiling to JS first
-    zod2ts: {
-        enabled: false,
-        outputDir: './types',
-    },
-}
+  // Zod2ts configuration
+  // Disabled - we handle type generation separately by transpiling to JS first
+  zod2ts: {
+    enabled: false,
+    outputDir: './types',
+  },
+};

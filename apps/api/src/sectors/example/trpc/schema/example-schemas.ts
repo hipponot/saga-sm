@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 // Base example data schema
 export const ExampleDataSchema = z.object({
@@ -11,7 +11,7 @@ export const ExampleDataSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-})
+});
 
 // Create example input schema
 export const CreateExampleSchema = z.object({
@@ -21,7 +21,7 @@ export const CreateExampleSchema = z.object({
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
   tags: z.array(z.string()).default([]),
   metadata: z.record(z.unknown()).optional(),
-})
+});
 
 // Update example input schema
 export const UpdateExampleSchema = z.object({
@@ -32,12 +32,12 @@ export const UpdateExampleSchema = z.object({
   priority: z.enum(['low', 'medium', 'high']).optional(),
   tags: z.array(z.string()).optional(),
   metadata: z.record(z.unknown()).optional(),
-})
+});
 
 // Query example schema
 export const GetExampleSchema = z.object({
   id: z.string().min(1, 'Example ID is required'),
-})
+});
 
 // Query examples with filters schema
 export const QueryExamplesSchema = z.object({
@@ -49,17 +49,17 @@ export const QueryExamplesSchema = z.object({
   offset: z.number().min(0).default(0),
   sortBy: z.enum(['createdAt', 'updatedAt', 'title', 'priority']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
-})
+});
 
 // Delete example schema
 export const DeleteExampleSchema = z.object({
   id: z.string().min(1, 'Example ID is required'),
-})
+});
 
 // TypeScript types derived from schemas
-export type ExampleDataZ = z.infer<typeof ExampleDataSchema>
-export type CreateExampleZ = z.infer<typeof CreateExampleSchema>
-export type UpdateExampleZ = z.infer<typeof UpdateExampleSchema>
-export type GetExampleZ = z.infer<typeof GetExampleSchema>
-export type QueryExamplesZ = z.infer<typeof QueryExamplesSchema>
-export type DeleteExampleZ = z.infer<typeof DeleteExampleSchema>
+export type ExampleDataZ = z.infer<typeof ExampleDataSchema>;
+export type CreateExampleZ = z.infer<typeof CreateExampleSchema>;
+export type UpdateExampleZ = z.infer<typeof UpdateExampleSchema>;
+export type GetExampleZ = z.infer<typeof GetExampleSchema>;
+export type QueryExamplesZ = z.infer<typeof QueryExamplesSchema>;
+export type DeleteExampleZ = z.infer<typeof DeleteExampleSchema>;
