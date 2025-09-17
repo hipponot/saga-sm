@@ -1,10 +1,18 @@
 {
     "folders": [
         {
+            "name": "saga-sm",
             "path": "."
         },
         {
+            "name": "saga-soa",
             "path": "../saga-soa"
         }
-    ]
+    ],
+    "settings": {
+        "debug.javascript.unmapMissingSources": true,
+        "debug.javascript.suggestPrettyPrinting": false,
+        "typescript.preferences.importModuleSpecifier": "relative",
+        "typescript.preferences.includePackageJsonAutoImports": "on"
+    }
 }
