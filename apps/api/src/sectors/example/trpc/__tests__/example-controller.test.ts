@@ -48,6 +48,7 @@ describe('ExampleController', () => {
       expect(router.createExample).toBeDefined();
       expect(router.updateExample).toBeDefined();
       expect(router.deleteExample).toBeDefined();
+      expect(router.getDiscriminatedUnion).toBeDefined();
     });
 
     it('should create router that extends AbstractTRPCController', () => {

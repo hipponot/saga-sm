@@ -14,6 +14,7 @@ export default defineConfig({
       'node_modules',
       'dist',
       'src/**/*.integration.{test,spec}.ts', // Exclude integration tests
+      'src/sectors/rbv/__tests__/rbv-helper-unit.test.ts', // Not maintained
     ],
 
     coverage: {
