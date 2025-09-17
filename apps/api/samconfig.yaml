@@ -1,26 +1,26 @@
 version: 0.1
 
 default:
-  deploy:
-    parameters:
-      stack_name: saga-sm-api-fargate
-      resolve_s3: true
-      s3_prefix: saga-sm-api-fargate
-      region: us-west-2
-      confirm_changeset: false
-      capabilities: CAPABILITY_NAMED_IAM
-      parameter_overrides:
-        - AppName=saga-sm-api
-        - Environment=dev
-        - ImageId=531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api:latest-20250912-160633
-        - VpcIdSSMParameter=/dev/app/vpc-id
-        - SubnetsSSMParameter=/dev/app/private-subnet-ids
-        - AppSecurityGroupIdSSMParameter=/dev/app/app-sg-id
-        - LoadBalancerArnSSMParameter=/dev/services/services-alb-arn
-        - ListenerArnSSMParameter=/dev/services/services-alb-3000-listener-arn
-        - ClusterArnSSMParameter=/dev/ecs-cluster-arn
-        - EcsExecEnabled=true
-      image_repositories: []
+    deploy:
+        parameters:
+            stack_name: saga-sm-api-fargate
+            resolve_s3: true
+            s3_prefix: saga-sm-api-fargate
+            region: us-west-2
+            confirm_changeset: false
+            capabilities: CAPABILITY_NAMED_IAM
+            parameter_overrides:
+                - AppName=saga-sm-api
+                - Environment=dev
+                - ImageId=531314149529.dkr.ecr.us-west-2.amazonaws.com/saga-sm-api:latest-20250916-112711
+                - VpcIdSSMParameter=/dev/app/vpc-id
+                - SubnetsSSMParameter=/dev/app/private-subnet-ids
+                - AppSecurityGroupIdSSMParameter=/dev/app/app-sg-id
+                - LoadBalancerArnSSMParameter=/dev/services/services-alb-arn
+                - ListenerArnSSMParameter=/dev/services/services-alb-3000-listener-arn
+                - ClusterArnSSMParameter=/dev/ecs-cluster-arn
+                - EcsExecEnabled=true
+            image_repositories: []
 
 qa:
   deploy:

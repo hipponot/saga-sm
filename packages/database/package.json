@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsup",
+    "build": "pnpm db:generate && tsup",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name auto-generated-migration --skip-generate",
     "db:deploy": "prisma migrate deploy",

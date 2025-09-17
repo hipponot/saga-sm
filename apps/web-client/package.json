@@ -18,7 +18,7 @@
         "playwright:debug": "playwright test --debug"
     },
     "dependencies": {
-        "@saga-sm/api-types": "file:../api/types",
+        "@saga-sm/api-types": "file:../api/api-types",
         "@trpc/client": "^11.0.0",
         "next": "^15.5.3",
         "react": "^19.1.0",

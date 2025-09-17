@@ -48,8 +48,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/database
       '@saga-sm/api-types':
-        specifier: file:./types
-        version: link:types
+        specifier: file:./api-types
+        version: link:api-types
       guid-typescript:
         specifier: ^1.0.9
         version: 1.0.9
@@ -94,7 +94,7 @@ importers:
         specifier: ^1.6.0
         version: 1.6.1(@types/node@18.19.124)
 
-  apps/api/types:
+  apps/api/api-types:
     dependencies:
       zod:
         specifier: ^3.25.67
@@ -131,8 +131,8 @@ importers:
   apps/web-client:
     dependencies:
       '@saga-sm/api-types':
-        specifier: file:../api/types
-        version: link:../api/types
+        specifier: file:../api/api-types
+        version: link:../api/api-types
       '@trpc/client':
         specifier: ^11.0.0
         version: 11.5.1(@trpc/server@11.5.1(typescript@5.9.2))(typescript@5.9.2)
