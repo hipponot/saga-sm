@@ -5,10 +5,10 @@ import {
   UpsertBellScheduleInput,
   BellSchedule,
   DayLabelRuleSet,
-  BellScheduleVariant,
+  BellScheduleDay
 } from '../../rbv.types';
 import { faker } from '@faker-js/faker';
-import { DayOfWeekRule, DayLabelRecurrenceRuleType, BellScheduleDay, TimeSlot } from '@repo/db';
+import { DayOfWeekRule, DayLabelRecurrenceRuleType, TimeSlot, BellScheduleGroup } from '@repo/db';
 import { LocalDate, LocalTime } from '@js-joda/core';
 import { LocalTimeRangeFactory } from '../../../../__tests__/util.factories';
 
@@ -28,6 +28,14 @@ export const BellScheduleFactory = Factory.define<BellSchedule>(({ params }) => 
   };
 });
 
+export const BellScheduleGroupFactory = Factory.define<BellScheduleGroup>(() => ({
+  id: faker.string.uuid(),
+  name: faker.lorem.word(),
+  description: faker.lorem.sentence(),
+  scheduleId: faker.string.uuid(),
+  days: [],
+}));
+
 export const TimeSlotFactory = Factory.define<TimeSlot>(() => {
   const { start, end } = LocalTimeRangeFactory.build();
   return {
@@ -44,6 +52,7 @@ export const BellScheduleDayFactory = Factory.define<BellScheduleDay>(() => ({
   scheduleId: faker.string.uuid(),
   name: faker.lorem.word(),
   description: faker.lorem.sentence(),
+  groups: [],
 }));
 
 export const DayLabelRuleSetFactory = Factory.define<DayLabelRuleSet>(() => ({

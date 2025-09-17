@@ -12,6 +12,7 @@ import {
   UpsertBellScheduleInputFactory,
   BellScheduleFactory,
   BellScheduleDayFactory,
+  BellScheduleGroupFactory,
 } from './builders/rbv.factories'
 import { BellSchedule } from '../rbv.types'
 import { prisma } from '@repo/db'
@@ -204,6 +205,14 @@ describe.sequential('RBVHelper', () => {
 
 function create_bladensburg_schedule() {
   const schedule_id = faker.string.uuid()
+
+  const groupings = ["1A", "2A", "3A", "4A", "1B", "2B", "3B", "4B"].map(name => {
+    return BellScheduleGroupFactory.build({
+      name: name,
+      scheduleId: schedule_id,
+    })
+  });
+
   const ADay = BellScheduleDayFactory.build({
     name: 'A Day',
     scheduleId: schedule_id,

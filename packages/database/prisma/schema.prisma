@@ -39,8 +39,10 @@ model BellScheduleGroup {
   scheduleId    String
   schedule      BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
-  dayId String
-  day   BellScheduleDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  days          BellScheduleDay[]
+
+  // Index for query performance
+  @@index([scheduleId]) // For finding groups by schedule
 }
 
 model BellScheduleDay {

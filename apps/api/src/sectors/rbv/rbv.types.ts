@@ -3,7 +3,7 @@ import {
   DayOfWeekRule,
   PatternBasedRule,
   BellSchedule as PrismaBellSchedule,
-  BellScheduleDay,
+  BellScheduleDay as PrismaBellScheduleDay,
   BellScheduleVariant as PrismaBellScheduleVariant,
   DayLabelRuleSet as PrismaDayLabelRuleSet,
   TimeSlot,
@@ -27,6 +27,9 @@ export interface DeleteBellScheduleInput {
 }
 
 // Bell Schedule Day related types
+export type BellScheduleDay = PrismaBellScheduleDay & {
+  groups: BellScheduleGroup[];
+};
 export type UpsertBellScheduleDayInput = Omit<BellScheduleDay, 'id'> & {
   id?: BellScheduleDay['id'];
 };
