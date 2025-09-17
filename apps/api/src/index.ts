@@ -1,2 +1,2 @@
 // Re-export event types
-export * from './sectors/pubsub/index.ts'
+export * from './sectors/pubsub/index.js'

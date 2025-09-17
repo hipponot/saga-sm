@@ -1,47 +1,11 @@
 {
-    "typescript.preferences.importModuleSpecifier": "relative",
-    "typescript.suggest.autoImports": true,
-    "typescript.updateImportsOnFileMove.enabled": "always",
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit",
-        "source.organizeImports": "explicit"
-    },
-    "files.exclude": {
-        "**/node_modules": true,
-        "**/dist": true,
-        "**/.next": true,
-        "**/.turbo": true,
-        "**/generated": false
-    },
-    "search.exclude": {
-        "**/node_modules": true,
-        "**/dist": true,
-        "**/.next": true,
-        "**/.turbo": true,
-        "**/pnpm-lock.yaml": true
-    },
-    "files.watcherExclude": {
-        "**/node_modules/**": true,
-        "**/dist/**": true,
-        "**/.next/**": true,
-        "**/.turbo/**": true
-    },
-    "eslint.workingDirectories": [
-        "apps/api",
-        "apps/web-client",
-        "apps/api/api-types"
-    ],
-    "typescript.preferences.includePackageJsonAutoImports": "on",
-    "npm.packageManager": "pnpm",
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "jest.jestCommandLine": "pnpm vitest",
-    "vitest.enable": true,
-    "vitest.commandLine": "pnpm vitest",
-    "testing.automaticallyOpenPeekView": "never",
-    "debug.allowBreakpointsEverywhere": true,
-    "debug.node.autoAttach": "on",
-    "debug.javascript.unmapMissingSources": true,
-    "debug.javascript.suggestPrettyPrinting": false
+  "debug.javascript.unmapMissingSources": true,
+  "debug.javascript.suggestPrettyPrinting": false,
+  "debug.allowBreakpointsEverywhere": true,
+  "debug.javascript.breakOnConditionalError": true,
+  "debug.javascript.debugByLinkOptions": "always",
+  "debug.node.autoAttach": "disabled",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }

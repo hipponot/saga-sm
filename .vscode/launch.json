@@ -1,165 +1,33 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Debug API Service",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/apps/api/dist/main.js",
-            "cwd": "${workspaceFolder}/apps/api",
-            "env": {
-                "NODE_ENV": "development"
-            },
-            "console": "integratedTerminal",
-            "restart": true,
-            "runtimeArgs": ["--enable-source-maps"],
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/apps/api/dist/**/*.js",
-                "${workspaceFolder}/../saga-soa/packages/*/dist/**/*.js",
-                "${workspaceFolder}/../saga-soa/build-tools/*/dist/**/*.js"
-            ],
-            "resolveSourceMapLocations": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/../saga-soa/**",
-                "!**/node_modules/**"
-            ],
-            "sourceMapPathOverrides": {
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-logger/src/*": "${workspaceRoot:saga-soa}/packages/logger/src/*",
-                "**/soa-logger/src/*": "${workspaceRoot:saga-soa}/packages/logger/src/*",
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-api-core/src/*": "${workspaceRoot:saga-soa}/packages/api-core/src/*",
-                "**/soa-api-core/src/*": "${workspaceRoot:saga-soa}/packages/api-core/src/*",
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-db/src/*": "${workspaceRoot:saga-soa}/packages/db/src/*",
-                "**/soa-db/src/*": "${workspaceRoot:saga-soa}/packages/db/src/*",
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-config/src/*": "${workspaceRoot:saga-soa}/packages/config/src/*",
-                "**/soa-config/src/*": "${workspaceRoot:saga-soa}/packages/config/src/*",
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-pubsub-core/src/*": "${workspaceRoot:saga-soa}/packages/pubsub-core/src/*",
-                "**/soa-pubsub-core/src/*": "${workspaceRoot:saga-soa}/packages/pubsub-core/src/*"
-            }
-        },
-        {
-            "name": "Debug API Service (with Auto-rebuild)",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/.bin/tsup",
-            "args": [
-                "--watch",
-                "--onSuccess",
-                "node dist/main.js"
-            ],
-            "cwd": "${workspaceFolder}/apps/api",
-            "env": {
-                "NODE_ENV": "development"
-            },
-            "console": "integratedTerminal",
-            "restart": true,
-            "runtimeArgs": ["--enable-source-maps"],
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/apps/api/dist/**/*.js",
-                "${workspaceFolder}/../saga-soa/packages/*/dist/**/*.js",
-                "${workspaceFolder}/../saga-soa/build-tools/*/dist/**/*.js"
-            ],
-            "resolveSourceMapLocations": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/../saga-soa/**",
-                "!**/node_modules/**"
-            ],
-            "sourceMapPathOverrides": {
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-logger/src/*": "${workspaceRoot:saga-soa}/packages/logger/src/*",
-                "**/soa-logger/src/*": "${workspaceRoot:saga-soa}/packages/logger/src/*",
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-api-core/src/*": "${workspaceRoot:saga-soa}/packages/api-core/src/*",
-                "**/soa-api-core/src/*": "${workspaceRoot:saga-soa}/packages/api-core/src/*",
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-db/src/*": "${workspaceRoot:saga-soa}/packages/db/src/*",
-                "**/soa-db/src/*": "${workspaceRoot:saga-soa}/packages/db/src/*",
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-config/src/*": "${workspaceRoot:saga-soa}/packages/config/src/*",
-                "**/soa-config/src/*": "${workspaceRoot:saga-soa}/packages/config/src/*",
-                "/home/skelly/dev/saga-sm/node_modules/.pnpm/**/node_modules/@hipponot/soa-pubsub-core/src/*": "${workspaceRoot:saga-soa}/packages/pubsub-core/src/*",
-                "**/soa-pubsub-core/src/*": "${workspaceRoot:saga-soa}/packages/pubsub-core/src/*"
-            }
-        },
-        {
-            "name": "Debug Web Client (Next.js)",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/.bin/next",
-            "args": ["dev", "--port", "3001"],
-            "cwd": "${workspaceFolder}/apps/web-client",
-            "env": {
-                "NODE_ENV": "development"
-            },
-            "console": "integratedTerminal",
-            "restart": true,
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
-        },
-        {
-            "name": "Debug API Tests",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/.bin/vitest",
-            "args": ["run", "--config", "vitest.config.ts"],
-            "cwd": "${workspaceFolder}/apps/api",
-            "env": {
-                "NODE_ENV": "test"
-            },
-            "console": "integratedTerminal",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
-        },
-        {
-            "name": "Debug API Integration Tests",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/.bin/vitest",
-            "args": ["run", "--config", "vitest.integration.config.ts"],
-            "cwd": "${workspaceFolder}/apps/api",
-            "env": {
-                "NODE_ENV": "test"
-            },
-            "console": "integratedTerminal",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
-        },
-        {
-            "name": "Debug Current Test File",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/.bin/vitest",
-            "args": ["run", "${relativeFile}"],
-            "cwd": "${workspaceFolder}/apps/api",
-            "env": {
-                "NODE_ENV": "test"
-            },
-            "console": "integratedTerminal",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
-        },
-        {
-            "name": "Attach to API Service",
-            "type": "node",
-            "request": "attach",
-            "port": 9229,
-            "restart": true,
-            "localRoot": "${workspaceFolder}/apps/api",
-            "remoteRoot": "/app",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
-        }
-    ],
-    "compounds": [
-        {
-            "name": "Debug Full Stack (API + Web Client)",
-            "configurations": [
-                "Debug API Service",
-                "Debug Web Client (Next.js)"
-            ],
-            "stopAll": true
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug saga-sm/apps/api",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/api/dist/main.js",
+      "cwd": "${workspaceFolder}/apps/api",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "smartStep": false,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "sourceMapPathOverrides": {
+        "../src/*": "${workspaceFolder}/apps/api/src/*"
+      },
+      "outFiles": [
+        "${workspaceFolder}/apps/api/dist/**/*.js",
+        "${workspaceFolder}/apps/api/node_modules/@hipponot/*/dist/**/*.js"
+      ],
+      "preLaunchTask": "build-api",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/apps/api/node_modules/@hipponot/**"
+      ]
+    }
+  ]
 }

@@ -12,7 +12,14 @@
     "settings": {
         "debug.javascript.unmapMissingSources": true,
         "debug.javascript.suggestPrettyPrinting": false,
+        "debug.allowBreakpointsEverywhere": true,
+        "debug.javascript.breakOnConditionalError": true,
+        "debug.javascript.debugByLinkOptions": "always",
+        "debug.node.autoAttach": "disabled",
+        "debug.javascript.usePreview": false,
+        "debug.javascript.codelens.npmScripts": "never",
         "typescript.preferences.importModuleSpecifier": "relative",
-        "typescript.preferences.includePackageJsonAutoImports": "on"
+        "typescript.preferences.includePackageJsonAutoImports": "on",
+        "typescript.enablePromptUseWorkspaceTsdk": true
     }
 }

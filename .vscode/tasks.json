@@ -1,162 +1,49 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build-saga-soa-deps",
-            "type": "shell",
-            "command": "pnpm",
-            "args": ["build"],
-            "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}/../saga-soa"
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "silent",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            },
-            "problemMatcher": [
-                "$tsc"
-            ]
-        },
-        {
-            "label": "build-api",
-            "type": "shell",
-            "command": "pnpm",
-            "args": ["build"],
-            "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}/apps/api"
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "silent",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            },
-            "problemMatcher": [
-                "$tsc"
-            ],
-            "dependsOn": "build-saga-soa-deps"
-        },
-        {
-            "label": "build-web-client",
-            "type": "shell",
-            "command": "pnpm",
-            "args": ["build"],
-            "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}/apps/web-client"
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "silent",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            },
-            "problemMatcher": [
-                "$tsc"
-            ]
-        },
-        {
-            "label": "build-api-types",
-            "type": "shell",
-            "command": "pnpm",
-            "args": ["build"],
-            "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}/apps/api/api-types"
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "silent",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            },
-            "problemMatcher": [
-                "$tsc"
-            ]
-        },
-        {
-            "label": "generate-types",
-            "type": "shell",
-            "command": "pnpm",
-            "args": ["generate"],
-            "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}/apps/api/api-types"
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "clean-all",
-            "type": "shell",
-            "command": "pnpm",
-            "args": ["clean"],
-            "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "test-api",
-            "type": "shell",
-            "command": "pnpm",
-            "args": ["test"],
-            "group": "test",
-            "options": {
-                "cwd": "${workspaceFolder}/apps/api"
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "test-integration",
-            "type": "shell",
-            "command": "pnpm",
-            "args": ["test:integration"],
-            "group": "test",
-            "options": {
-                "cwd": "${workspaceFolder}/apps/api"
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-api",
+      "dependsOrder": "sequence",
+      "dependsOn": ["build-saga-soa-packages"],
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["run", "build"],
+      "group": "build",
+      "cwd": "${workspaceFolder}/apps/api",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "build-saga-soa-packages",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["run", "build"],
+      "group": "build",
+      "cwd": "${workspaceFolder}/../saga-soa",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "build-all",
+      "dependsOrder": "sequence",
+      "dependsOn": ["build-saga-soa-packages", "build-api"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    }
+  ]
 }

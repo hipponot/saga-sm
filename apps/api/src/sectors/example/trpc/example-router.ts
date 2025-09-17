@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify'
 import { AbstractTRPCController, router } from '@hipponot/soa-api-core/abstract-trpc-controller'
 import type { ILogger } from '@hipponot/soa-logger'
-import type { IExampleHelper } from '../helpers/example_helper'
+import type { IExampleHelper } from '../helpers/example_helper.js'
 import {
   CreateExampleSchema,
   UpdateExampleSchema,
@@ -14,7 +14,7 @@ import {
   type QueryExamplesZ,
   type DeleteExampleZ,
   type ExampleDataZ,
-} from './schema/example-schemas'
+} from './schema/example-schemas.js'
 
 @injectable()
 export class ExampleController extends AbstractTRPCController {
