@@ -21,9 +21,9 @@ export default {
     },
 
     // Zod2ts configuration
-    // Disabled - we handle type generation separately by transpiling to JS first
+    // Enhanced zod2ts now handles TypeScript files directly
     zod2ts: {
-        enabled: false,
+        enabled: true,
         outputDir: './types',
     },
 }
