@@ -16,9 +16,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "sourceMapPathOverrides": {
-        "../src/*": "${workspaceFolder}/apps/api/src/*"
-      },
+      "sourceMapPathOverrides": {},
       "outFiles": [
         "${workspaceFolder}/apps/api/dist/**/*.js",
         "${workspaceFolder}/apps/api/node_modules/@hipponot/*/dist/**/*.js"
@@ -26,6 +24,7 @@
       "preLaunchTask": "build-api",
       "resolveSourceMapLocations": [
         "${workspaceFolder}/**",
+        "${workspaceFolder}/../saga-soa/**",
         "${workspaceFolder}/apps/api/node_modules/@hipponot/**"
       ]
     }
