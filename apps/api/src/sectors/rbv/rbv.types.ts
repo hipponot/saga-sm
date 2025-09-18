@@ -31,11 +31,19 @@ export interface DeleteBellScheduleInput {
 export type BellScheduleDay = PrismaBellScheduleDay & {
   groups: BellScheduleGroup[];
 };
-export type UpsertBellScheduleDayInput = Omit<BellScheduleDay, 'id'> & {
+export type UpsertBellScheduleDayInput = Omit<BellScheduleDay, 'id' | 'groups'> & {
   id?: BellScheduleDay['id'];
 };
 export interface DeleteBellScheduleDayInput {
   id: BellScheduleDay['id'];
+}
+
+// Bell Schedule Group related types
+export type UpsertBellScheduleGroupInput = Omit<BellScheduleGroup, 'id'> & {
+  id?: BellScheduleGroup['id'];
+};
+export interface DeleteBellScheduleGroupInput {
+  id: BellScheduleGroup['id'];
 }
 
 // Bell Schedule Variant related types
@@ -52,7 +60,7 @@ export interface DeleteBellScheduleVariantInput {
 export type VariantRuleSet = PrismaVariantRuleSet & {
   exceptions: ExceptionBasedRule[];
 }
-export type UpsertVariantRuleSetInput = Omit<VariantRuleSet, 'id'> & {
+export type UpsertVariantRuleSetInput = Omit<VariantRuleSet, 'id' | 'exceptions'> & {
   id?: VariantRuleSet['id'];
 };
 export interface DeleteVariantRuleSetInput {
@@ -63,7 +71,7 @@ export type DayLabelRuleSet = PrismaDayLabelRuleSet & {
   dayOfWeekRules?: DayOfWeekRule[];
   patternBasedRules?: PatternBasedRule[];
 };
-export type UpsertDayLabelRuleSetInput = Omit<PrismaDayLabelRuleSet, 'id'> & {
+export type UpsertDayLabelRuleSetInput = Omit<DayLabelRuleSet, 'id' | 'dayOfWeekRules' | 'patternBasedRules'> & {
   id?: DayLabelRuleSet['id'];
 };
 export interface DeleteDayLabelRuleSetInput {
@@ -76,6 +84,30 @@ export type UpsertTimeSlotInput = Omit<TimeSlot, 'id'> & {
 };
 export interface DeleteTimeSlotInput {
   id: TimeSlot['id'];
+}
+
+// Day Of Week Rule related types
+export type UpsertDayOfWeekRuleInput = Omit<DayOfWeekRule, 'id'> & {
+  id?: DayOfWeekRule['id'];
+};
+export interface DeleteDayOfWeekRuleInput {
+  id: DayOfWeekRule['id'];
+}
+
+// Pattern Based Rule related types
+export type UpsertPatternBasedRuleInput = Omit<PatternBasedRule, 'id'> & {
+  id?: PatternBasedRule['id'];
+};
+export interface DeletePatternBasedRuleInput {
+  id: PatternBasedRule['id'];
+}
+
+// Exception Based Rule related types
+export type UpsertExceptionBasedRuleInput = Omit<ExceptionBasedRule, 'id'> & {
+  id?: ExceptionBasedRule['id'];
+};
+export interface DeleteExceptionBasedRuleInput {
+  id: ExceptionBasedRule['id'];
 }
 
 export interface CalculateMeetingTimesInput {
