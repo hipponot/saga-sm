@@ -45,7 +45,11 @@ export class RBVHelper {
     const schedule = await prisma.bellSchedule.findUnique({
       where: { id },
       include: {
-        days: true,
+        days: {
+          include: {
+            groups: true,
+          },
+        },
         variants: {
           include: {
             timeSlots: true,
@@ -58,7 +62,11 @@ export class RBVHelper {
             patternBasedRules: true,
           },
         },
-        variantRuleSet: true,
+        variantRuleSet: {
+          include: {
+            exceptions: true,
+          },
+        },
       },
     });
     if (!schedule) {
