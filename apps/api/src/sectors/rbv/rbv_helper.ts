@@ -62,7 +62,11 @@ export class RBVHelper {
             patternBasedRules: true,
           },
         },
-        variantRuleSet: true,
+        variantRuleSet: {
+          include: {
+            exceptions: true,
+          },
+        },
       },
     });
     if (!schedule) {

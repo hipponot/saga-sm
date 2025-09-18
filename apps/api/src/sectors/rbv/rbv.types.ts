@@ -7,7 +7,8 @@ import {
   BellScheduleVariant as PrismaBellScheduleVariant,
   DayLabelRuleSet as PrismaDayLabelRuleSet,
   TimeSlot,
-  VariantRuleSet,
+  ExceptionBasedRule,
+  VariantRuleSet as PrismaVariantRuleSet,
 } from '@repo/db';
 import { LocalDate, LocalDateTime } from '@js-joda/core';
 
@@ -46,6 +47,16 @@ export type UpsertBellScheduleVariantInput = Omit<PrismaBellScheduleVariant, 'id
 };
 export interface DeleteBellScheduleVariantInput {
   id: BellScheduleVariant['id'];
+}
+
+export type VariantRuleSet = PrismaVariantRuleSet & {
+  exceptions: ExceptionBasedRule[];
+}
+export type UpsertVariantRuleSetInput = Omit<VariantRuleSet, 'id'> & {
+  id?: VariantRuleSet['id'];
+};
+export interface DeleteVariantRuleSetInput {
+  id: VariantRuleSet['id'];
 }
 
 export type DayLabelRuleSet = PrismaDayLabelRuleSet & {

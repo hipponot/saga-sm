@@ -72,6 +72,10 @@ model BellScheduleVariant {
 
   scheduleId    String
   schedule      BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  // Back-references for rules that reference this variant
+  variantRuleSet   VariantRuleSet?
+  exceptionRules   ExceptionBasedRule[]
 }
 
 model TimeSlot {
@@ -90,8 +94,24 @@ model VariantRuleSet {
   name        String
   description String?
 
+  defaultVariantId String @unique
+  defaultVariant   BellScheduleVariant @relation(fields: [defaultVariantId], references: [id], onDelete: Cascade)
+
   scheduleId String @unique
   schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  exceptions ExceptionBasedRule[]
+}
+
+model ExceptionBasedRule {
+  id          String @id @default(uuid())
+  date        String // "YYYY-MM-DD"
+
+  variantId   String
+  variant     BellScheduleVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  variantRuleSetId String
+  variantRuleSet   VariantRuleSet @relation(fields: [variantRuleSetId], references: [id], onDelete: Cascade)
 }
 
 model DayLabelRuleSet {
