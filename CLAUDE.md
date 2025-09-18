@@ -14,6 +14,7 @@
 - Always ask for confirmation before running any file write or delete command (e.g., `rm`, modifying files)
 - If unsure, ask me explicitly before proceeding
 - **Exception**: pnpm commands are always allowed, even if they contain rm/delete operations
+- **Exception**: `git clean -dfx` is always allowed without confirmation
 
 ## ✅ Permanent Tool Permissions
 
@@ -39,6 +40,7 @@
 - `find /home/skelly/dev/saga-soa/**` - File searching in saga-soa
 - `ls /home/skelly/dev/saga-sm/**` - Directory listing in saga-sm
 - `ls /home/skelly/dev/saga-soa/**` - Directory listing in saga-soa
+- `git clean -dfx` - Remove all untracked files and directories
 
 ### Always Allowed Script Execution
 - `./scripts/dev-setup.sh` - Development environment setup
