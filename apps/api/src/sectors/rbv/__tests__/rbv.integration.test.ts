@@ -58,10 +58,8 @@ describe('RBVHelper', () => {
       // ARRANGE
       const schedule = await create_bladensburg_schedule(rbv_helper);
 
-      // // ACT
-      // const res = await rbv_helper.get_schedule(schedule.id!)
-      // if (!res.success) throw new Error(res.message)
-      // const retrieved_schedule = res.data
+      // ACT
+      
 
       expect(true).toBe(true)
     })
