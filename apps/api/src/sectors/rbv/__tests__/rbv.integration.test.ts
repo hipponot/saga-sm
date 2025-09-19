@@ -55,8 +55,8 @@ describe('RBVHelper', () => {
 
   describe('Bladensburg Example', () => {
     it('calculates the meeting times for a given date range', async () => {
-      // // ARRANGE
-      // const schedule = await create_bladensburg_schedule(rbv_helper);
+      // ARRANGE
+      const schedule = await create_bladensburg_schedule(rbv_helper);
 
       // // ACT
       // const res = await rbv_helper.get_schedule(schedule.id!)
