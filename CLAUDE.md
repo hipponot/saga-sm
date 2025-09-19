@@ -21,6 +21,7 @@
 ### Always Allowed Bash Commands
 - `cd /home/skelly/dev/saga-sm/**` - Any directory navigation in saga-sm
 - `cd /home/skelly/dev/saga-soa/**` - Any directory navigation in saga-soa
+- `pnpm install` - Install project dependencies
 - `pnpm build` - Build the project
 - `pnpm dev` - Run development server
 - `pnpm test` - Run tests
@@ -34,6 +35,8 @@
 - `pnpm db:generate` - Generate Prisma client
 - `pnpm db:migrate` - Run database migrations
 - `pnpm db:deploy` - Deploy database changes
+- `turbo build --force --no-cache`
+- `turbo build`
 - `tsup` - TypeScript bundler
 - `turbo run <task>` - Any turbo command
 - `find /home/skelly/dev/saga-sm/**` - File searching in saga-sm
