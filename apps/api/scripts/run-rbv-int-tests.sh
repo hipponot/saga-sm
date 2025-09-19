@@ -20,6 +20,69 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Function to display help
+show_help() {
+    cat << 'EOF'
+RBV Integration Tests Setup Script
+
+DESCRIPTION:
+    Sets up and runs RBV (Risk-Based Verification) integration tests in a clean,
+    isolated environment. This script is designed for local development only.
+
+USAGE:
+    ./run-rbv-int-tests.sh [OPTIONS]
+
+OPTIONS:
+    -h, --help      Show this help message and exit
+
+ENVIRONMENT VARIABLES:
+    POSTGRES_TIMEOUT        Timeout in seconds for PostgreSQL startup (default: 30)
+    FORCE_LOCAL_DB          Set to 'true' to bypass local database checks (use with caution!)
+
+SAFETY FEATURES:
+    • Validates database URL is local before destructive operations
+    • Blocks execution against cloud database providers (no bypass)
+    • Requires explicit confirmation for non-standard database URLs
+
+STEPS PERFORMED:
+    1. Check prerequisites (docker, pnpm, turbo)
+    2. Verify Docker daemon is running
+    3. Find project root (pnpm-workspace.yaml)
+    4. Set up .env file (copy from .env.example if needed)
+    5. Start PostgreSQL container if not running
+    6. Install dependencies if needed
+    7. Generate Prisma client
+    8. Build project with generated types
+    9. Safety check: Validate database URL is local
+    10. Reset database to clean state (migrate reset)
+    11. Apply all migrations (migrate deploy)
+    12. Re-generate Prisma client if schema changed
+    13. Run integration tests
+
+EXAMPLES:
+    ./run-rbv-int-tests.sh                          # Normal execution
+    POSTGRES_TIMEOUT=60 ./run-rbv-int-tests.sh      # Custom timeout
+    FORCE_LOCAL_DB=true ./run-rbv-int-tests.sh      # Bypass local check
+
+For more information, see the project documentation.
+EOF
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}❌ Unknown option: $1${NC}"
+            echo "Use -h or --help for usage information."
+            exit 1
+            ;;
+    esac
+done
+
 # Cleanup trap for interruptions
 trap 'echo -e "${RED}\n❌ Script interrupted${NC}"; exit 1' INT TERM
 
