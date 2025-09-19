@@ -79,6 +79,7 @@ export interface CreateCompleteScheduleInput {
     id?: string;
     name: string;
     description?: string;
+    groupIds?: string[]; // Reference groups by ID
   }>;
 
   variants: Array<{
@@ -147,11 +148,13 @@ export interface UpdateCompleteScheduleInput {
       id?: string;
       name: string;
       description?: string;
+      groupIds?: string[]; // Reference groups by ID
     }>;
     update?: Array<{
       id: string;
       name?: string;
       description?: string;
+      groupIds?: string[]; // Reference groups by ID
     }>;
     delete?: string[]; // Array of IDs to delete
   };

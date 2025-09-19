@@ -24,7 +24,7 @@ import {
   ExceptionBasedRule,
   prisma,
 } from '@repo/db';
-import { ChronoUnit, LocalDate } from '@js-joda/core';
+import { ChronoUnit, LocalDate, LocalDateTime, LocalTime } from '@js-joda/core';
 
 export const BELL_SCHEDULE_COLLECTION = 'bell_schedules';
 export const BELL_SCHEDULE_VARIANT_COLLECTION = 'bell_schedule_variants';
@@ -122,7 +122,21 @@ export class RBVHelper {
           },
         });
 
-        // 2. Create schedule days (needed for rule references)
+        // 2. Create schedule groups first (needed for day-group relationships)
+        const createdGroups: Array<{ id: string; name: string }> = [];
+        for (const groupInput of input.groups) {
+          const group = await tx.bellScheduleGroup.create({
+            data: {
+              id: groupInput.id ?? Guid.raw(),
+              name: groupInput.name,
+              description: groupInput.description,
+              scheduleId: schedule.id,
+            },
+          });
+          createdGroups.push({ id: group.id, name: group.name });
+        }
+
+        // 3. Create schedule days with group associations (needed for rule references)
         const createdDays: Array<{ id: string; name: string }> = [];
         for (const dayInput of input.days) {
           const day = await tx.bellScheduleDay.create({
@@ -131,21 +145,15 @@ export class RBVHelper {
               name: dayInput.name,
               description: dayInput.description,
               scheduleId: schedule.id,
+              // Connect to groups if specified
+              ...(dayInput.groupIds && dayInput.groupIds.length > 0 && {
+                groups: {
+                  connect: dayInput.groupIds.map(groupId => ({ id: groupId }))
+                }
+              })
             },
           });
           createdDays.push({ id: day.id, name: day.name });
-        }
-
-        // 3. Create schedule groups
-        for (const groupInput of input.groups) {
-          await tx.bellScheduleGroup.create({
-            data: {
-              id: groupInput.id ?? Guid.raw(),
-              name: groupInput.name,
-              description: groupInput.description,
-              scheduleId: schedule.id,
-            },
-          });
         }
 
         // 4. Create variants with their time slots
@@ -326,12 +334,25 @@ export class RBVHelper {
           // Update existing days
           if (input.days.update) {
             for (const dayUpdate of input.days.update) {
+              const updateData: any = {
+                ...(dayUpdate.name !== undefined && { name: dayUpdate.name }),
+                ...(dayUpdate.description !== undefined && { description: dayUpdate.description }),
+              };
+
+              // Handle group connections if specified
+              if (dayUpdate.groupIds !== undefined) {
+                if (dayUpdate.groupIds.length === 0) {
+                  // Disconnect from all groups
+                  updateData.groups = { set: [] };
+                } else {
+                  // Connect to specified groups
+                  updateData.groups = { set: dayUpdate.groupIds.map(groupId => ({ id: groupId })) };
+                }
+              }
+
               await tx.bellScheduleDay.update({
                 where: { id: dayUpdate.id },
-                data: {
-                  ...(dayUpdate.name !== undefined && { name: dayUpdate.name }),
-                  ...(dayUpdate.description !== undefined && { description: dayUpdate.description }),
-                },
+                data: updateData,
               });
             }
           }
@@ -345,6 +366,12 @@ export class RBVHelper {
                   name: dayCreate.name,
                   description: dayCreate.description,
                   scheduleId: input.id,
+                  // Connect to groups if specified
+                  ...(dayCreate.groupIds && dayCreate.groupIds.length > 0 && {
+                    groups: {
+                      connect: dayCreate.groupIds.map(groupId => ({ id: groupId }))
+                    }
+                  })
                 },
               });
             }
@@ -618,7 +645,7 @@ export class RBVHelper {
 
   public async calculate_meeting_times(
     input: CalculateMeetingTimesInput
-  ): Promise<DataResponse<MeetingTimes>> {
+  ): Promise<DataResponse<MeetingTimes[]>> {
     // 1. Get the schedule
     const schedule_res = await this.get_schedule(input.scheduleId);
     if (!schedule_res.success) return schedule_res;
@@ -628,8 +655,17 @@ export class RBVHelper {
       return { success: false, message: 'Schedule missing a recurrence rule set' };
     }
 
+    const variantById = new Map<string, BellScheduleVariant>();
+    for (const variant of schedule.variants) {
+      variantById.set(variant.id, variant);
+    }
+    const dayById = new Map<string, BellScheduleDay>();
+    for (const day of schedule.days) {
+      dayById.set(day.id, day);
+    }
+
     // 2. Determine which bell schedule days occur on each day of the date range
-    const dayMap: Map<LocalDate, string> = new Map(); // Map of date to the scheduleDayId
+    const dayMap: Map<string, BellScheduleDay> = new Map(); // Map of date to the scheduleDayId
     switch (schedule.dayLabelRuleSet.type) {
       case DayLabelRecurrenceRuleType.DAY_OF_WEEK:
         const dayOfWeekRules = schedule.dayLabelRuleSet.dayOfWeekRules;
@@ -642,7 +678,11 @@ export class RBVHelper {
         while (!date.isAfter(input.dateRange.end)) {
           const dayOfWeek = date.dayOfWeek().value();
           const day = dayOfWeekRules.find(d => d.dayOfWeek === dayOfWeek);
-          dayMap.set(date, day?.scheduleDayId ?? '');
+          const day_object = dayById.get(day?.scheduleDayId ?? '');
+          if (!day_object) {
+            throw new Error(`Day with id ${day?.scheduleDayId} not found on the schedule`);
+          }
+          dayMap.set(date.toString(), day_object);
 
           date = date.plusDays(1);
         }
@@ -678,8 +718,17 @@ export class RBVHelper {
           const dayOfWeek = currentDate.dayOfWeek().value() % 7; // Convert to 0-6 (Sunday=0)
 
           if (activeDaysSet.has(dayOfWeek)) {
-            const dayId = patternBasedRules[patternIndex].scheduleDayId;
-            dayMap.set(currentDate, dayId);
+            const dayId = patternBasedRules
+              .find(d => d.patternPosition === patternIndex)
+              ?.scheduleDayId;
+            if (!dayId) {
+              throw new Error(`Pattern-based rule with position ${patternIndex} not found`);
+            }
+            const day_object = dayById.get(dayId);
+            if (!day_object) {
+              throw new Error(`Day with id ${dayId} not found on the schedule`);
+            }
+            dayMap.set(currentDate.toString(), day_object);
             patternIndex = (patternIndex + 1) % pattern_length;
           }
 
@@ -689,12 +738,76 @@ export class RBVHelper {
     }
 
     // 3. Determine which variants are active on each day of the date range
+    const variantMap: Map<string, BellScheduleVariant> = new Map(); // Map of date to the variantId
+    const variantRuleSet = schedule.variantRuleSet;
+    if (!variantRuleSet) {
+      return { success: false, message: 'Schedule missing a variant rule set' };
+    }
+    // First set any relevant exceptions
+    const exceptions = variantRuleSet.exceptions ?? [];
+    for (const exception of exceptions) {
+      const date = LocalDate.parse(exception.date);
+      if (!date.isBefore(input.dateRange.start) && !date.isAfter(input.dateRange.end)) {
+        const variant_object = variantById.get(exception.variantId);
+        if (!variant_object) {
+          throw new Error(`Variant with id ${exception.variantId} not found on the schedule`);
+        }
+        variantMap.set(date.toString(), variant_object);
+      }
+    }
+    // Then set the remaining days to the default variant
+    const defaultVariant = variantById.get(variantRuleSet.defaultVariantId);
+    if (!defaultVariant) {
+      throw new Error(`Default variant with id ${variantRuleSet.defaultVariantId} not found on the schedule`);
+    }
+    for (const date of dayMap.keys()) {
+      if (!variantMap.get(date)) {
+        variantMap.set(date, defaultVariant);
+      }
+    }
 
     // 4. Combine the active variants with the active days to determine the meeting times
+    const flatMeetingTimes: MeetingTimes[] = [];
+    for (const date of dayMap.keys()) {
+      const day = dayMap.get(date);
+      const variant = variantMap.get(date);
+      if (!day || !variant) {
+        throw new Error(`Day or variant not found for date ${date}`);
+      }
+
+      flatMeetingTimes.push(...this.combineDayAndVariant(day, variant, LocalDate.parse(date)));
+    }
 
     // 5. Return the meeting times
+    const groupedMeetingTimes: MeetingTimes[] = flatMeetingTimes.reduce((acc, meetingTime) => {
+      const existingGroup = acc.find(m => m.scheduleGroupId === meetingTime.scheduleGroupId);
+      if (existingGroup) {
+        existingGroup.meetingTimes.push(...meetingTime.meetingTimes);
+      } else {
+        acc.push(meetingTime);
+      }
+      return acc;
+    }, [] as MeetingTimes[]);
 
-    return { success: true, data: null as unknown as MeetingTimes };
+    return { success: true, data: groupedMeetingTimes };
+  }
+
+  private combineDayAndVariant(day: BellScheduleDay, variant: BellScheduleVariant, date: LocalDate): MeetingTimes[] {
+    // Order the groups on the day and insert them into the variant time slots
+    const groups = day.groups;
+    const timeSlots = variant.timeSlots;
+
+    const meetingTimes: MeetingTimes[] = groups.map((group, index) => ({
+      scheduleGroupId: group.id,
+      meetingTimes: [
+        {
+          start: LocalDateTime.parse(`${date.toString()}T${timeSlots[index].start}`),
+          end: LocalDateTime.parse(`${date.toString()}T${timeSlots[index].end}`),
+        }
+      ]
+    }));
+
+    return meetingTimes;
   }
 
   /**

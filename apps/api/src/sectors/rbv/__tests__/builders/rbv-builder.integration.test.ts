@@ -47,7 +47,13 @@ describe('RBVHelper', () => {
 
       // ASSERT
       expect(fetched_schedule.data).toEqual(builtSchedule);
-      expect(builtSchedule).toEqual(schedule);
+      expect({
+        ...builtSchedule,
+        days: builtSchedule.days.sort((a, b) => a.name.localeCompare(b.name)),
+      }).toEqual({
+        ...schedule,
+        days: schedule.days.sort((a, b) => a.name.localeCompare(b.name)),
+      });
     })
   })
 })

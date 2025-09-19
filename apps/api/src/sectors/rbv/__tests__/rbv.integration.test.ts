@@ -19,10 +19,11 @@ import {
 } from './builders/rbv.factories';
 import { LocalDate } from '@js-joda/core';
 import { BellScheduleBuilder } from './builders/rbv.builders';
-import { prisma } from '@repo/db';
+import { DayLabelRecurrenceRuleType, prisma } from '@repo/db';
 import { RBVHelper } from '../rbv_helper';
 import { Container } from 'inversify';
 import { ILogger } from '@hipponot/soa-logger';
+import { BellSchedule } from '../rbv.types';
 
 const mockLogger: ILogger = {
   info: console.log,
@@ -40,28 +41,60 @@ describe('RBVHelper', () => {
     container.bind('ILogger').toConstantValue(mockLogger)
     container.bind<RBVHelper>('RBVHelper').to(RBVHelper)
     rbv_helper = container.get('RBVHelper')
-
-    // Clean up all test data
-    await prisma.bellScheduleVariant.deleteMany()
-    await prisma.bellSchedule.deleteMany()
-    await prisma.dayLabelRuleSet.deleteMany()
-    await prisma.dayOfWeekRule.deleteMany()
-    await prisma.patternBasedRule.deleteMany()
-  })
-
-  afterEach(() => {
-    container.unbindAll()
   })
 
   describe('Bladensburg Example', () => {
-    it('calculates the meeting times for a given date range', async () => {
+    let schedule: BellSchedule;
+    beforeEach(async () => {
+      await prisma.bellSchedule.deleteMany();
+
+      schedule = await create_bladensburg_schedule(rbv_helper);
+    })
+
+    it('request for the next week of meeting times gives alternating A and B days', async () => {
       // ARRANGE
-      const schedule = await create_bladensburg_schedule(rbv_helper);
 
       // ACT
-      
+      const meetingTimeRes = await rbv_helper.calculate_meeting_times({
+        scheduleId: schedule.id,
+        dateRange: {
+          start: LocalDate.now(),
+          end: LocalDate.now().plusDays(7),
+        },
+      });
+      if (!meetingTimeRes.success) {
+        throw new Error('Failed to calculate meeting times');
+      }
 
-      expect(true).toBe(true)
+      // Determine which groups meet on each day
+      const meetingTimeMap = new Map<string, string[]>(); // date -> groups that meet on that date
+      for (const groupMeetings of meetingTimeRes.data) {
+        for (const meeting of groupMeetings.meetingTimes) {
+          const date = meeting.start.toLocalDate();
+          if (!meetingTimeMap.get(date.toString())) {
+            meetingTimeMap.set(date.toString(), []);
+          }
+          meetingTimeMap.get(date.toString())!.push(groupMeetings.scheduleGroupId);
+        }
+      }
+
+      // Split the groups into the A day and B day groups
+      const a_day_groups = schedule.days.find(day => day.name === 'A Day')?.groups.map(group => group.id) ?? [];
+      const b_day_groups = schedule.days.find(day => day.name === 'B Day')?.groups.map(group => group.id) ?? [];
+      expect(a_day_groups.length).toBe(4);
+      expect(b_day_groups.length).toBe(4);
+
+      // ASSERT
+      let index = 0;
+      for (const date of Array.from(meetingTimeMap.keys()).sort()) {
+        const groups = meetingTimeMap.get(date)!;
+        if (index % 2 === 0) {
+          expect(groups.sort()).toEqual(a_day_groups.sort());
+        } else {
+          expect(groups.sort()).toEqual(b_day_groups.sort());
+        }
+        index++;
+      }
     })
   })
 })
@@ -131,6 +164,7 @@ async function create_bladensburg_schedule(rbv_helper: RBVHelper) {
   // Add the A/B pattern for the day rules
   const dayRuleSet = DayLabelRuleSetFactory.build({
     scheduleId: schedule_id,
+    type: DayLabelRecurrenceRuleType.PATTERN_BASED,
     dayOfWeekRules: undefined,
   })
   dayRuleSet.patternBasedRules = [

@@ -31,6 +31,7 @@ export class BellScheduleBuilder {
         id: day.id,
         name: day.name,
         description: day.description ?? undefined,
+        groupIds: day.groups.map(group => group.id),
       })),
 
       // Transform variants with their time slots

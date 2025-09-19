@@ -15,16 +15,21 @@ import { LocalTimeRangeFactory } from '../../../../__tests__/util.factories';
 export const BellScheduleFactory = Factory.define<BellSchedule>(({ params }) => {
   const id = params.id ?? faker.string.uuid();
   const days = BellScheduleDayFactory.buildList(5, { scheduleId: id });
+  const variants = BellScheduleVariantFactory.buildList(2, { scheduleId: id });
+  const groups = days.flatMap(day => day.groups);
   return {
     name: faker.lorem.word(),
     id,
     description: faker.lorem.sentence(),
     activeDaysOfWeek: [1, 2, 3, 4, 5],
     days,
-    variants: [],
-    groups: [],
-    dayLabelRuleSet: null,
-    variantRuleSet: null,
+    variants,
+    groups,
+    dayLabelRuleSet: DayLabelRuleSetFactory.build({ scheduleId: id }),
+    variantRuleSet: VariantRuleSetFactory.build({
+      scheduleId: id,
+      defaultVariantId: variants[0].id,
+    }),
   };
 });
 
@@ -54,13 +59,17 @@ export const TimeSlotFactory = Factory.define<TimeSlot>(() => {
   };
 });
 
-export const BellScheduleDayFactory = Factory.define<BellScheduleDay>(() => ({
-  id: faker.string.uuid(),
-  scheduleId: faker.string.uuid(),
-  name: faker.lorem.word(),
-  description: faker.lorem.sentence(),
-  groups: [],
-}));
+export const BellScheduleDayFactory = Factory.define<BellScheduleDay>(({ params }) => {
+  const scheduleId = params.scheduleId ?? faker.string.uuid();
+  const groups = BellScheduleGroupFactory.buildList(2, { scheduleId });
+  return {
+    id: faker.string.uuid(),
+    scheduleId,
+    name: faker.lorem.word(),
+    description: faker.lorem.sentence(),
+    groups,
+  };
+});
 
 export const DayLabelRuleSetFactory = Factory.define<DayLabelRuleSet>(() => ({
   id: faker.string.uuid(),
