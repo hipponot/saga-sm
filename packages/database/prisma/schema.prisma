@@ -1,6 +1,3 @@
-// This is your Prisma schema file for RBV sector
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -41,8 +38,8 @@ model BellScheduleGroup {
 
   days          BellScheduleDay[]
 
-  // Index for query performance
-  @@index([scheduleId]) // For finding groups by schedule
+  // Database Optimization: Index for fast schedule group lookups
+  @@index([scheduleId], name: "idx_bell_schedule_group_schedule_id")
 }
 
 model BellScheduleDay {
@@ -59,8 +56,10 @@ model BellScheduleDay {
   dayOfWeekRules     DayOfWeekRule[]
   patternBasedRules  PatternBasedRule[]
 
-  // Composite unique constraint to enable composite FK from rules
-  @@unique([scheduleId, id])
+  // Database Optimization: Index for fast schedule day lookups by schedule
+  @@index([scheduleId], name: "idx_bell_schedule_day_schedule_id")
+  // Database Optimization: Compound index for name-based lookups within a schedule
+  @@index([scheduleId, name], name: "idx_bell_schedule_day_schedule_name")
 }
 
 model BellScheduleVariant {
@@ -76,6 +75,11 @@ model BellScheduleVariant {
   // Back-references for rules that reference this variant
   variantRuleSet   VariantRuleSet?
   exceptionRules   ExceptionBasedRule[]
+
+  // Database Optimization: Index for fast schedule variant lookups by schedule
+  @@index([scheduleId], name: "idx_bell_schedule_variant_schedule_id")
+  // Database Optimization: Compound index for name-based lookups within a schedule
+  @@index([scheduleId, name], name: "idx_bell_schedule_variant_schedule_name")
 }
 
 model TimeSlot {
@@ -86,6 +90,11 @@ model TimeSlot {
 
   variantId String
   variant   BellScheduleVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  // Database Optimization: Index for fast time slot lookups by variant
+  @@index([variantId], name: "idx_time_slot_variant_id")
+  // Database Optimization: Index for time-ordered queries (start time ordering)
+  @@index([variantId, start], name: "idx_time_slot_variant_start")
 }
 
 // Recurrence Rule Sets - Each schedule has exactly one of each type
@@ -112,6 +121,11 @@ model ExceptionBasedRule {
 
   variantRuleSetId String
   variantRuleSet   VariantRuleSet @relation(fields: [variantRuleSetId], references: [id], onDelete: Cascade)
+
+  // Database Optimization: Index for fast exception rule lookups by rule set
+  @@index([variantRuleSetId], name: "idx_exception_rule_rule_set_id")
+  // Database Optimization: Index for date-based exception lookups (most common query pattern)
+  @@index([variantRuleSetId, date], name: "idx_exception_rule_rule_set_date")
 }
 
 model DayLabelRuleSet {
@@ -140,7 +154,7 @@ model DayOfWeekRule {
 
   // Reference to the schedule day this rule applies
   scheduleDayId String
-  scheduleDay   BellScheduleDay @relation(fields: [scheduleId, scheduleDayId], references: [scheduleId, id], onDelete: Cascade)
+  scheduleDay   BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
 
   // Reference to the rule set
   ruleSetId   String
@@ -151,6 +165,10 @@ model DayOfWeekRule {
   schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@unique([ruleSetId, dayOfWeek]) // Ensure one rule per day of week per rule set
+  // Database Optimization: Index for fast day-of-week rule lookups by rule set
+  @@index([ruleSetId], name: "idx_day_of_week_rule_rule_set_id")
+  // Database Optimization: Compound index for day-of-week calculations (most common query)
+  @@index([ruleSetId, dayOfWeek], name: "idx_day_of_week_rule_rule_set_day")
 }
 
 // Pattern-based recurrence rules - each rule represents one position in the pattern
@@ -163,7 +181,7 @@ model PatternBasedRule {
 
   // Reference to the schedule day this rule applies
   scheduleDayId String
-  scheduleDay   BellScheduleDay @relation(fields: [scheduleId, scheduleDayId], references: [scheduleId, id], onDelete: Cascade)
+  scheduleDay   BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
 
   // Reference to the rule set
   ruleSetId   String
@@ -174,6 +192,10 @@ model PatternBasedRule {
   schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@unique([ruleSetId, patternPosition]) // Ensure unique positions within a pattern
+  // Database Optimization: Index for fast pattern-based rule lookups by rule set
+  @@index([ruleSetId], name: "idx_pattern_rule_rule_set_id")
+  // Database Optimization: Compound index for pattern position ordering (critical for pattern calculation)
+  @@index([ruleSetId, patternPosition], name: "idx_pattern_rule_rule_set_position")
 }
 
 enum DayLabelRecurrenceRuleType {

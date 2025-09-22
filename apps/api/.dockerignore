@@ -29,7 +29,6 @@ coverage/
 
 # Config files not needed for build
 .eslintrc.*
-.prettierrc.*
 .editorconfig
 .env*
 !.env.example

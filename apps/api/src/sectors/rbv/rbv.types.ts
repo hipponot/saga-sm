@@ -9,6 +9,7 @@ import {
   TimeSlot,
   ExceptionBasedRule,
   VariantRuleSet as PrismaVariantRuleSet,
+  DayLabelRecurrenceRuleType,
 } from '@repo/db';
 import { LocalDate, LocalDateTime } from '@js-joda/core';
 
@@ -22,7 +23,7 @@ export type BellSchedule = PrismaBellSchedule & {
   dayLabelRuleSet: DayLabelRuleSet | null;
   variantRuleSet: VariantRuleSet | null;
 };
-export type UpsertBellScheduleInput = Omit<PrismaBellSchedule, 'id'> & { id?: BellSchedule['id'] };
+
 export interface DeleteBellScheduleInput {
   id: BellSchedule['id'];
 }
@@ -31,53 +32,22 @@ export interface DeleteBellScheduleInput {
 export type BellScheduleDay = PrismaBellScheduleDay & {
   groups: BellScheduleGroup[];
 };
-export type UpsertBellScheduleDayInput = Omit<BellScheduleDay, 'id'> & {
-  id?: BellScheduleDay['id'];
-};
-export interface DeleteBellScheduleDayInput {
-  id: BellScheduleDay['id'];
-}
 
 // Bell Schedule Variant related types
 export type BellScheduleVariant = PrismaBellScheduleVariant & {
   timeSlots: TimeSlot[];
 };
-export type UpsertBellScheduleVariantInput = Omit<PrismaBellScheduleVariant, 'id'> & {
-  id?: BellScheduleVariant['id'];
-};
-export interface DeleteBellScheduleVariantInput {
-  id: BellScheduleVariant['id'];
-}
 
 export type VariantRuleSet = PrismaVariantRuleSet & {
   exceptions: ExceptionBasedRule[];
-}
-export type UpsertVariantRuleSetInput = Omit<VariantRuleSet, 'id'> & {
-  id?: VariantRuleSet['id'];
-};
-export interface DeleteVariantRuleSetInput {
-  id: VariantRuleSet['id'];
 }
 
 export type DayLabelRuleSet = PrismaDayLabelRuleSet & {
   dayOfWeekRules?: DayOfWeekRule[];
   patternBasedRules?: PatternBasedRule[];
 };
-export type UpsertDayLabelRuleSetInput = Omit<PrismaDayLabelRuleSet, 'id'> & {
-  id?: DayLabelRuleSet['id'];
-};
-export interface DeleteDayLabelRuleSetInput {
-  id: DayLabelRuleSet['id'];
-}
 
-// Time Slot related types
-export type UpsertTimeSlotInput = Omit<TimeSlot, 'id'> & {
-  id?: TimeSlot['id'];
-};
-export interface DeleteTimeSlotInput {
-  id: TimeSlot['id'];
-}
-
+// Business logic interfaces
 export interface CalculateMeetingTimesInput {
   scheduleId: string;
   dateRange: {
@@ -93,3 +63,183 @@ export interface MeetingTimes {
     end: LocalDateTime;
   }[];
 }
+
+// ============================================================================
+// AGGREGATE OPERATION TYPES - For creating/updating complete schedules
+// ============================================================================
+
+export interface CreateCompleteScheduleInput {
+  id?: string;
+  name: string;
+  description?: string;
+  activeDaysOfWeek: number[];
+
+  // Nested entities to create
+  days: Array<{
+    id?: string;
+    name: string;
+    description?: string;
+    groupIds?: string[]; // Reference groups by ID
+  }>;
+
+  variants: Array<{
+    id?: string;
+    name: string;
+    description?: string;
+    timeSlots: Array<{
+      id?: string;
+      name: string;
+      start: string;
+      end: string;
+    }>;
+  }>;
+
+  groups: Array<{
+    id?: string;
+    name: string;
+    description?: string;
+  }>;
+
+  // Rule sets - exactly one of each type per schedule
+  dayLabelRuleSet?: {
+    id?: string;
+    name: string;
+    type: DayLabelRecurrenceRuleType;
+    description?: string;
+    seedDate?: string;
+
+    // Rules - only include the appropriate type based on rule set type
+    dayOfWeekRules?: Array<{
+      id?: string;
+      dayOfWeek: number;
+      scheduleDayName: string; // Reference by name instead of ID for easier creation
+    }>;
+
+    patternBasedRules?: Array<{
+      id?: string;
+      patternPosition: number;
+      scheduleDayName: string; // Reference by name instead of ID for easier creation
+    }>;
+  };
+
+  variantRuleSet?: {
+    id?: string;
+    name: string;
+    description?: string;
+    defaultVariantName: string; // Reference by name instead of ID for easier creation
+
+    exceptions: Array<{
+      id?: string;
+      date: string; // YYYY-MM-DD format
+      variantName: string; // Reference by name instead of ID for easier creation
+    }>;
+  };
+}
+
+export interface UpdateCompleteScheduleInput {
+  id: string;
+  name?: string;
+  description?: string;
+  activeDaysOfWeek?: number[];
+
+  // For updates, we support adding, updating, and removing nested entities
+  days?: {
+    create?: Array<{
+      id?: string;
+      name: string;
+      description?: string;
+      groupIds?: string[]; // Reference groups by ID
+    }>;
+    update?: Array<{
+      id: string;
+      name?: string;
+      description?: string;
+      groupIds?: string[]; // Reference groups by ID
+    }>;
+    delete?: string[]; // Array of IDs to delete
+  };
+
+  variants?: {
+    create?: Array<{
+      id?: string;
+      name: string;
+      description?: string;
+      timeSlots: Array<{
+        id?: string;
+        name: string;
+        start: string;
+        end: string;
+      }>;
+    }>;
+    update?: Array<{
+      id: string;
+      name?: string;
+      description?: string;
+      timeSlots?: {
+        create?: Array<{
+          id?: string;
+          name: string;
+          start: string;
+          end: string;
+        }>;
+        update?: Array<{
+          id: string;
+          name?: string;
+          start?: string;
+          end?: string;
+        }>;
+        delete?: string[]; // Array of time slot IDs to delete
+      };
+    }>;
+    delete?: string[]; // Array of variant IDs to delete
+  };
+
+  groups?: {
+    create?: Array<{
+      id?: string;
+      name: string;
+      description?: string;
+    }>;
+    update?: Array<{
+      id: string;
+      name?: string;
+      description?: string;
+    }>;
+    delete?: string[]; // Array of group IDs to delete
+  };
+
+  // Rule set updates - replace entire rule sets for simplicity
+  dayLabelRuleSet?: {
+    id?: string;
+    name: string;
+    type: import('@repo/db').DayLabelRecurrenceRuleType;
+    description?: string;
+    seedDate?: string;
+
+    dayOfWeekRules?: Array<{
+      id?: string;
+      dayOfWeek: number;
+      scheduleDayName: string;
+    }>;
+
+    patternBasedRules?: Array<{
+      id?: string;
+      patternPosition: number;
+      scheduleDayName: string;
+    }>;
+  };
+
+  variantRuleSet?: {
+    id?: string;
+    name: string;
+    description?: string;
+    defaultVariantName: string;
+
+    exceptions: Array<{
+      id?: string;
+      date: string;
+      variantName: string;
+    }>;
+  };
+}
+

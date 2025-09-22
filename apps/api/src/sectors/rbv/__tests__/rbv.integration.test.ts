@@ -1,4 +1,4 @@
-// rbv.unit.test.ts
+import { faker } from '@faker-js/faker';
 import {
   describe,
   it,
@@ -6,26 +6,24 @@ import {
   beforeEach,
   afterEach,
 } from 'vitest'
-import { Container } from 'inversify'
-import { RBVHelper } from '../rbv_helper'
 import {
-  UpsertBellScheduleInputFactory,
-  BellScheduleFactory,
   BellScheduleDayFactory,
   BellScheduleGroupFactory,
   BellScheduleVariantFactory,
-  TimeSlotFactory,
   DayLabelRuleSetFactory,
+  TimeSlotFactory,
   PatternBasedRuleFactory,
   VariantRuleSetFactory,
   ExceptionBasedRuleFactory,
-} from './builders/rbv.factories'
-import { BellSchedule } from '../rbv.types'
-import { BellScheduleBuilder } from './builders/rbv.builders'
-import { prisma } from '@repo/db'
-import type { ILogger } from '@hipponot/soa-logger'
-import { faker } from '@faker-js/faker'
-import { LocalDate } from '@js-joda/core'
+  BellScheduleFactory,
+} from './builders/rbv.factories';
+import { LocalDate } from '@js-joda/core';
+import { BellScheduleBuilder } from './builders/rbv.builders';
+import { DayLabelRecurrenceRuleType, prisma } from '@repo/db';
+import { RBVHelper } from '../rbv_helper';
+import { Container } from 'inversify';
+import { ILogger } from '@hipponot/soa-logger';
+import { BellSchedule } from '../rbv.types';
 
 const mockLogger: ILogger = {
   info: console.log,
@@ -34,7 +32,7 @@ const mockLogger: ILogger = {
   debug: console.log,
 }
 
-describe.sequential('RBVHelper', () => {
+describe('RBVHelper', () => {
   let container: Container
   let rbv_helper: RBVHelper
 
@@ -43,175 +41,65 @@ describe.sequential('RBVHelper', () => {
     container.bind('ILogger').toConstantValue(mockLogger)
     container.bind<RBVHelper>('RBVHelper').to(RBVHelper)
     rbv_helper = container.get('RBVHelper')
-
-    // Clean up all test data
-    await prisma.bellScheduleVariant.deleteMany()
-    await prisma.bellSchedule.deleteMany()
-    await prisma.dayLabelRuleSet.deleteMany()
-    await prisma.dayOfWeekRule.deleteMany()
-    await prisma.patternBasedRule.deleteMany()
   })
 
-  afterEach(() => {
-    container.unbindAll()
-  })
-
-  describe('Bell Schedule CRUD', () => {
-    describe('Bell Schedule Retrieval', () => {
-      it('retrieves a bell schedule by id', async () => {
-        // ARRANGE
-        const schedule = UpsertBellScheduleInputFactory.build({ id: faker.string.uuid() })
-        await prisma.bellSchedule.create({ data: schedule })
-
-        // ACT
-        const res = await rbv_helper.get_schedule(schedule.id!)
-        if (!res.success) throw new Error(res.message)
-        const retrieved_schedule = res.data
-
-        // ASSERT
-        expect(retrieved_schedule).toEqual(
-          expect.objectContaining({
-            id: schedule.id,
-            name: schedule.name,
-            description: schedule.description,
-          })
-        )
-      })
-
-      it('returns an error if the bell schedule does not exist', async () => {
-        // ARRANGE
-        // ACT
-        const res = await rbv_helper.get_schedule('nonexistent-id')
-
-        // ASSERT
-        expect(res.success).toBe(false)
-        expect(res.message).toBe('Requested bell schedule not found')
-      })
-    })
-
-    describe('Bell Schedule Creation & Update', () => {
-      it('creates a bell schedule without specifying an id', async () => {
-        // ARRANGE
-        const input = UpsertBellScheduleInputFactory.build({
-          id: undefined,
-        })
-
-        // ACT
-        const res = await rbv_helper.upsert_schedule(input)
-        if (!res.success) throw new Error(res.message)
-        const created_schedule = res.data
-
-        // ASSERT
-        expect(created_schedule).toEqual(
-          expect.objectContaining({
-            name: input.name,
-            description: input.description,
-          })
-        )
-        expect(created_schedule.id).toBeDefined()
-      })
-
-      it('creates a bell schedule with a specified id', async () => {
-        // ARRANGE
-        const input = UpsertBellScheduleInputFactory.build({
-          id: 'test-schedule-id',
-        })
-
-        // ACT
-        const res = await rbv_helper.upsert_schedule(input)
-        if (!res.success) throw new Error(res.message)
-        const created_schedule = res.data
-
-        // ASSERT
-        expect(created_schedule).toEqual(
-          expect.objectContaining({
-            id: 'test-schedule-id',
-            name: input.name,
-            description: input.description,
-          })
-        )
-      })
-
-      it('Updates an existing bell schedule without modifying the variants', async () => {
-        // ARRANGE
-        const schedule = UpsertBellScheduleInputFactory.build({ id: faker.string.uuid() })
-        await prisma.bellSchedule.create({ data: schedule })
-
-        // ACT
-        const res = await rbv_helper.upsert_schedule({
-          ...schedule,
-          name: 'New Name',
-        })
-        if (!res.success) throw new Error(res.message)
-        const returned_schedule = res.data
-        const fetched_schedule = await prisma.bellSchedule.findUnique({
-          where: { id: schedule.id },
-        })
-
-        // ASSERT
-        expect(returned_schedule.name).toBe('New Name')
-        expect(returned_schedule.id).toBe(schedule.id)
-        expect(fetched_schedule?.name).toBe('New Name')
-      })
-    })
-
-    describe('Bell Schedule Deletion', () => {
-      it('deletes a bell schedule by id', async () => {
-        // ARRANGE
-        const schedule = UpsertBellScheduleInputFactory.build({ id: faker.string.uuid() })
-        await prisma.bellSchedule.create({ data: schedule })
-
-        // ACT
-        const res = await rbv_helper.delete_schedule({ id: schedule.id! })
-        if (!res.success) throw new Error(res.message)
-
-        // ASSERT
-        const fetched_schedule = await prisma.bellSchedule.findUnique({
-          where: { id: schedule.id },
-        })
-        expect(fetched_schedule).toBeNull()
-      })
-    })
-  })
-
-  describe('Bell Schedule Variant CUD', () => {
-    let schedule: BellSchedule
-
+  describe('Bladensburg Example', () => {
+    let schedule: BellSchedule;
     beforeEach(async () => {
-      const schedule_input = UpsertBellScheduleInputFactory.build({ id: faker.string.uuid() })
-      await prisma.bellSchedule.create({ data: schedule_input })
+      await prisma.bellSchedule.deleteMany();
 
-      schedule = {
-        ...schedule_input,
-        id: schedule_input.id!,
-        days: [],
-        variants: [],
-        groups: [],
-        dayLabelRuleSet: null,
-        variantRuleSet: null,
+      schedule = await create_bladensburg_schedule(rbv_helper);
+    })
+
+    it('request for the next week of meeting times gives alternating A and B days', async () => {
+      // ARRANGE
+
+      // ACT
+      const meetingTimeRes = await rbv_helper.calculate_meeting_times({
+        scheduleId: schedule.id,
+        dateRange: {
+          start: LocalDate.now(),
+          end: LocalDate.now().plusDays(7),
+        },
+      });
+      if (!meetingTimeRes.success) {
+        throw new Error('Failed to calculate meeting times');
       }
-    })
 
-    describe('Bell Schedule Variant Creation', () => {
-      it('Adds a new variant to a bell schedule', async () => {
-        expect(true).toBe(true)
-      })
-    })
-  })
+      // Determine which groups meet on each day
+      const meetingTimeMap = new Map<string, string[]>(); // date -> groups that meet on that date
+      for (const groupMeetings of meetingTimeRes.data) {
+        for (const meeting of groupMeetings.meetingTimes) {
+          const date = meeting.start.toLocalDate();
+          if (!meetingTimeMap.get(date.toString())) {
+            meetingTimeMap.set(date.toString(), []);
+          }
+          meetingTimeMap.get(date.toString())!.push(groupMeetings.scheduleGroupId);
+        }
+      }
 
-  describe('Meeting Time Calculations', () => {
-    describe('Day-Based Day Rules', () => {
-      it('calculates the meeting times for a given date range', async () => {
-        // ARRANGE
-        const schedule = BellScheduleFactory.build()
-        const schedule_day = BellScheduleDayFactory.build()
-        expect(true).toBe(true)
-      })
+      // Split the groups into the A day and B day groups
+      const a_day_groups = schedule.days.find(day => day.name === 'A Day')?.groups.map(group => group.id) ?? [];
+      const b_day_groups = schedule.days.find(day => day.name === 'B Day')?.groups.map(group => group.id) ?? [];
+      expect(a_day_groups.length).toBe(4);
+      expect(b_day_groups.length).toBe(4);
+
+      // ASSERT
+      let index = 0;
+      for (const date of Array.from(meetingTimeMap.keys()).sort()) {
+        const groups = meetingTimeMap.get(date)!;
+        if (index % 2 === 0) {
+          expect(groups.sort()).toEqual(a_day_groups.sort());
+        } else {
+          expect(groups.sort()).toEqual(b_day_groups.sort());
+        }
+        index++;
+      }
     })
   })
 })
 
-async function create_bladensburg_schedule() {
+async function create_bladensburg_schedule(rbv_helper: RBVHelper) {
   const schedule_id = faker.string.uuid()
 
   // Add the groupings for the A and B days
@@ -276,6 +164,7 @@ async function create_bladensburg_schedule() {
   // Add the A/B pattern for the day rules
   const dayRuleSet = DayLabelRuleSetFactory.build({
     scheduleId: schedule_id,
+    type: DayLabelRecurrenceRuleType.PATTERN_BASED,
     dayOfWeekRules: undefined,
   })
   dayRuleSet.patternBasedRules = [
@@ -318,8 +207,8 @@ async function create_bladensburg_schedule() {
     variantRuleSet: variantRuleSet,
   })
 
-  const builder = new BellScheduleBuilder(schedule, prisma);
+  const builder = new BellScheduleBuilder(rbv_helper, schedule, prisma);
   await builder.build();
 
-  return schedule
+  return schedule;
 }
