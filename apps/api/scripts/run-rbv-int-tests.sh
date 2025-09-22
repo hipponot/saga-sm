@@ -30,10 +30,12 @@ DESCRIPTION:
     isolated environment. This script is designed for local development only.
 
 USAGE:
-    ./run-rbv-int-tests.sh [OPTIONS]
+    ./run-rbv-int-tests.sh [OPTIONS] [-- VITEST_OPTIONS]
 
 OPTIONS:
-    -h, --help      Show this help message and exit
+    -h, --help              Show this help message and exit
+    -t, --testNamePattern   Run only tests matching this pattern (passed to vitest)
+    --                      Pass remaining arguments directly to vitest
 
 ENVIRONMENT VARIABLES:
     POSTGRES_TIMEOUT        Timeout in seconds for PostgreSQL startup (default: 30)
@@ -60,13 +62,18 @@ STEPS PERFORMED:
     13. Run integration tests
 
 EXAMPLES:
-    ./run-rbv-int-tests.sh                          # Normal execution
-    POSTGRES_TIMEOUT=60 ./run-rbv-int-tests.sh      # Custom timeout
-    FORCE_LOCAL_DB=true ./run-rbv-int-tests.sh      # Bypass local check
+    ./run-rbv-int-tests.sh                              # Run all tests
+    ./run-rbv-int-tests.sh -t "should create user"      # Run specific test
+    ./run-rbv-int-tests.sh -- --reporter=verbose        # Pass options to vitest
+    POSTGRES_TIMEOUT=60 ./run-rbv-int-tests.sh          # Custom timeout
+    FORCE_LOCAL_DB=true ./run-rbv-int-tests.sh          # Bypass local check
 
 For more information, see the project documentation.
 EOF
 }
+
+# Variable to store vitest arguments
+VITEST_ARGS=""
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -74,6 +81,20 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             show_help
             exit 0
+            ;;
+        -t|--testNamePattern)
+            if [[ -z "$2" || "$2" == -* ]]; then
+                echo -e "${RED}❌ Option $1 requires an argument${NC}"
+                exit 1
+            fi
+            VITEST_ARGS="$VITEST_ARGS -t \"$2\""
+            shift 2
+            ;;
+        --)
+            # Pass all remaining arguments to vitest
+            shift
+            VITEST_ARGS="$VITEST_ARGS $*"
+            break
             ;;
         *)
             echo -e "${RED}❌ Unknown option: $1${NC}"
@@ -270,9 +291,13 @@ fi
 
 # Step 8: Run integration tests
 echo -e "${GREEN}🧪 Running RBV integration tests...${NC}"
+if [ -n "$VITEST_ARGS" ]; then
+    echo -e "${YELLOW}📌 Running with vitest options:${VITEST_ARGS}${NC}"
+fi
 
 # Run the tests (using subshell to avoid permanent directory change)
-if (cd "${PROJECT_ROOT}/apps/api" && pnpm test:integration); then
+# Use eval to properly handle the quoted arguments in VITEST_ARGS
+if (cd "${PROJECT_ROOT}/apps/api" && eval "pnpm test:integration $VITEST_ARGS"); then
     echo -e "${GREEN}✅ Integration tests completed successfully!${NC}"
     exit 0
 else
