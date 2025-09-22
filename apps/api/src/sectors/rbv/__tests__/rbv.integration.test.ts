@@ -53,6 +53,9 @@ describe('RBVHelper', () => {
 
     it('request for the next week of meeting times gives alternating A and B days', async () => {
       // ARRANGE
+      // Ensure clean state before this specific test
+      await prisma.bellSchedule.deleteMany();
+      schedule = await create_bladensburg_schedule(rbv_helper);
 
       // ACT
       const meetingTimeRes = await rbv_helper.calculate_meeting_times({
