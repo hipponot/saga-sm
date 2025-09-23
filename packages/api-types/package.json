@@ -33,8 +33,8 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
-    "@hipponot/soa-trpc-codegen": "file:../../../../saga-soa/packages/trpc-codegen",
-    "@hipponot/soa-zod2ts": "file:../../../../saga-soa/build-tools/zod2ts",
+    "@hipponot/soa-trpc-codegen": "file:../../../saga-soa/packages/trpc-codegen",
+    "@hipponot/soa-zod2ts": "file:../../../saga-soa/build-tools/zod2ts",
     "@trpc/client": "^11.5.1",
     "@trpc/server": "^11.5.1",
     "@types/node": "^22.10.1",

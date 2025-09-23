@@ -16,7 +16,7 @@ import {
   type DeleteExampleZ,
   type ExampleDataZ,
   type DiscriminatedUnionZ,
-} from './schema/example-schemas.js'
+} from '@saga-sm/api-types/schemas'
 
 @injectable()
 export class ExampleController extends AbstractTRPCController {

@@ -38,7 +38,7 @@
     "@js-joda/core": "^5.6.5",
     "@prisma/client": "^6.16.0",
     "@repo/db": "workspace:*",
-    "@saga-sm/api-types": "file:./api-types",
+    "@saga-sm/api-types": "workspace:*",
     "guid-typescript": "^1.0.9",
     "inversify": "^6.0.2",
     "reflect-metadata": "^0.2.2",

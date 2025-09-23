@@ -3,7 +3,7 @@ import { AbstractTRPCController, router } from '@hipponot/soa-api-core/abstract-
 import type { ILogger } from '@hipponot/soa-logger'
 import { z } from 'zod'
 import { randomUUID } from 'node:crypto'
-import { PingMessageSchema, type PingMessageZ } from './schema/pubsub-schemas.js'
+import { PingMessageSchema, type PingMessageZ } from '@saga-sm/api-types/schemas'
 import type { PubSubService } from '../../../services/pubsub.service.js'
 
 @injectable()

@@ -8,7 +8,7 @@ import { ExampleController } from '../example-router';
 import { ExampleHelper } from '../../helpers/example_helper';
 import type { ILogger } from '@hipponot/soa-logger';
 import type { IExampleHelper } from '../../helpers/example_helper';
-import type { DiscriminatedUnionZ } from '../schema/example-schemas';
+import type { DiscriminatedUnionZ } from '@saga-sm/api-types/schemas';
 import 'reflect-metadata';
 
 const mockLogger: ILogger = {
