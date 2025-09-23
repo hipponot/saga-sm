@@ -1,0 +1,9 @@
+# Build output
+dist/
+generated/
+
+# Dependencies
+node_modules/
+
+# Turbo
+.turbo/
