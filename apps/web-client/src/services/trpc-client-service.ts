@@ -61,19 +61,19 @@ export class TrpcClientService implements ServiceInterface {
 
             switch (endpoint.id) {
                 case 'example.queryExamples':
-                    result = await this.client.example.queryExamples.query(parsedInput as any || {})
+                    result = await this.client.example.queryExamples.query(parsedInput as never || {})
                     break
                 case 'example.getExampleById':
-                    result = await this.client.example.getExampleById.query(parsedInput as any)
+                    result = await this.client.example.getExampleById.query(parsedInput as never)
                     break
                 case 'example.createExample':
-                    result = await this.client.example.createExample.mutate(parsedInput as any)
+                    result = await this.client.example.createExample.mutate(parsedInput as never)
                     break
                 case 'example.updateExample':
-                    result = await this.client.example.updateExample.mutate(parsedInput as any)
+                    result = await this.client.example.updateExample.mutate(parsedInput as never)
                     break
                 case 'example.deleteExample':
-                    result = await this.client.example.deleteExample.mutate(parsedInput as any)
+                    result = await this.client.example.deleteExample.mutate(parsedInput as never)
                     break
                 default:
                     throw new Error(`Unknown endpoint: ${endpoint.id}`)

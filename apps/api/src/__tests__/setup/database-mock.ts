@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
-import type { PrismaClient } from '@repo/db';
+import { vi } from "vitest";
+import type { PrismaClient } from "@repo/db";
 
 // Mock Prisma client with comprehensive database operations
 export const createMockPrismaClient = () => {
@@ -107,9 +107,9 @@ export const createMockPrismaClient = () => {
 // Mock factory functions for creating test data
 export const mockBellScheduleFactory = {
   build: (overrides: Partial<any> = {}) => ({
-    id: 'schedule-1',
-    name: 'Test Schedule',
-    description: 'Test schedule description',
+    id: "schedule-1",
+    name: "Test Schedule",
+    description: "Test schedule description",
     activeDaysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
     ...overrides,
   }),
@@ -117,21 +117,21 @@ export const mockBellScheduleFactory = {
 
 export const mockBellScheduleDayFactory = {
   build: (overrides: Partial<any> = {}) => ({
-    id: 'day-1',
-    name: 'Regular Day',
-    description: 'Regular school day',
-    scheduleId: 'schedule-1',
+    id: "day-1",
+    name: "Regular Day",
+    description: "Regular school day",
+    scheduleId: "schedule-1",
     ...overrides,
   }),
 };
 
 export const mockTimeSlotFactory = {
   build: (overrides: Partial<any> = {}) => ({
-    id: 'slot-1',
-    name: 'Period 1',
-    start: '08:00',
-    end: '09:00',
-    scheduleId: 'schedule-1',
+    id: "slot-1",
+    name: "Period 1",
+    start: "08:00",
+    end: "09:00",
+    scheduleId: "schedule-1",
     ...overrides,
   }),
 };
@@ -141,9 +141,9 @@ export const mockPrisma = createMockPrismaClient();
 
 // Helper function to reset all mocks
 export const resetDatabaseMocks = () => {
-  Object.values(mockPrisma).forEach(model => {
-    if (typeof model === 'object' && model !== null) {
-      Object.values(model).forEach(method => {
+  Object.values(mockPrisma).forEach((model) => {
+    if (typeof model === "object" && model !== null) {
+      Object.values(model).forEach((method) => {
         if (vi.isMockFunction(method)) {
           method.mockClear();
         }

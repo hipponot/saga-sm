@@ -450,7 +450,10 @@ To run the deployment scripts successfully, your AWS credentials need these perm
         "iam:DeleteRolePolicy",
         "iam:PassRole"
       ],
-      "Resource": ["arn:aws:iam::*:role/saga-sm-*", "arn:aws:iam::*:role/aws-sam-cli-managed-*"]
+      "Resource": [
+        "arn:aws:iam::*:role/saga-sm-*",
+        "arn:aws:iam::*:role/aws-sam-cli-managed-*"
+      ]
     },
     {
       "Sid": "CloudWatchLogs",
@@ -479,7 +482,10 @@ To run the deployment scripts successfully, your AWS credentials need these perm
         "s3:ListBucket",
         "s3:GetBucketLocation"
       ],
-      "Resource": ["arn:aws:s3:::aws-sam-cli-managed-*", "arn:aws:s3:::aws-sam-cli-managed-*/*"]
+      "Resource": [
+        "arn:aws:s3:::aws-sam-cli-managed-*",
+        "arn:aws:s3:::aws-sam-cli-managed-*/*"
+      ]
     }
   ]
 }

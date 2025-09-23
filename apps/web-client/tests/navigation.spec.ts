@@ -60,10 +60,10 @@ test.describe('Navigation and Basic Functionality', () => {
             // Verify page loaded successfully (has a title and body content)
             const title = await page.title()
             const bodyText = await page.textContent('body')
-            
+
             expect(title).toBeTruthy()
             expect(bodyText).toBeTruthy()
-            expect(bodyText.length).toBeGreaterThan(100) // Should have substantial content
+            expect(bodyText?.length).toBeGreaterThan(100) // Should have substantial content
         }
     })
 })

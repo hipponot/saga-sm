@@ -1,7 +1,10 @@
-import { injectable, inject } from 'inversify'
-import { AbstractTRPCController, router } from '@hipponot/soa-api-core/abstract-trpc-controller'
-import type { ILogger } from '@hipponot/soa-logger'
-import type { IExampleHelper } from '../helpers/example_helper.js'
+import { injectable, inject } from "inversify";
+import {
+  AbstractTRPCController,
+  router,
+} from "@hipponot/soa-api-core/abstract-trpc-controller";
+import type { ILogger } from "@hipponot/soa-logger";
+import type { IExampleHelper } from "../helpers/example_helper.js";
 import {
   CreateExampleSchema,
   UpdateExampleSchema,
@@ -16,15 +19,15 @@ import {
   type DeleteExampleZ,
   type ExampleDataZ,
   type DiscriminatedUnionZ,
-} from '@saga-sm/api-types/schemas'
+} from "@saga-sm/api-types/schemas";
 
 @injectable()
 export class ExampleController extends AbstractTRPCController {
-  readonly sectorName = 'example';
+  readonly sectorName = "example";
 
   constructor(
-    @inject('ILogger') logger: ILogger,
-    @inject('IExampleHelper') private exampleHelper: IExampleHelper
+    @inject("ILogger") logger: ILogger,
+    @inject("IExampleHelper") private exampleHelper: IExampleHelper,
   ) {
     super(logger);
   }
@@ -48,20 +51,22 @@ export class ExampleController extends AbstractTRPCController {
         }),
 
       // Get example by ID
-      getExampleById: t.input(GetExampleSchema).query(async ({ input }: { input: GetExampleZ }) => {
-        const mockExample: ExampleDataZ = {
-          id: input.id,
-          title: this.exampleHelper.formatTitle('Sample Example'),
-          description: 'Sample example description',
-          status: 'draft',
-          priority: 'medium',
-          tags: [],
-          metadata: {},
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        return mockExample;
-      }),
+      getExampleById: t
+        .input(GetExampleSchema)
+        .query(async ({ input }: { input: GetExampleZ }) => {
+          const mockExample: ExampleDataZ = {
+            id: input.id,
+            title: this.exampleHelper.formatTitle("Sample Example"),
+            description: "Sample example description",
+            status: "draft",
+            priority: "medium",
+            tags: [],
+            metadata: {},
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          return mockExample;
+        }),
 
       // Create new example
       createExample: t
@@ -86,13 +91,18 @@ export class ExampleController extends AbstractTRPCController {
       updateExample: t
         .input(UpdateExampleSchema)
         .mutation(async ({ input }: { input: UpdateExampleZ }) => {
-          if (input.status && !this.exampleHelper.validateStatus(input.status)) {
+          if (
+            input.status &&
+            !this.exampleHelper.validateStatus(input.status)
+          ) {
             throw new Error(`Invalid status: ${input.status}`);
           }
 
           const updatedExample: Partial<ExampleDataZ> = {
             ...input,
-            ...(input.title && { title: this.exampleHelper.formatTitle(input.title) }),
+            ...(input.title && {
+              title: this.exampleHelper.formatTitle(input.title),
+            }),
             ...(input.tags && {
               priority: this.exampleHelper.calculatePriority(input.tags),
             }),
@@ -109,7 +119,7 @@ export class ExampleController extends AbstractTRPCController {
           return {
             success: true,
             deletedId: input.id,
-            message: 'Example deleted successfully',
+            message: "Example deleted successfully",
           };
         }),
 
@@ -117,11 +127,11 @@ export class ExampleController extends AbstractTRPCController {
       getDiscriminatedUnion: t.query(async (): Promise<DiscriminatedUnionZ> => {
         // Return a mock discriminated union object
         const mockDiscriminatedUnion: DiscriminatedUnionZ = {
-          type: 'user',
-          id: 'user-123',
-          name: 'John Doe',
-          email: 'john.doe@example.com',
-          role: 'admin',
+          type: "user",
+          id: "user-123",
+          name: "John Doe",
+          email: "john.doe@example.com",
+          role: "admin",
         };
         return mockDiscriminatedUnion;
       }),

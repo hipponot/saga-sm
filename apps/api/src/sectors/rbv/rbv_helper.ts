@@ -1,5 +1,5 @@
-import { DataResponse, ID, StatusResponse } from './base.types.js';
-import { inject, injectable } from 'inversify';
+import { DataResponse, ID, StatusResponse } from "./base.types.js";
+import { inject, injectable } from "inversify";
 import {
   BellSchedule,
   BellScheduleDay,
@@ -11,9 +11,9 @@ import {
   VariantRuleSet,
   CreateCompleteScheduleInput,
   UpdateCompleteScheduleInput,
-} from './rbv.types.js';
-import { Guid } from 'guid-typescript';
-import { type ILogger } from '@hipponot/soa-logger';
+} from "./rbv.types.js";
+import { Guid } from "guid-typescript";
+import { type ILogger } from "@hipponot/soa-logger";
 
 import {
   BellScheduleGroup,
@@ -23,18 +23,18 @@ import {
   TimeSlot,
   ExceptionBasedRule,
   prisma,
-} from '@repo/db';
-import { ChronoUnit, LocalDate, LocalDateTime, LocalTime } from '@js-joda/core';
+} from "@repo/db";
+import { ChronoUnit, LocalDate, LocalDateTime, LocalTime } from "@js-joda/core";
 
-export const BELL_SCHEDULE_COLLECTION = 'bell_schedules';
-export const BELL_SCHEDULE_VARIANT_COLLECTION = 'bell_schedule_variants';
-export const PERIOD_COLLECTION = 'periods';
+export const BELL_SCHEDULE_COLLECTION = "bell_schedules";
+export const BELL_SCHEDULE_VARIANT_COLLECTION = "bell_schedule_variants";
+export const PERIOD_COLLECTION = "periods";
 
 @injectable()
 export class RBVHelper {
   private log: ILogger;
 
-  constructor(@inject('ILogger') log: ILogger) {
+  constructor(@inject("ILogger") log: ILogger) {
     this.log = log;
   }
 
@@ -67,29 +67,31 @@ export class RBVHelper {
       },
     });
     if (!schedule) {
-      const msg = 'Requested bell schedule not found';
+      const msg = "Requested bell schedule not found";
       this.log.error(msg);
       return { success: false, message: msg };
     }
     return { success: true, data: schedule };
   }
 
-  public async delete_schedule(input: DeleteBellScheduleInput): Promise<StatusResponse> {
+  public async delete_schedule(
+    input: DeleteBellScheduleInput,
+  ): Promise<StatusResponse> {
     try {
       const res = await prisma.bellSchedule.delete({ where: { id: input.id } });
       /* istanbul ignore if */
       if (!res) {
         this.log.error(`Failed to delete bell schedule`);
-        return { success: false, message: 'Failed to delete bell schedule' };
+        return { success: false, message: "Failed to delete bell schedule" };
       }
       return { success: true };
     } catch (error: any) {
-      if (error.code === 'P2025') {
+      if (error.code === "P2025") {
         // Record not found
-        return { success: false, message: 'Requested bell schedule not found' };
+        return { success: false, message: "Requested bell schedule not found" };
       }
       this.log.error(`Failed to delete bell schedule: ${error.message}`);
-      return { success: false, message: 'Failed to delete bell schedule' };
+      return { success: false, message: "Failed to delete bell schedule" };
     }
   }
 
@@ -107,7 +109,7 @@ export class RBVHelper {
    * - Single transaction reduces database round trips and ensures data consistency
    */
   public async createCompleteSchedule(
-    input: CreateCompleteScheduleInput
+    input: CreateCompleteScheduleInput,
   ): Promise<DataResponse<BellSchedule>> {
     try {
       const result = await prisma.$transaction(async (tx) => {
@@ -146,11 +148,14 @@ export class RBVHelper {
               description: dayInput.description,
               scheduleId: schedule.id,
               // Connect to groups if specified
-              ...(dayInput.groupIds && dayInput.groupIds.length > 0 && {
-                groups: {
-                  connect: dayInput.groupIds.map(groupId => ({ id: groupId }))
-                }
-              })
+              ...(dayInput.groupIds &&
+                dayInput.groupIds.length > 0 && {
+                  groups: {
+                    connect: dayInput.groupIds.map((groupId) => ({
+                      id: groupId,
+                    })),
+                  },
+                }),
             },
           });
           createdDays.push({ id: day.id, name: day.name });
@@ -200,9 +205,13 @@ export class RBVHelper {
           // Create day of week rules if provided
           if (ruleSetInput.dayOfWeekRules) {
             for (const ruleInput of ruleSetInput.dayOfWeekRules) {
-              const scheduleDayId = createdDays.find(d => d.name === ruleInput.scheduleDayName)?.id;
+              const scheduleDayId = createdDays.find(
+                (d) => d.name === ruleInput.scheduleDayName,
+              )?.id;
               if (!scheduleDayId) {
-                throw new Error(`Schedule day with name "${ruleInput.scheduleDayName}" not found`);
+                throw new Error(
+                  `Schedule day with name "${ruleInput.scheduleDayName}" not found`,
+                );
               }
 
               await tx.dayOfWeekRule.create({
@@ -220,9 +229,13 @@ export class RBVHelper {
           // Create pattern based rules if provided
           if (ruleSetInput.patternBasedRules) {
             for (const ruleInput of ruleSetInput.patternBasedRules) {
-              const scheduleDayId = createdDays.find(d => d.name === ruleInput.scheduleDayName)?.id;
+              const scheduleDayId = createdDays.find(
+                (d) => d.name === ruleInput.scheduleDayName,
+              )?.id;
               if (!scheduleDayId) {
-                throw new Error(`Schedule day with name "${ruleInput.scheduleDayName}" not found`);
+                throw new Error(
+                  `Schedule day with name "${ruleInput.scheduleDayName}" not found`,
+                );
               }
 
               await tx.patternBasedRule.create({
@@ -241,9 +254,13 @@ export class RBVHelper {
         // 6. Create variant rule set if provided
         if (input.variantRuleSet) {
           const ruleSetInput = input.variantRuleSet;
-          const defaultVariantId = createdVariants.find(v => v.name === ruleSetInput.defaultVariantName)?.id;
+          const defaultVariantId = createdVariants.find(
+            (v) => v.name === ruleSetInput.defaultVariantName,
+          )?.id;
           if (!defaultVariantId) {
-            throw new Error(`Default variant with name "${ruleSetInput.defaultVariantName}" not found`);
+            throw new Error(
+              `Default variant with name "${ruleSetInput.defaultVariantName}" not found`,
+            );
           }
 
           const variantRuleSet = await tx.variantRuleSet.create({
@@ -258,9 +275,13 @@ export class RBVHelper {
 
           // Create exception rules
           for (const exceptionInput of ruleSetInput.exceptions) {
-            const variantId = createdVariants.find(v => v.name === exceptionInput.variantName)?.id;
+            const variantId = createdVariants.find(
+              (v) => v.name === exceptionInput.variantName,
+            )?.id;
             if (!variantId) {
-              throw new Error(`Exception variant with name "${exceptionInput.variantName}" not found`);
+              throw new Error(
+                `Exception variant with name "${exceptionInput.variantName}" not found`,
+              );
             }
 
             await tx.exceptionBasedRule.create({
@@ -285,9 +306,13 @@ export class RBVHelper {
 
       return { success: true, data: schedule_res.data };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       this.log.error(`Failed to create complete schedule: ${errorMessage}`);
-      return { success: false, message: `Failed to create complete schedule: ${errorMessage}` };
+      return {
+        success: false,
+        message: `Failed to create complete schedule: ${errorMessage}`,
+      };
     }
   }
 
@@ -303,18 +328,26 @@ export class RBVHelper {
    *   to simplify the logic and reduce complexity
    */
   public async updateCompleteSchedule(
-    input: UpdateCompleteScheduleInput
+    input: UpdateCompleteScheduleInput,
   ): Promise<DataResponse<BellSchedule>> {
     try {
       await prisma.$transaction(async (tx) => {
         // 1. Update the main schedule properties if provided
-        if (input.name !== undefined || input.description !== undefined || input.activeDaysOfWeek !== undefined) {
+        if (
+          input.name !== undefined ||
+          input.description !== undefined ||
+          input.activeDaysOfWeek !== undefined
+        ) {
           await tx.bellSchedule.update({
             where: { id: input.id },
             data: {
               ...(input.name !== undefined && { name: input.name }),
-              ...(input.description !== undefined && { description: input.description }),
-              ...(input.activeDaysOfWeek !== undefined && { activeDaysOfWeek: input.activeDaysOfWeek }),
+              ...(input.description !== undefined && {
+                description: input.description,
+              }),
+              ...(input.activeDaysOfWeek !== undefined && {
+                activeDaysOfWeek: input.activeDaysOfWeek,
+              }),
             },
           });
         }
@@ -336,7 +369,9 @@ export class RBVHelper {
             for (const dayUpdate of input.days.update) {
               const updateData: any = {
                 ...(dayUpdate.name !== undefined && { name: dayUpdate.name }),
-                ...(dayUpdate.description !== undefined && { description: dayUpdate.description }),
+                ...(dayUpdate.description !== undefined && {
+                  description: dayUpdate.description,
+                }),
               };
 
               // Handle group connections if specified
@@ -346,7 +381,9 @@ export class RBVHelper {
                   updateData.groups = { set: [] };
                 } else {
                   // Connect to specified groups
-                  updateData.groups = { set: dayUpdate.groupIds.map(groupId => ({ id: groupId })) };
+                  updateData.groups = {
+                    set: dayUpdate.groupIds.map((groupId) => ({ id: groupId })),
+                  };
                 }
               }
 
@@ -367,11 +404,14 @@ export class RBVHelper {
                   description: dayCreate.description,
                   scheduleId: input.id,
                   // Connect to groups if specified
-                  ...(dayCreate.groupIds && dayCreate.groupIds.length > 0 && {
-                    groups: {
-                      connect: dayCreate.groupIds.map(groupId => ({ id: groupId }))
-                    }
-                  })
+                  ...(dayCreate.groupIds &&
+                    dayCreate.groupIds.length > 0 && {
+                      groups: {
+                        connect: dayCreate.groupIds.map((groupId) => ({
+                          id: groupId,
+                        })),
+                      },
+                    }),
                 },
               });
             }
@@ -396,8 +436,12 @@ export class RBVHelper {
               await tx.bellScheduleGroup.update({
                 where: { id: groupUpdate.id },
                 data: {
-                  ...(groupUpdate.name !== undefined && { name: groupUpdate.name }),
-                  ...(groupUpdate.description !== undefined && { description: groupUpdate.description }),
+                  ...(groupUpdate.name !== undefined && {
+                    name: groupUpdate.name,
+                  }),
+                  ...(groupUpdate.description !== undefined && {
+                    description: groupUpdate.description,
+                  }),
                 },
               });
             }
@@ -437,15 +481,22 @@ export class RBVHelper {
               await tx.bellScheduleVariant.update({
                 where: { id: variantUpdate.id },
                 data: {
-                  ...(variantUpdate.name !== undefined && { name: variantUpdate.name }),
-                  ...(variantUpdate.description !== undefined && { description: variantUpdate.description }),
+                  ...(variantUpdate.name !== undefined && {
+                    name: variantUpdate.name,
+                  }),
+                  ...(variantUpdate.description !== undefined && {
+                    description: variantUpdate.description,
+                  }),
                 },
               });
 
               // Handle time slot updates for this variant
               if (variantUpdate.timeSlots) {
                 // Delete time slots if specified
-                if (variantUpdate.timeSlots.delete && variantUpdate.timeSlots.delete.length > 0) {
+                if (
+                  variantUpdate.timeSlots.delete &&
+                  variantUpdate.timeSlots.delete.length > 0
+                ) {
                   await tx.timeSlot.deleteMany({
                     where: {
                       id: { in: variantUpdate.timeSlots.delete },
@@ -460,9 +511,15 @@ export class RBVHelper {
                     await tx.timeSlot.update({
                       where: { id: timeSlotUpdate.id },
                       data: {
-                        ...(timeSlotUpdate.name !== undefined && { name: timeSlotUpdate.name }),
-                        ...(timeSlotUpdate.start !== undefined && { start: timeSlotUpdate.start }),
-                        ...(timeSlotUpdate.end !== undefined && { end: timeSlotUpdate.end }),
+                        ...(timeSlotUpdate.name !== undefined && {
+                          name: timeSlotUpdate.name,
+                        }),
+                        ...(timeSlotUpdate.start !== undefined && {
+                          start: timeSlotUpdate.start,
+                        }),
+                        ...(timeSlotUpdate.end !== undefined && {
+                          end: timeSlotUpdate.end,
+                        }),
                       },
                     });
                   }
@@ -542,9 +599,13 @@ export class RBVHelper {
           // Create day of week rules if provided
           if (input.dayLabelRuleSet.dayOfWeekRules) {
             for (const ruleInput of input.dayLabelRuleSet.dayOfWeekRules) {
-              const scheduleDayId = currentDays.find(d => d.name === ruleInput.scheduleDayName)?.id;
+              const scheduleDayId = currentDays.find(
+                (d) => d.name === ruleInput.scheduleDayName,
+              )?.id;
               if (!scheduleDayId) {
-                throw new Error(`Schedule day with name "${ruleInput.scheduleDayName}" not found`);
+                throw new Error(
+                  `Schedule day with name "${ruleInput.scheduleDayName}" not found`,
+                );
               }
 
               await tx.dayOfWeekRule.create({
@@ -562,9 +623,13 @@ export class RBVHelper {
           // Create pattern based rules if provided
           if (input.dayLabelRuleSet.patternBasedRules) {
             for (const ruleInput of input.dayLabelRuleSet.patternBasedRules) {
-              const scheduleDayId = currentDays.find(d => d.name === ruleInput.scheduleDayName)?.id;
+              const scheduleDayId = currentDays.find(
+                (d) => d.name === ruleInput.scheduleDayName,
+              )?.id;
               if (!scheduleDayId) {
-                throw new Error(`Schedule day with name "${ruleInput.scheduleDayName}" not found`);
+                throw new Error(
+                  `Schedule day with name "${ruleInput.scheduleDayName}" not found`,
+                );
               }
 
               await tx.patternBasedRule.create({
@@ -593,9 +658,13 @@ export class RBVHelper {
             select: { id: true, name: true },
           });
 
-          const defaultVariantId = currentVariants.find(v => v.name === input.variantRuleSet!.defaultVariantName)?.id;
+          const defaultVariantId = currentVariants.find(
+            (v) => v.name === input.variantRuleSet!.defaultVariantName,
+          )?.id;
           if (!defaultVariantId) {
-            throw new Error(`Default variant with name "${input.variantRuleSet.defaultVariantName}" not found`);
+            throw new Error(
+              `Default variant with name "${input.variantRuleSet.defaultVariantName}" not found`,
+            );
           }
 
           // Create new variant rule set
@@ -611,9 +680,13 @@ export class RBVHelper {
 
           // Create exception rules
           for (const exceptionInput of input.variantRuleSet.exceptions) {
-            const variantId = currentVariants.find(v => v.name === exceptionInput.variantName)?.id;
+            const variantId = currentVariants.find(
+              (v) => v.name === exceptionInput.variantName,
+            )?.id;
             if (!variantId) {
-              throw new Error(`Exception variant with name "${exceptionInput.variantName}" not found`);
+              throw new Error(
+                `Exception variant with name "${exceptionInput.variantName}" not found`,
+              );
             }
 
             await tx.exceptionBasedRule.create({
@@ -635,16 +708,18 @@ export class RBVHelper {
 
       return { success: true, data: schedule_res.data };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       this.log.error(`Failed to update complete schedule: ${errorMessage}`);
-      return { success: false, message: `Failed to update complete schedule: ${errorMessage}` };
+      return {
+        success: false,
+        message: `Failed to update complete schedule: ${errorMessage}`,
+      };
     }
   }
 
-
-
   public async calculate_meeting_times(
-    input: CalculateMeetingTimesInput
+    input: CalculateMeetingTimesInput,
   ): Promise<DataResponse<MeetingTimes[]>> {
     // 1. Get the schedule
     const schedule_res = await this.get_schedule(input.scheduleId);
@@ -652,7 +727,10 @@ export class RBVHelper {
 
     const schedule = schedule_res.data;
     if (!schedule.dayLabelRuleSet || !schedule.variantRuleSet) {
-      return { success: false, message: 'Schedule missing a recurrence rule set' };
+      return {
+        success: false,
+        message: "Schedule missing a recurrence rule set",
+      };
     }
 
     const variantById = new Map<string, BellScheduleVariant>();
@@ -670,17 +748,23 @@ export class RBVHelper {
       case DayLabelRecurrenceRuleType.DAY_OF_WEEK:
         const dayOfWeekRules = schedule.dayLabelRuleSet.dayOfWeekRules;
         if (!dayOfWeekRules) {
-          return { success: false, message: 'Schedule is day-of-week based but has no day-of-week rules' };
+          return {
+            success: false,
+            message:
+              "Schedule is day-of-week based but has no day-of-week rules",
+          };
         }
 
         // Iterate through the date range, pulling the proper day from the rule set
         let date = input.dateRange.start;
         while (!date.isAfter(input.dateRange.end)) {
           const dayOfWeek = date.dayOfWeek().value();
-          const day = dayOfWeekRules.find(d => d.dayOfWeek === dayOfWeek);
-          const day_object = dayById.get(day?.scheduleDayId ?? '');
+          const day = dayOfWeekRules.find((d) => d.dayOfWeek === dayOfWeek);
+          const day_object = dayById.get(day?.scheduleDayId ?? "");
           if (!day_object) {
-            throw new Error(`Day with id ${day?.scheduleDayId} not found on the schedule`);
+            throw new Error(
+              `Day with id ${day?.scheduleDayId} not found on the schedule`,
+            );
           }
           dayMap.set(date.toString(), day_object);
 
@@ -690,10 +774,16 @@ export class RBVHelper {
       case DayLabelRecurrenceRuleType.PATTERN_BASED:
         const patternBasedRules = schedule.dayLabelRuleSet.patternBasedRules;
         if (!patternBasedRules) {
-          return { success: false, message: 'Schedule is pattern-based but has no pattern-based rules' };
+          return {
+            success: false,
+            message: "Schedule is pattern-based but has no pattern-based rules",
+          };
         }
         if (!schedule.dayLabelRuleSet.seedDate) {
-          return { success: false, message: 'Schedule is pattern-based but has no seed date' };
+          return {
+            success: false,
+            message: "Schedule is pattern-based but has no seed date",
+          };
         }
 
         // Count only active days when advancing through the pattern
@@ -709,7 +799,7 @@ export class RBVHelper {
         const activeDaysSinceSeed = this.calculateActiveDaysBetween(
           seedDate,
           currentDate,
-          activeDaysSet
+          activeDaysSet,
         );
         let patternIndex = activeDaysSinceSeed % pattern_length;
 
@@ -718,11 +808,13 @@ export class RBVHelper {
           const dayOfWeek = currentDate.dayOfWeek().value() % 7; // Convert to 0-6 (Sunday=0)
 
           if (activeDaysSet.has(dayOfWeek)) {
-            const dayId = patternBasedRules
-              .find(d => d.patternPosition === patternIndex)
-              ?.scheduleDayId;
+            const dayId = patternBasedRules.find(
+              (d) => d.patternPosition === patternIndex,
+            )?.scheduleDayId;
             if (!dayId) {
-              throw new Error(`Pattern-based rule with position ${patternIndex} not found`);
+              throw new Error(
+                `Pattern-based rule with position ${patternIndex} not found`,
+              );
             }
             const day_object = dayById.get(dayId);
             if (!day_object) {
@@ -741,16 +833,21 @@ export class RBVHelper {
     const variantMap: Map<string, BellScheduleVariant> = new Map(); // Map of date to the variantId
     const variantRuleSet = schedule.variantRuleSet;
     if (!variantRuleSet) {
-      return { success: false, message: 'Schedule missing a variant rule set' };
+      return { success: false, message: "Schedule missing a variant rule set" };
     }
     // First set any relevant exceptions
     const exceptions = variantRuleSet.exceptions ?? [];
     for (const exception of exceptions) {
       const date = LocalDate.parse(exception.date);
-      if (!date.isBefore(input.dateRange.start) && !date.isAfter(input.dateRange.end)) {
+      if (
+        !date.isBefore(input.dateRange.start) &&
+        !date.isAfter(input.dateRange.end)
+      ) {
         const variant_object = variantById.get(exception.variantId);
         if (!variant_object) {
-          throw new Error(`Variant with id ${exception.variantId} not found on the schedule`);
+          throw new Error(
+            `Variant with id ${exception.variantId} not found on the schedule`,
+          );
         }
         variantMap.set(date.toString(), variant_object);
       }
@@ -758,7 +855,9 @@ export class RBVHelper {
     // Then set the remaining days to the default variant
     const defaultVariant = variantById.get(variantRuleSet.defaultVariantId);
     if (!defaultVariant) {
-      throw new Error(`Default variant with id ${variantRuleSet.defaultVariantId} not found on the schedule`);
+      throw new Error(
+        `Default variant with id ${variantRuleSet.defaultVariantId} not found on the schedule`,
+      );
     }
     for (const date of dayMap.keys()) {
       if (!variantMap.get(date)) {
@@ -775,24 +874,35 @@ export class RBVHelper {
         throw new Error(`Day or variant not found for date ${date}`);
       }
 
-      flatMeetingTimes.push(...this.combineDayAndVariant(day, variant, LocalDate.parse(date)));
+      flatMeetingTimes.push(
+        ...this.combineDayAndVariant(day, variant, LocalDate.parse(date)),
+      );
     }
 
     // 5. Return the meeting times
-    const groupedMeetingTimes: MeetingTimes[] = flatMeetingTimes.reduce((acc, meetingTime) => {
-      const existingGroup = acc.find(m => m.scheduleGroupId === meetingTime.scheduleGroupId);
-      if (existingGroup) {
-        existingGroup.meetingTimes.push(...meetingTime.meetingTimes);
-      } else {
-        acc.push(meetingTime);
-      }
-      return acc;
-    }, [] as MeetingTimes[]);
+    const groupedMeetingTimes: MeetingTimes[] = flatMeetingTimes.reduce(
+      (acc, meetingTime) => {
+        const existingGroup = acc.find(
+          (m) => m.scheduleGroupId === meetingTime.scheduleGroupId,
+        );
+        if (existingGroup) {
+          existingGroup.meetingTimes.push(...meetingTime.meetingTimes);
+        } else {
+          acc.push(meetingTime);
+        }
+        return acc;
+      },
+      [] as MeetingTimes[],
+    );
 
     return { success: true, data: groupedMeetingTimes };
   }
 
-  private combineDayAndVariant(day: BellScheduleDay, variant: BellScheduleVariant, date: LocalDate): MeetingTimes[] {
+  private combineDayAndVariant(
+    day: BellScheduleDay,
+    variant: BellScheduleVariant,
+    date: LocalDate,
+  ): MeetingTimes[] {
     // Order the groups on the day and insert them into the variant time slots
     const groups = day.groups;
     const timeSlots = variant.timeSlots;
@@ -801,10 +911,14 @@ export class RBVHelper {
       scheduleGroupId: group.id,
       meetingTimes: [
         {
-          start: LocalDateTime.parse(`${date.toString()}T${timeSlots[index].start}`),
-          end: LocalDateTime.parse(`${date.toString()}T${timeSlots[index].end}`),
-        }
-      ]
+          start: LocalDateTime.parse(
+            `${date.toString()}T${timeSlots[index].start}`,
+          ),
+          end: LocalDateTime.parse(
+            `${date.toString()}T${timeSlots[index].end}`,
+          ),
+        },
+      ],
     }));
 
     return meetingTimes;
@@ -817,7 +931,7 @@ export class RBVHelper {
   private calculateActiveDaysBetween(
     startDate: LocalDate,
     endDate: LocalDate,
-    activeDaysSet: Set<number>
+    activeDaysSet: Set<number>,
   ): number {
     let count = 0;
     let currentDate = startDate;

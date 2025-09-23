@@ -1,9 +1,9 @@
-import { vi, beforeEach } from 'vitest';
-import 'reflect-metadata';
-import { mockPrisma, resetDatabaseMocks } from './database-mock';
+import { vi, beforeEach } from "vitest";
+import "reflect-metadata";
+import { mockPrisma, resetDatabaseMocks } from "./database-mock";
 
 // Mock the database module
-vi.mock('@repo/db', () => ({
+vi.mock("@repo/db", () => ({
   prisma: mockPrisma,
 }));
 

@@ -10,8 +10,8 @@ import {
   ExceptionBasedRule,
   VariantRuleSet as PrismaVariantRuleSet,
   DayLabelRecurrenceRuleType,
-} from '@repo/db';
-import { LocalDate, LocalDateTime } from '@js-joda/core';
+} from "@repo/db";
+import { LocalDate, LocalDateTime } from "@js-joda/core";
 
 // Bell Schedule related types
 export type BellSchedule = PrismaBellSchedule & {
@@ -25,7 +25,7 @@ export type BellSchedule = PrismaBellSchedule & {
 };
 
 export interface DeleteBellScheduleInput {
-  id: BellSchedule['id'];
+  id: BellSchedule["id"];
 }
 
 // Bell Schedule Day related types
@@ -40,7 +40,7 @@ export type BellScheduleVariant = PrismaBellScheduleVariant & {
 
 export type VariantRuleSet = PrismaVariantRuleSet & {
   exceptions: ExceptionBasedRule[];
-}
+};
 
 export type DayLabelRuleSet = PrismaDayLabelRuleSet & {
   dayOfWeekRules?: DayOfWeekRule[];
@@ -212,7 +212,7 @@ export interface UpdateCompleteScheduleInput {
   dayLabelRuleSet?: {
     id?: string;
     name: string;
-    type: import('@repo/db').DayLabelRecurrenceRuleType;
+    type: import("@repo/db").DayLabelRecurrenceRuleType;
     description?: string;
     seedDate?: string;
 
@@ -242,4 +242,3 @@ export interface UpdateCompleteScheduleInput {
     }>;
   };
 }
-

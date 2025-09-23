@@ -4,6 +4,7 @@ export default {
     sectorsDir: '../../apps/api/src/sectors',
     routerPattern: '*/trpc/*-router.ts',
     schemaPattern: './src/schemas/*-schemas.ts',
+    copySchemas: true,  // Copy schemas to generated directory
   },
 
   // Generation configuration

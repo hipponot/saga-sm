@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { Factory } from 'fishery';
-import { LocalDate, LocalTime } from '@js-joda/core';
+import { Factory } from "fishery";
+import { LocalDate, LocalTime } from "@js-joda/core";
 
 export interface DateRangeFactoryTransientParams {
   start_date?: LocalDate;
@@ -46,7 +46,9 @@ export const LocalTimeRangeFactory = Factory.define<
  * @param enumObj - The enum object to select from
  * @returns A random enum value
  */
-export function oneOf<T extends Record<string, string | number>>(enumObj: T): T[keyof T] {
+export function oneOf<T extends Record<string, string | number>>(
+  enumObj: T,
+): T[keyof T] {
   const values = Object.values(enumObj) as T[keyof T][];
   const randomIndex = Math.floor(Math.random() * values.length);
   return values[randomIndex];
@@ -59,7 +61,7 @@ export function oneOf<T extends Record<string, string | number>>(enumObj: T): T[
  */
 export function oneOfArray<T>(array: readonly T[]): T {
   if (array.length === 0) {
-    throw new Error('Cannot select from empty array');
+    throw new Error("Cannot select from empty array");
   }
   const randomIndex = Math.floor(Math.random() * array.length);
   return array[randomIndex];

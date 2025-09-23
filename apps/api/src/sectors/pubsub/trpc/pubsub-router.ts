@@ -1,19 +1,25 @@
-import { injectable, inject } from 'inversify'
-import { AbstractTRPCController, router } from '@hipponot/soa-api-core/abstract-trpc-controller'
-import type { ILogger } from '@hipponot/soa-logger'
-import { z } from 'zod'
-import { randomUUID } from 'node:crypto'
-import { PingMessageSchema, type PingMessageZ } from '@saga-sm/api-types/schemas'
-import type { PubSubService } from '../../../services/pubsub.service.js'
+import { injectable, inject } from "inversify";
+import {
+  AbstractTRPCController,
+  router,
+} from "@hipponot/soa-api-core/abstract-trpc-controller";
+import type { ILogger } from "@hipponot/soa-logger";
+import { z } from "zod";
+import { randomUUID } from "node:crypto";
+import {
+  PingMessageSchema,
+  type PingMessageZ,
+} from "@saga-sm/api-types/schemas";
+import type { PubSubService } from "../../../services/pubsub.service.js";
 
 @injectable()
 export class PubSubController extends AbstractTRPCController {
-  readonly sectorName = 'pubsub';
+  readonly sectorName = "pubsub";
   private pubsubService: PubSubService;
 
   constructor(
-    @inject('ILogger') logger: ILogger,
-    @inject('PubSubService') pubsubService: PubSubService
+    @inject("ILogger") logger: ILogger,
+    @inject("PubSubService") pubsubService: PubSubService,
   ) {
     super(logger);
     this.pubsubService = pubsubService;
@@ -24,38 +30,40 @@ export class PubSubController extends AbstractTRPCController {
 
     return router({
       // Send a ping message and get automatic pong response via pubsub
-      ping: t.input(PingMessageSchema).mutation(async ({ input }: { input: PingMessageZ }) => {
-        try {
-          // Send the ping event via pubsub service
-          const result = await this.pubsubService.sendEvent({
-            name: 'ping:message',
-            payload: input,
-            channel: 'pingpong',
-            clientEventId: randomUUID(),
-            correlationId: randomUUID(),
-          });
+      ping: t
+        .input(PingMessageSchema)
+        .mutation(async ({ input }: { input: PingMessageZ }) => {
+          try {
+            // Send the ping event via pubsub service
+            const result = await this.pubsubService.sendEvent({
+              name: "ping:message",
+              payload: input,
+              channel: "pingpong",
+              clientEventId: randomUUID(),
+              correlationId: randomUUID(),
+            });
 
-          if (result.status === 'error') {
-            throw new Error(result.error || 'Failed to send ping event');
+            if (result.status === "error") {
+              throw new Error(result.error || "Failed to send ping event");
+            }
+
+            return {
+              success: true,
+              message: `Ping sent successfully: "${input.message}"`,
+              eventId: result.eventId,
+              emittedEvents: result.emittedEvents,
+            };
+          } catch (error) {
+            this.logger.error(
+              "Failed to send ping event",
+              error instanceof Error ? error : new Error(String(error)),
+              { input },
+            );
+            throw new Error(
+              `Failed to send ping: ${error instanceof Error ? error.message : "Unknown error"}`,
+            );
           }
-
-          return {
-            success: true,
-            message: `Ping sent successfully: "${input.message}"`,
-            eventId: result.eventId,
-            emittedEvents: result.emittedEvents,
-          };
-        } catch (error) {
-          this.logger.error(
-            'Failed to send ping event',
-            error instanceof Error ? error : new Error(String(error)),
-            { input }
-          );
-          throw new Error(
-            `Failed to send ping: ${error instanceof Error ? error.message : 'Unknown error'}`
-          );
-        }
-      }),
+        }),
 
       // Send a custom event via pubsub
       sendEvent: t
@@ -63,7 +71,10 @@ export class PubSubController extends AbstractTRPCController {
           z.object({
             name: z
               .string()
-              .regex(/^[^:]+:[^:]+$/, 'Event name must be in format "category:action"'),
+              .regex(
+                /^[^:]+:[^:]+$/,
+                'Event name must be in format "category:action"',
+              ),
             payload: z.any(),
             channel: z.string().optional(),
             options: z
@@ -72,11 +83,11 @@ export class PubSubController extends AbstractTRPCController {
                 correlationId: z.string().optional(),
               })
               .optional(),
-          })
+          }),
         )
         .mutation(async ({ input }) => {
           try {
-            const channel = input.channel || 'default';
+            const channel = input.channel || "default";
 
             const result = await this.pubsubService.sendEvent({
               name: input.name,
@@ -86,8 +97,8 @@ export class PubSubController extends AbstractTRPCController {
               correlationId: input.options?.correlationId,
             });
 
-            if (result.status === 'error') {
-              throw new Error(result.error || 'Failed to send event');
+            if (result.status === "error") {
+              throw new Error(result.error || "Failed to send event");
             }
 
             return {
@@ -98,12 +109,12 @@ export class PubSubController extends AbstractTRPCController {
             };
           } catch (error) {
             this.logger.error(
-              'Failed to send custom event',
+              "Failed to send custom event",
               error instanceof Error ? error : new Error(String(error)),
-              { input }
+              { input },
             );
             throw new Error(
-              `Failed to send event: ${error instanceof Error ? error.message : 'Unknown error'}`
+              `Failed to send event: ${error instanceof Error ? error.message : "Unknown error"}`,
             );
           }
         }),
@@ -119,10 +130,11 @@ export class PubSubController extends AbstractTRPCController {
       // Get channel information
       getChannelInfo: t.query(() => {
         return {
-          channel: 'pingpong',
-          eventTypes: ['ping:message', 'pong:response'],
-          description: 'Ping-pong demonstration channel for SSE testing',
-          activeSubscribers: this.pubsubService.getSubscriptionStats().totalSubscriptions,
+          channel: "pingpong",
+          eventTypes: ["ping:message", "pong:response"],
+          description: "Ping-pong demonstration channel for SSE testing",
+          activeSubscribers:
+            this.pubsubService.getSubscriptionStats().totalSubscriptions,
         };
       }),
 
@@ -130,7 +142,7 @@ export class PubSubController extends AbstractTRPCController {
       getServiceStatus: t.query(() => {
         const stats = this.pubsubService.getSubscriptionStats();
         return {
-          status: 'running',
+          status: "running",
           channels: stats.activeChannels,
           uptime: process.uptime(),
           timestamp: new Date().toISOString(),
@@ -146,7 +158,7 @@ export class PubSubController extends AbstractTRPCController {
           z.object({
             channel: z.string(),
             eventTypes: z.array(z.string()).optional(),
-          })
+          }),
         )
         .mutation(async ({ input }) => {
           try {
@@ -154,7 +166,7 @@ export class PubSubController extends AbstractTRPCController {
             // For now, we'll return subscription info
             const subscriptionId = randomUUID();
 
-            this.logger.info('Subscription request received', {
+            this.logger.info("Subscription request received", {
               channel: input.channel,
               subscriptionId,
               eventTypes: input.eventTypes,
@@ -164,18 +176,19 @@ export class PubSubController extends AbstractTRPCController {
               success: true,
               subscriptionId,
               channel: input.channel,
-              eventTypes: input.eventTypes || ['*'],
-              message: 'Subscription established (use /events SSE endpoint for real-time events)',
+              eventTypes: input.eventTypes || ["*"],
+              message:
+                "Subscription established (use /events SSE endpoint for real-time events)",
               timestamp: new Date().toISOString(),
             };
           } catch (error) {
             this.logger.error(
-              'Failed to create subscription',
+              "Failed to create subscription",
               error instanceof Error ? error : new Error(String(error)),
-              { input }
+              { input },
             );
             throw new Error(
-              `Failed to subscribe: ${error instanceof Error ? error.message : 'Unknown error'}`
+              `Failed to subscribe: ${error instanceof Error ? error.message : "Unknown error"}`,
             );
           }
         }),
@@ -185,26 +198,30 @@ export class PubSubController extends AbstractTRPCController {
         .input(
           z.object({
             subscriptionId: z.string(),
-          })
+          }),
         )
         .mutation(async ({ input }) => {
           try {
-            const success = this.pubsubService.unsubscribe(input.subscriptionId);
+            const success = this.pubsubService.unsubscribe(
+              input.subscriptionId,
+            );
 
             return {
               success,
               subscriptionId: input.subscriptionId,
-              message: success ? 'Subscription removed successfully' : 'Subscription not found',
+              message: success
+                ? "Subscription removed successfully"
+                : "Subscription not found",
               timestamp: new Date().toISOString(),
             };
           } catch (error) {
             this.logger.error(
-              'Failed to unsubscribe',
+              "Failed to unsubscribe",
               error instanceof Error ? error : new Error(String(error)),
-              { input }
+              { input },
             );
             throw new Error(
-              `Failed to unsubscribe: ${error instanceof Error ? error.message : 'Unknown error'}`
+              `Failed to unsubscribe: ${error instanceof Error ? error.message : "Unknown error"}`,
             );
           }
         }),

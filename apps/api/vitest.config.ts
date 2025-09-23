@@ -1,33 +1,33 @@
-import { defineConfig } from 'vitest/config';
-import path from 'path';
+import { defineConfig } from "vitest/config";
+import path from "path";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: "node",
 
     // Setup files for mocking and global configuration
-    setupFiles: ['./src/__tests__/setup/vitest.setup.ts'],
+    setupFiles: ["./src/__tests__/setup/vitest.setup.ts"],
 
-    include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+    include: ["src/**/*.test.ts", "src/**/*.spec.ts"],
     exclude: [
-      'node_modules',
-      'dist',
-      'src/**/*.integration.{test,spec}.ts', // Exclude integration tests
-      'src/sectors/rbv/__tests__/rbv-helper-unit.test.ts', // Not maintained
+      "node_modules",
+      "dist",
+      "src/**/*.integration.{test,spec}.ts", // Exclude integration tests
+      "src/sectors/rbv/__tests__/rbv-helper-unit.test.ts", // Not maintained
     ],
 
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.ts'],
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      include: ["src/**/*.ts"],
       exclude: [
-        'src/**/*.test.ts',
-        'src/**/*.spec.ts',
-        'src/**/__tests__/**',
-        'src/**/*.d.ts',
-        'src/main.ts',
-        'src/index.ts',
+        "src/**/*.test.ts",
+        "src/**/*.spec.ts",
+        "src/**/__tests__/**",
+        "src/**/*.d.ts",
+        "src/main.ts",
+        "src/index.ts",
       ],
     },
 
@@ -42,8 +42,8 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@tests': path.resolve(__dirname, './src/__tests__'),
+      "@": path.resolve(__dirname, "./src"),
+      "@tests": path.resolve(__dirname, "./src/__tests__"),
     },
   },
 });

@@ -1,9 +1,9 @@
-import { injectable } from 'inversify';
+import { injectable } from "inversify";
 
 export interface IExampleHelper {
   generateId(): string;
   formatTitle(title: string): string;
-  calculatePriority(tags: string[]): 'low' | 'medium' | 'high';
+  calculatePriority(tags: string[]): "low" | "medium" | "high";
   validateStatus(status: string): boolean;
 }
 
@@ -16,25 +16,25 @@ export class ExampleHelper implements IExampleHelper {
   formatTitle(title: string): string {
     return title
       .trim()
-      .replace(/\s+/g, ' ')
+      .replace(/\s+/g, " ")
       .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 
-  calculatePriority(tags: string[]): 'low' | 'medium' | 'high' {
-    if (tags.includes('urgent') || tags.includes('critical')) {
-      return 'high';
+  calculatePriority(tags: string[]): "low" | "medium" | "high" {
+    if (tags.includes("urgent") || tags.includes("critical")) {
+      return "high";
     }
-    if (tags.includes('important') || tags.includes('feature')) {
-      return 'medium';
+    if (tags.includes("important") || tags.includes("feature")) {
+      return "medium";
     }
-    return 'low';
+    return "low";
   }
 
   validateStatus(status: string): boolean {
-    const validStatuses = ['draft', 'active', 'completed', 'archived'];
+    const validStatuses = ["draft", "active", "completed", "archived"];
     return validStatuses.includes(status);
   }
 }
