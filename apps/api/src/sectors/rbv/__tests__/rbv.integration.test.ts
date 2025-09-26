@@ -286,6 +286,7 @@ async function create_bladensburg_schedule(rbv_helper: RBVHelper) {
     id: schedule_id,
     name: "Bladensburg",
     description: "Bladensburg schedule",
+    activeDaysOfWeek: [1, 2, 3, 4, 5],
     days: [ADay, BDay],
     variants: [variantNormal, variantTwoHrDelay],
     groups: groupings,
