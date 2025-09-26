@@ -759,14 +759,16 @@ export class RBVHelper {
         let date = input.dateRange.start;
         while (!date.isAfter(input.dateRange.end)) {
           const dayOfWeek = date.dayOfWeek().value();
-          const day = dayOfWeekRules.find((d) => d.dayOfWeek === dayOfWeek);
-          const day_object = dayById.get(day?.scheduleDayId ?? "");
-          if (!day_object) {
-            throw new Error(
-              `Day with id ${day?.scheduleDayId} not found on the schedule`,
-            );
+          if (schedule.activeDaysOfWeek.includes(dayOfWeek)) {
+            const day = dayOfWeekRules.find((d) => d.dayOfWeek === dayOfWeek);
+            const day_object = dayById.get(day?.scheduleDayId ?? "");
+            if (!day_object) {
+              throw new Error(
+                `Day with id ${day?.scheduleDayId} not found on the schedule`,
+              );
+            }
+            dayMap.set(date.toString(), day_object);
           }
-          dayMap.set(date.toString(), day_object);
 
           date = date.plusDays(1);
         }
