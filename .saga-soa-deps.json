@@ -1,0 +1,56 @@
+{
+  "description": "Configuration for saga-soa dependency management",
+  "packages": {
+    "apps/api": {
+      "dependencies": {
+        "@hipponot/soa-api-core": {
+          "local": "file:../../../saga-soa/packages/api-core",
+          "published": "^1.0.4"
+        },
+        "@hipponot/soa-config": {
+          "local": "file:../../../saga-soa/packages/config",
+          "published": "^1.0.3"
+        },
+        "@hipponot/soa-db": {
+          "local": "file:../../../saga-soa/packages/db",
+          "published": "^1.0.3"
+        },
+        "@hipponot/soa-logger": {
+          "local": "file:../../../saga-soa/packages/logger",
+          "published": "^1.0.4"
+        },
+        "@hipponot/soa-pubsub-core": {
+          "local": "file:../../../saga-soa/packages/pubsub-core",
+          "published": "^1.0.4"
+        }
+      },
+      "devDependencies": {
+        "@hipponot/soa-trpc-codegen": {
+          "local": "file:../../../saga-soa/packages/trpc-codegen",
+          "published": "^1.0.3"
+        }
+      }
+    },
+    "packages/api-types": {
+      "devDependencies": {
+        "@hipponot/soa-trpc-codegen": {
+          "local": "file:../../../saga-soa/packages/trpc-codegen",
+          "published": "^1.0.3"
+        },
+        "@hipponot/soa-zod2ts": {
+          "local": "file:../../../saga-soa/build-tools/zod2ts",
+          "published": "^1.0.3"
+        }
+      }
+    }
+  },
+  "npmrc": {
+    "published": {
+      "@hipponot:registry": "https://npm.pkg.github.com",
+      "//npm.pkg.github.com/:_authToken": "${GITHUB_TOKEN}"
+    },
+    "local": {
+      "comment": "No special registry configuration needed for local file: dependencies"
+    }
+  }
+}

@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BellSchedule {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+
+  activeDaysOfWeek Int[] // 0-6 (0 = Sunday, 1 = Monday, etc.)
+
+  days          BellScheduleDay[]
+  variants      BellScheduleVariant[]
+  groups        BellScheduleGroup[]
+
+  // Each schedule has exactly one recurrence rule set
+  dayLabelRuleSet  DayLabelRuleSet?
+  variantRuleSet   VariantRuleSet?
+
+  // Back-references for rules that reference this schedule
+  dayOfWeekRules     DayOfWeekRule[]
+  patternBasedRules  PatternBasedRule[]
+}
+
+model BellScheduleGroup {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+
+  scheduleId    String
+  schedule      BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  days          BellScheduleDay[]
+
+  // Database Optimization: Index for fast schedule group lookups
+  @@index([scheduleId], name: "idx_bell_schedule_group_schedule_id")
+}
+
+model BellScheduleDay {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+
+  groups        BellScheduleGroup[]
+
+  scheduleId    String
+  schedule      BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  // Back-references for rules (but rules are owned by DayRecurrenceRuleSet)
+  dayOfWeekRules     DayOfWeekRule[]
+  patternBasedRules  PatternBasedRule[]
+
+  // Database Optimization: Index for fast schedule day lookups by schedule
+  @@index([scheduleId], name: "idx_bell_schedule_day_schedule_id")
+  // Database Optimization: Compound index for name-based lookups within a schedule
+  @@index([scheduleId, name], name: "idx_bell_schedule_day_schedule_name")
+}
+
+model BellScheduleVariant {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+
+  timeSlots     TimeSlot[]
+
+  scheduleId    String
+  schedule      BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  // Back-references for rules that reference this variant
+  variantRuleSet   VariantRuleSet?
+  exceptionRules   ExceptionBasedRule[]
+
+  // Database Optimization: Index for fast schedule variant lookups by schedule
+  @@index([scheduleId], name: "idx_bell_schedule_variant_schedule_id")
+  // Database Optimization: Compound index for name-based lookups within a schedule
+  @@index([scheduleId, name], name: "idx_bell_schedule_variant_schedule_name")
+}
+
+model TimeSlot {
+  id        String   @id @default(uuid())
+  name      String
+  start     String   // HH:MM format (e.g., "08:00")
+  end       String   // HH:MM format (e.g., "09:00")
+
+  variantId String
+  variant   BellScheduleVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  // Database Optimization: Index for fast time slot lookups by variant
+  @@index([variantId], name: "idx_time_slot_variant_id")
+  // Database Optimization: Index for time-ordered queries (start time ordering)
+  @@index([variantId, start], name: "idx_time_slot_variant_start")
+}
+
+// Recurrence Rule Sets - Each schedule has exactly one of each type
+model VariantRuleSet {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+
+  defaultVariantId String @unique
+  defaultVariant   BellScheduleVariant @relation(fields: [defaultVariantId], references: [id], onDelete: Cascade)
+
+  scheduleId String @unique
+  schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  exceptions ExceptionBasedRule[]
+}
+
+model ExceptionBasedRule {
+  id          String @id @default(uuid())
+  date        String // "YYYY-MM-DD"
+
+  variantId   String
+  variant     BellScheduleVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  variantRuleSetId String
+  variantRuleSet   VariantRuleSet @relation(fields: [variantRuleSetId], references: [id], onDelete: Cascade)
+
+  // Database Optimization: Index for fast exception rule lookups by rule set
+  @@index([variantRuleSetId], name: "idx_exception_rule_rule_set_id")
+  // Database Optimization: Index for date-based exception lookups (most common query pattern)
+  @@index([variantRuleSetId, date], name: "idx_exception_rule_rule_set_date")
+}
+
+model DayLabelRuleSet {
+  id          String   @id @default(uuid())
+  name        String
+  type        DayLabelRecurrenceRuleType
+  description String?
+
+  // Day-of-week rules (only used if type is DAY_OF_WEEK)
+  dayOfWeekRules DayOfWeekRule[]
+
+  // Pattern-based rules (only used if type is PATTERN_BASED)
+  patternBasedRules PatternBasedRule[]
+  seedDate    String? // Starting date for pattern calculation (YYYY-MM-DD)
+
+  scheduleId String @unique
+  schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+}
+
+// Day-of-week based recurrence rules
+model DayOfWeekRule {
+  id          String   @id @default(uuid())
+
+  // Which day of the week (0 = Sunday, 1 = Monday, etc.)
+  dayOfWeek   Int      // 0-6
+
+  // Reference to the schedule day this rule applies
+  scheduleDayId String
+  scheduleDay   BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
+
+  // Reference to the rule set
+  ruleSetId   String
+  ruleSet     DayLabelRuleSet @relation(fields: [ruleSetId], references: [id], onDelete: Cascade)
+
+  // Schedule reference for data integrity - must match scheduleDay.scheduleId
+  scheduleId String
+  schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleSetId, dayOfWeek]) // Ensure one rule per day of week per rule set
+  // Database Optimization: Index for fast day-of-week rule lookups by rule set
+  @@index([ruleSetId], name: "idx_day_of_week_rule_rule_set_id")
+  // Database Optimization: Compound index for day-of-week calculations (most common query)
+  @@index([ruleSetId, dayOfWeek], name: "idx_day_of_week_rule_rule_set_day")
+}
+
+// Pattern-based recurrence rules - each rule represents one position in the pattern
+model PatternBasedRule {
+  id          String   @id @default(uuid())
+
+  // Position in the pattern sequence (0-based index)
+  // The pattern is constructed by ordering these positions
+  patternPosition Int
+
+  // Reference to the schedule day this rule applies
+  scheduleDayId String
+  scheduleDay   BellScheduleDay @relation(fields: [scheduleDayId], references: [id], onDelete: Cascade)
+
+  // Reference to the rule set
+  ruleSetId   String
+  ruleSet     DayLabelRuleSet @relation(fields: [ruleSetId], references: [id], onDelete: Cascade)
+
+  // Schedule reference for data integrity - must match scheduleDay.scheduleId
+  scheduleId String
+  schedule   BellSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleSetId, patternPosition]) // Ensure unique positions within a pattern
+  // Database Optimization: Index for fast pattern-based rule lookups by rule set
+  @@index([ruleSetId], name: "idx_pattern_rule_rule_set_id")
+  // Database Optimization: Compound index for pattern position ordering (critical for pattern calculation)
+  @@index([ruleSetId, patternPosition], name: "idx_pattern_rule_rule_set_position")
+}
+
+enum DayLabelRecurrenceRuleType {
+  DAY_OF_WEEK
+  PATTERN_BASED
+}

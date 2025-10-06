@@ -1,0 +1,61 @@
+name: Act Test Workflow
+
+on:
+  push:
+    branches: [act-test]
+  pull_request:
+    branches: [act-test]
+
+# Concurrency groups to prevent multiple runs from interfering
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Security: Restrict permissions to minimum required
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "20"
+  CI: true
+
+jobs:
+  # Simple test job without saga-soa dependencies
+  simple-test:
+    name: 🧪 Simple Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: 📦 Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: 📦 Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: ✅ Success test
+        run: |
+          echo "🎉 Act test workflow completed successfully!"
+          echo "📦 Node version: $(node --version)"
+          echo "📦 Pnpm version: $(pnpm --version)"
+          echo "🌿 Current branch: ${{ github.ref_name }}"

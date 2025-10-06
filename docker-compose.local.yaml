@@ -1,0 +1,178 @@
+# Docker Compose configuration for local saga-soa development
+# Build context should be run from the dev directory (parent of saga-sm and saga-soa)
+# Usage: cd /path/to/dev && docker-compose -f saga-sm/docker-compose.local.yaml up -d
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:8.0
+    container_name: saga-sm-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: saga_sm
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./saga-sm/scripts/mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - saga-sm-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: saga-sm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: saga_sm
+      POSTGRES_USER: saga_user
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./saga-sm/scripts/postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - saga-sm-network
+
+  # Redis Cache
+  redis:
+    image: redis:7.0-alpine
+    container_name: saga-sm-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - saga-sm-network
+    command: redis-server --appendonly yes
+
+  # API Service (local saga-soa dependencies)
+  api:
+    build:
+      context: .
+      dockerfile: saga-sm/apps/api/Dockerfile.local
+    container_name: saga-sm-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      PUBSUB_PORT: 3002
+      # MongoDB connection
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/saga_sm?authSource=admin
+      # PostgreSQL connection  
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: saga_sm
+      POSTGRES_USER: saga_user
+      POSTGRES_PASSWORD: password123
+      DATABASE_URL: postgresql://saga_user:password123@postgres:5432/saga_sm
+      # Redis connection
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3000:3000"
+      - "3002:3002"
+    depends_on:
+      - mongodb
+      - postgres
+      - redis
+    networks:
+      - saga-sm-network
+    volumes:
+      # Mount source for development (optional)
+      - ./saga-sm/apps/api/src:/app/saga-sm/apps/api/src:ro
+    profiles:
+      - full  # Only start with --profile full
+
+  # Database Setup Service
+  db-setup:
+    build:
+      context: .
+      dockerfile: saga-sm/apps/api/Dockerfile.local
+      target: dependencies
+    container_name: saga-sm-db-setup
+    environment:
+      DATABASE_URL: postgresql://saga_user:password123@postgres:5432/saga_sm
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/saga_sm?authSource=admin
+    depends_on:
+      postgres:
+        condition: service_started
+      mongodb:
+        condition: service_started
+    networks:
+      - saga-sm-network
+    working_dir: /app/saga-sm/packages/database
+    command: >
+      sh -c "
+        echo 'Waiting for databases to be ready...' &&
+        sleep 10 &&
+        echo 'Pushing Prisma schema to PostgreSQL...' &&
+        npx prisma db push --schema ./prisma/schema.prisma --accept-data-loss &&
+        echo 'Database setup completed successfully!'
+      "
+    profiles:
+      - setup
+
+  # Web Client (local saga-soa dependencies)
+  web-client:
+    build:
+      context: .
+      dockerfile: saga-sm/apps/web-client/Dockerfile.local
+    container_name: saga-sm-web-client
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      # API connection
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_TRPC_URL: http://localhost:3000/trpc
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api
+    networks:
+      - saga-sm-network
+    volumes:
+      # Mount source for development (optional)
+      - ./saga-sm/apps/web-client/app:/app/saga-sm/apps/web-client/app:ro
+      - ./saga-sm/apps/web-client/src:/app/saga-sm/apps/web-client/src:ro
+    profiles:
+      - full  # Only start with --profile full
+
+  # Database Admin (optional)
+  adminer:
+    image: adminer:4.8.1
+    container_name: saga-sm-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+    depends_on:
+      - postgres
+      - mongodb
+    networks:
+      - saga-sm-network
+    profiles:
+      - admin  # Only start with --profile admin
+
+networks:
+  saga-sm-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/16
+          gateway: 172.16.0.1
+
+volumes:
+  mongodb_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

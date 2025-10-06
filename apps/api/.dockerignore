@@ -1,0 +1,78 @@
+# Docker ignore file to optimize build context
+
+# Build artifacts
+dist/
+build/
+out/
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+
+# Test files
+**/*.test.*
+**/*.spec.*
+**/test/
+**/tests/
+test-results/
+coverage/
+
+# Documentation
+**/*.md
+!README.md
+
+# Config files not needed for build
+.eslintrc.*
+.editorconfig
+.env*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime files
+*.pid
+*.sock
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# IDE files
+*.swp
+*.swo
+*~
+
+# Package manager files
+package-lock.json
+yarn.lock
+.yarnrc
+.npmrc
+
+# Docker files in subdirectories
+**/Dockerfile*
+**/docker-compose*
+
+# Deployment files
+samconfig.yaml
+template.yaml
+*.sh
+
+# Specific to this project
+apps/web-client/
+memory-bank/
+scripts/
+docker-compose*.yaml
+*.code-workspace

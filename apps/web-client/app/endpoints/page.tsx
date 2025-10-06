@@ -1,42 +1,42 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import styles from './page.module.css'
 import { TrpcClientService } from '@/services/trpc-client-service'
 import { TrpcCurlService } from '@/services/trpc-curl-service'
-import { SCHEDULE_ENDPOINTS } from '@/services/endpoints'
+import { EXAMPLE_ENDPOINTS } from '@/services/endpoints'
 import { Endpoint, ApiResponse, ServiceInterface } from '@/services/types'
 
 export default function EndpointsPage() {
-    const [selectedEndpoint, setSelectedEndpoint] = useState&lt;Endpoint | null&gt;(null)
+    const [selectedEndpoint, setSelectedEndpoint] = useState<Endpoint | null>(null)
     const [inputValue, setInputValue] = useState('')
-    const [response, setResponse] = useState&lt;ApiResponse | null&gt;(null)
+    const [response, setResponse] = useState<ApiResponse | null>(null)
     const [loading, setLoading] = useState(false)
-    const [serviceType, setServiceType] = useState&lt;'trpc' | 'curl'&gt;('trpc')
+    const [serviceType, setServiceType] = useState<'trpc' | 'curl'>('trpc')
     const [generatedCode, setGeneratedCode] = useState('')
 
-    const trpcService = new TrpcClientService()
-    const curlService = new TrpcCurlService()
+    const [trpcService] = useState(() => new TrpcClientService())
+    const [curlService] = useState(() => new TrpcCurlService())
+
+    const generateCode = useCallback(() => {
+        if (!selectedEndpoint) return
+
+        const service = serviceType === 'trpc' ? trpcService : curlService
+        const code = service.generateCode(selectedEndpoint, inputValue)
+        setGeneratedCode(code)
+    }, [selectedEndpoint, serviceType, inputValue, trpcService, curlService])
 
     useEffect(() => {
         if (selectedEndpoint) {
             setInputValue(selectedEndpoint.sampleInput || '')
             generateCode()
         }
-    }, [selectedEndpoint, serviceType])
+    }, [selectedEndpoint, serviceType, generateCode])
 
     useEffect(() => {
         generateCode()
-    }, [inputValue])
-
-    const generateCode = () => {
-        if (!selectedEndpoint) return
-        
-        const service = serviceType === 'trpc' ? trpcService : curlService
-        const code = service.generateCode(selectedEndpoint, inputValue)
-        setGeneratedCode(code)
-    }
+    }, [inputValue, generateCode])
 
     const executeEndpoint = async () => {
         if (!selectedEndpoint) return
@@ -46,7 +46,7 @@ export default function EndpointsPage() {
 
         const service: ServiceInterface = serviceType === 'trpc' ? trpcService : curlService
         const result = await service.executeEndpoint(selectedEndpoint, inputValue)
-        
+
         setResponse(result)
         setLoading(false)
     }
@@ -56,125 +56,135 @@ export default function EndpointsPage() {
     }
 
     return (
-        &lt;div className={styles.container}&gt;
-            &lt;header className={styles.header}&gt;
-                &lt;Link href="/" className={styles.backLink}&gt;← Back to Home&lt;/Link&gt;
-                &lt;h1&gt;Schedule API Endpoint Explorer&lt;/h1&gt;
-                &lt;p&gt;Interactive testing interface for schedule management endpoints&lt;/p&gt;
-            &lt;/header&gt;
+        <div className={styles.container}>
+            <header className={styles.header}>
+                <Link href="/" className={styles.backLink}>
+                    ← Back to Home
+                </Link>
+                <h1>Example API Endpoint Explorer</h1>
+                <p>Interactive testing interface for example management endpoints</p>
+            </header>
 
-            &lt;div className={styles.content}&gt;
-                &lt;div className={styles.sidebar}&gt;
-                    &lt;h2&gt;Endpoints&lt;/h2&gt;
-                    &lt;div className={styles.endpointList}&gt;
-                        {SCHEDULE_ENDPOINTS.map((endpoint) =&gt; (
-                            &lt;button
+            <div className={styles.content}>
+                <div className={styles.sidebar}>
+                    <h2>Endpoints</h2>
+                    <div className={styles.endpointList}>
+                        {EXAMPLE_ENDPOINTS.map(endpoint => (
+                            <button
                                 key={endpoint.id}
                                 className={`${styles.endpointItem} ${
                                     selectedEndpoint?.id === endpoint.id ? styles.active : ''
                                 }`}
-                                onClick={() =&gt; setSelectedEndpoint(endpoint)}
-                            &gt;
-                                &lt;div className={styles.endpointMethod}&gt;{endpoint.method}&lt;/div&gt;
-                                &lt;div className={styles.endpointName}&gt;{endpoint.name}&lt;/div&gt;
-                            &lt;/button&gt;
+                                onClick={() => setSelectedEndpoint(endpoint)}
+                            >
+                                <div className={styles.endpointMethod}>{endpoint.method}</div>
+                                <div className={styles.endpointName}>{endpoint.name}</div>
+                            </button>
                         ))}
-                    &lt;/div&gt;
-                &lt;/div&gt;
+                    </div>
+                </div>
 
-                &lt;div className={styles.main}&gt;
+                <div className={styles.main}>
                     {selectedEndpoint ? (
-                        &lt;&gt;
-                            &lt;div className={styles.endpointDetails}&gt;
-                                &lt;h2&gt;{selectedEndpoint.name}&lt;/h2&gt;
-                                &lt;p&gt;{selectedEndpoint.description}&lt;/p&gt;
-                                &lt;code&gt;{selectedEndpoint.url}&lt;/code&gt;
-                            &lt;/div&gt;
+                        <>
+                            <div className={styles.endpointDetails}>
+                                <h2>{selectedEndpoint.name}</h2>
+                                <p>{selectedEndpoint.description}</p>
+                                <code>{selectedEndpoint.url}</code>
+                            </div>
 
-                            &lt;div className={styles.serviceToggle}&gt;
-                                &lt;label&gt;
-                                    &lt;input
+                            <div className={styles.serviceToggle}>
+                                <label>
+                                    <input
                                         type="radio"
                                         value="trpc"
                                         checked={serviceType === 'trpc'}
-                                        onChange={(e) =&gt; setServiceType(e.target.value as 'trpc' | 'curl')}
-                                    /&gt;
+                                        onChange={e =>
+                                            setServiceType(e.target.value as 'trpc' | 'curl')
+                                        }
+                                    />
                                     tRPC Client
-                                &lt;/label&gt;
-                                &lt;label&gt;
-                                    &lt;input
+                                </label>
+                                <label>
+                                    <input
                                         type="radio"
                                         value="curl"
                                         checked={serviceType === 'curl'}
-                                        onChange={(e) =&gt; setServiceType(e.target.value as 'trpc' | 'curl')}
-                                    /&gt;
+                                        onChange={e =>
+                                            setServiceType(e.target.value as 'trpc' | 'curl')
+                                        }
+                                    />
                                     HTTP/cURL
-                                &lt;/label&gt;
-                            &lt;/div&gt;
+                                </label>
+                            </div>
 
                             {selectedEndpoint.inputType && (
-                                &lt;div className={styles.inputSection}&gt;
-                                    &lt;h3&gt;Input Parameters&lt;/h3&gt;
-                                    &lt;textarea
+                                <div className={styles.inputSection}>
+                                    <h3>Input Parameters</h3>
+                                    <textarea
                                         className={styles.inputArea}
                                         value={inputValue}
-                                        onChange={(e) =&gt; setInputValue(e.target.value)}
+                                        onChange={e => setInputValue(e.target.value)}
                                         placeholder="Enter JSON input parameters..."
                                         rows={6}
-                                    /&gt;
-                                &lt;/div&gt;
+                                    />
+                                </div>
                             )}
 
-                            &lt;div className={styles.actions}&gt;
-                                &lt;button 
-                                    className="btn-primary" 
+                            <div className={styles.actions}>
+                                <button
+                                    className="btn-primary"
                                     onClick={executeEndpoint}
                                     disabled={loading}
-                                &gt;
+                                >
                                     {loading ? 'Executing...' : 'Execute Endpoint'}
-                                &lt;/button&gt;
-                            &lt;/div&gt;
+                                </button>
+                            </div>
 
                             {generatedCode && (
-                                &lt;div className={styles.codeSection}&gt;
-                                    &lt;div className={styles.codeHeader}&gt;
-                                        &lt;h3&gt;Generated Code&lt;/h3&gt;
-                                        &lt;button 
+                                <div className={styles.codeSection}>
+                                    <div className={styles.codeHeader}>
+                                        <h3>Generated Code</h3>
+                                        <button
                                             className="btn-secondary"
-                                            onClick={() =&gt; copyToClipboard(generatedCode)}
-                                        &gt;
+                                            onClick={() => copyToClipboard(generatedCode)}
+                                        >
                                             Copy
-                                        &lt;/button&gt;
-                                    &lt;/div&gt;
-                                    &lt;pre className={styles.codeBlock}&gt;{generatedCode}&lt;/pre&gt;
-                                &lt;/div&gt;
+                                        </button>
+                                    </div>
+                                    <pre className={styles.codeBlock}>{generatedCode}</pre>
+                                </div>
                             )}
 
                             {response && (
-                                &lt;div className={styles.responseSection}&gt;
-                                    &lt;div className={styles.responseHeader}&gt;
-                                        &lt;h3&gt;Response&lt;/h3&gt;
-                                        &lt;div className={styles.responseStats}&gt;
-                                            &lt;span className={`${styles.status} ${response.success ? styles.success : styles.error}`}&gt;
+                                <div className={styles.responseSection}>
+                                    <div className={styles.responseHeader}>
+                                        <h3>Response</h3>
+                                        <div className={styles.responseStats}>
+                                            <span
+                                                className={`${styles.status} ${response.success ? styles.success : styles.error}`}
+                                            >
                                                 {response.success ? 'SUCCESS' : 'ERROR'}
-                                            &lt;/span&gt;
-                                            &lt;span className={styles.duration}&gt;{response.duration}ms&lt;/span&gt;
-                                        &lt;/div&gt;
-                                    &lt;/div&gt;
-                                    &lt;pre className={styles.responseBody}&gt;
+                                            </span>
+                                            <span className={styles.duration}>
+                                                {response.duration}ms
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <pre className={styles.responseBody}>
                                         {JSON.stringify(response.data || response.error, null, 2)}
-                                    &lt;/pre&gt;
-                                &lt;/div&gt;
+                                    </pre>
+                                </div>
                             )}
-                        &lt;/&gt;
+                        </>
                     ) : (
-                        &lt;div className={styles.placeholder}&gt;
-                            &lt;h2&gt;Select an Endpoint&lt;/h2&gt;
-                            &lt;p&gt;Choose an endpoint from the sidebar to start testing&lt;/p&gt;
-                        &lt;/div&gt;
+                        <div className={styles.placeholder}>
+                            <h2>Select an Endpoint</h2>
+                            <p>Choose an endpoint from the sidebar to start testing</p>
+                        </div>
                     )}
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
+                </div>
+            </div>
+        </div>
     )
 }

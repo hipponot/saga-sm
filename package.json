@@ -11,7 +11,14 @@
         "check": "turbo run check",
         "lint": "turbo run lint",
         "typecheck": "turbo run typecheck",
-        "clean": "turbo run clean"
+        "clean": "turbo run clean",
+        "playwright": "pnpm --filter @saga-sm/web-client playwright",
+        "playwright:headed": "pnpm --filter @saga-sm/web-client playwright:headed", 
+        "playwright:ui": "pnpm --filter @saga-sm/web-client playwright:ui",
+        "playwright:debug": "pnpm --filter @saga-sm/web-client playwright:debug",
+        "deploy:web": "cd apps/web-client && ./scripts/deploy.sh",
+        "deploy:api": "cd apps/api && ./scripts/build-push-deploy.sh --local",
+        "deploy": "npm run build && npm run deploy:api && npm run deploy:web"
     },
     "devDependencies": {
         "@types/node": "^18.19.31",

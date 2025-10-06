@@ -3,6 +3,9 @@ node_modules/
 .pnp
 .pnp.js
 
+# npmrc because it can contains the github token
+.npmrc
+
 # Production builds
 /dist
 /build
@@ -76,6 +79,7 @@ apps/web-client/.next/
 dist
 
 # Storybook build outputs
+out/
 .out
 .storybook-out
 
@@ -127,3 +131,7 @@ blob-report/
 # Local development overrides
 apps/*/.env.local
 apps/*/.env.development.local
+
+# Prisma
+**/generated/prisma
+.aws-sam

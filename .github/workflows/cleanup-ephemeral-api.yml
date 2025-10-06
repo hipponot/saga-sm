@@ -1,0 +1,112 @@
+name: Cleanup Ephemeral API Environment
+
+on:
+  pull_request:
+    branches: [pause-cleanup-ephemeral-api]
+    types: [closed]
+    paths:
+      - "apps/api/**"
+  workflow_dispatch:
+    inputs:
+      branch_identifier:
+        description: "Branch identifier to cleanup (e.g., gh-123-feature-branch)"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  packages: read
+
+env:
+  AWS_REGION: us-west-2
+  AWS_DEPLOY_ROLE_ARN: arn:aws:iam::531314149529:role/github-actions-role/aws-github-actions-access-saga-sm-deploy-Role-bJ3kiYdI4Syc
+
+jobs:
+  cleanup-ephemeral-api:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action == 'closed')
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-CleanupEphemeral
+
+      - name: Generate branch identifier
+        id: branch-id
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            BRANCH_ID="${{ inputs.branch_identifier }}"
+          else
+            # Convert branch name to URL-safe identifier
+            BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
+            BRANCH_ID=$(echo "gh-${{ github.event.pull_request.number }}-${BRANCH_NAME}" | sed 's/[^a-zA-Z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | tr '[:upper:]' '[:lower:]')
+          fi
+          echo "branch_identifier=${BRANCH_ID}" >> $GITHUB_OUTPUT
+          echo "Branch identifier: ${BRANCH_ID}"
+
+      - name: Check if stack exists
+        id: check-stack
+        run: |
+          STACK_NAME="saga-sm-api-ephemeral-${{ steps.branch-id.outputs.branch_identifier }}"
+          echo "Stack name: ${STACK_NAME}"
+
+          if aws cloudformation describe-stacks --stack-name "${STACK_NAME}" > /dev/null 2>&1; then
+            echo "stack_exists=true" >> $GITHUB_OUTPUT
+            echo "Stack exists: ${STACK_NAME}"
+          else
+            echo "stack_exists=false" >> $GITHUB_OUTPUT
+            echo "Stack does not exist: ${STACK_NAME}"
+          fi
+
+      - name: Delete CloudFormation stack
+        if: steps.check-stack.outputs.stack_exists == 'true'
+        run: |
+          STACK_NAME="saga-sm-api-ephemeral-${{ steps.branch-id.outputs.branch_identifier }}"
+
+          echo "Deleting stack: ${STACK_NAME}"
+          aws cloudformation delete-stack --stack-name "${STACK_NAME}"
+
+          echo "Waiting for stack deletion to complete..."
+          aws cloudformation wait stack-delete-complete --stack-name "${STACK_NAME}"
+
+          echo "Stack ${STACK_NAME} successfully deleted"
+
+      - name: Clean up S3 deployment artifacts
+        if: steps.check-stack.outputs.stack_exists == 'true'
+        run: |
+          S3_PREFIX="saga-sm-api-ephemeral-${{ steps.branch-id.outputs.branch_identifier }}"
+
+          # Find SAM bucket for this region
+          SAM_BUCKET=$(aws s3api list-buckets --query "Buckets[?contains(Name, 'aws-sam-cli-managed') && contains(Name, 'samclisourcebucket')].Name" --output text | head -1)
+
+          if [ ! -z "$SAM_BUCKET" ]; then
+            echo "Cleaning up S3 artifacts in bucket: ${SAM_BUCKET}"
+            aws s3 rm s3://${SAM_BUCKET}/${S3_PREFIX}/ --recursive || true
+            echo "S3 cleanup completed"
+          else
+            echo "No SAM bucket found or already cleaned up"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch Identifier**: ${{ steps.branch-id.outputs.branch_identifier }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stack Name**: saga-sm-api-ephemeral-${{ steps.branch-id.outputs.branch_identifier }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stack Existed**: ${{ steps.check-stack.outputs.stack_exists }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check-stack.outputs.stack_exists }}" == "true" ]; then
+            echo "- **Action**: Stack and S3 artifacts deleted successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Action**: No cleanup needed (stack did not exist)" >> $GITHUB_STEP_SUMMARY
+          fi

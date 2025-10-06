@@ -4,27 +4,35 @@
     "description": "Web client for testing saga-sm API",
     "private": true,
     "scripts": {
-        "dev": "next dev --turbopack --port 3001",
+        "dev": "next dev --port 3001",
         "build": "next build",
-        "start": "next start",
-        "lint": "next lint --max-warnings 0",
+        "start": "npx serve@latest out -l 3001",
+        "lint": "eslint --max-warnings 0 .",
         "typecheck": "tsc --noEmit",
         "check": "pnpm run build && pnpm run lint && pnpm run typecheck",
-        "clean": "rm -rf .next"
+        "clean": "rm -rf .next",
+        "test": "echo 'No unit tests for web-client. Use pnpm playwright for E2E tests.'",
+        "playwright": "playwright test",
+        "playwright:headed": "playwright test --headed",
+        "playwright:ui": "playwright test --ui",
+        "playwright:debug": "playwright test --debug"
     },
     "dependencies": {
-        "next": "^15.4.0",
+        "@saga-sm/api-types": "workspace:*",
+        "@trpc/client": "^11.0.0",
+        "next": "^15.5.3",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
-        "@trpc/client": "^11.0.0"
+        "zod": "^4.1.7"
     },
     "devDependencies": {
-        "@types/node": "^22.0.0",
-        "@types/react": "^19.1.0",
+        "@eslint/eslintrc": "^3.3.1",
+        "@playwright/test": "^1.55.0",
+        "@types/node": "24.3.1",
+        "@types/react": "19.1.12",
         "@types/react-dom": "^19.1.0",
-        "eslint": "^8.57.0",
-        "eslint-config-next": "^15.4.0",
-        "typescript": "^5.8.2",
-        "prettier": "^3.2.5"
+        "eslint": "^9.35.0",
+        "eslint-config-next": "^15.5.3",
+        "typescript": "5.9.2"
     }
 }

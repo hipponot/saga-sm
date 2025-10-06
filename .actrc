@@ -1,0 +1,25 @@
+# Act configuration for local GitHub Actions testing
+
+# Use medium size runner for better compatibility
+--platform ubuntu-latest=catthehacker/ubuntu:act-latest
+
+# Set default secrets file
+--secret-file .act/.secrets
+
+# Set default environment variables file
+--env-file .act/.env
+
+# Use Docker bind mounts for better performance
+--use-gitignore=false
+
+# Enable verbose logging
+--verbose
+
+# Container architecture
+--container-architecture linux/amd64
+
+# Reuse containers for better performance during development
+--reuse
+
+# Bind working directory to container
+--bind

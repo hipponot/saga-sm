@@ -17,10 +17,22 @@
 
 This project provides:
 
-- **Schedule CRUD operations**: Create, read, update, delete schedules
-- **Real-time updates**: PubSub events for schedule changes
+- **Example API operations**: Demonstrates CRUD operations with example entities
+- **Real-time updates**: PubSub events for entity changes
 - **Type-safe API**: Full TypeScript support from API to client
 - **Interactive testing**: Web client for endpoint exploration and testing
+
+## 📖 Documentation Guide
+
+| Topic | Guide | Description |
+|-------|-------|-------------|
+| **Getting Started** | [README.md](README.md) | Project overview, quick start, architecture |
+| **Environment Setup** | [Environment Setup](ENVIRONMENT_SETUP.md) | .env files, database config, local development |
+| **GitHub Authentication** | [GitHub Setup](GITHUB_SETUP.md) | Personal access tokens, package registry access |
+| **Docker & Containers** | [Docker Setup](DOCKER_SETUP.md) | Container builds, authentication, troubleshooting |
+| **Dependency Management** | [Dependencies](DEPENDENCIES.md) | Local vs published packages, switching modes |
+| **Testing** | [Testing Guide](TESTING.md) | Unit tests, integration tests, database setup |
+| **Deployment** | [Web Client](apps/web-client/DEPLOYMENT_GUIDE.md) • [API](apps/api/DEPLOYMENT_GUIDE.md) | Production deployment guides |
 
 ## 📁 Project Structure
 
@@ -30,7 +42,7 @@ saga-sm/
 │   ├── api/                    # tRPC API service (port 3000)
 │   │   ├── src/
 │   │   │   ├── sectors/        # Business logic by domain
-│   │   │   │   ├── schedule/   # Schedule management
+│   │   │   │   ├── example/    # Example sector (formerly schedule)
 │   │   │   │   └── pubsub/     # Event definitions
 │   │   │   ├── main.ts         # API bootstrap
 │   │   │   └── inversify.config.ts
@@ -39,7 +51,7 @@ saga-sm/
 │       ├── app/                # Testing interfaces
 │       │   ├── endpoints/      # Interactive endpoint testing
 │       │   ├── api-test/       # Connection testing
-│       │   ├── schedule-demo/  # Live demo interface
+│       │   ├── example-demo/   # Live demo interface
 │       │   └── page.tsx        # Home page
 │       ├── src/services/       # tRPC client integration
 │       └── package.json
@@ -52,8 +64,8 @@ saga-sm/
 ### Prerequisites
 
 - **Node.js** >= 18
-- **pnpm** >= 8
-- **MongoDB** (local or remote)
+- **pnpm** >= 8  
+- **Docker** with Docker Compose (for databases)
 - **saga-soa repository** (must be cloned alongside this project)
 
 ### Required Directory Structure
@@ -64,7 +76,9 @@ dev/
 └── saga-sm/           # This project
 ```
 
-### Quick Setup
+### 🚀 One-Command Setup
+
+For new developers, we provide a comprehensive setup script that handles everything:
 
 **1. Clone both repositories:**
 ```bash
@@ -73,32 +87,85 @@ git clone [saga-soa-repo-url] saga-soa
 git clone [saga-sm-repo-url] saga-sm
 ```
 
-**2. Link saga-sm to saga-soa for concurrent development:**
+**2. Run the quick-start script:**
 ```bash
 cd saga-sm
-
-# Option A: pnpm link (recommended for active saga-soa development)
-./scripts/setup-local-dev.sh
-
-# Option B: file protocol (simpler, automatic updates)
-./scripts/setup-file-protocol.sh
+./scripts/quick-start.sh
 ```
 
-**3. Configure environment:**
+This script will:
+- ✅ Check prerequisites (Node.js, pnpm, Docker)
+- ✅ Install dependencies and configure saga-soa integration  
+- ✅ Start database services (PostgreSQL, MongoDB, Redis)
+- ✅ Setup database schema with Prisma
+- ✅ Run tests to verify everything works
+
+**3. Start developing:**
 ```bash
-# Copy and customize API configuration
-cp apps/api/.env.example apps/api/.env
-# Update MongoDB URI and other settings as needed
+pnpm dev  # Starts API server (3000) and web client (3001)
 ```
 
-**4. Start development servers:**
+### ✅ Validate Your Setup
+
+To verify everything is working correctly:
+
 ```bash
-# Terminal 1: Start saga-soa packages (if using pnpm link)
-cd ../saga-soa && turbo run dev --filter='@saga-soa/*'
-
-# Terminal 2: Start saga-sm applications
-cd saga-sm && pnpm dev
+./scripts/validate-setup.sh  # Comprehensive environment check
 ```
+
+This validation script checks:
+- Database connectivity (PostgreSQL, MongoDB, Redis)  
+- Build process functionality
+- Test suite execution
+- saga-soa integration status
+
+### Manual Setup (Alternative)
+
+If you prefer manual control or the quick-start script doesn't work:
+
+**1. Setup development environment:**
+```bash
+# For local development (recommended for saga-soa development)
+./scripts/dev-setup.sh local
+
+# For CI-like environment (uses published packages, requires GitHub token)
+./scripts/dev-setup.sh ci
+```
+
+**2. Start databases:**
+```bash
+docker compose up -d postgres mongodb redis
+```
+
+**3. Setup database schema:**
+```bash
+./scripts/setup-test-env.sh  # Setup Prisma schema and test environment
+```
+
+**4. Start applications:**
+```bash
+pnpm dev
+```
+
+### Dependency Management
+
+saga-sm works with saga-soa in **local** (file: dependencies) or **published** (@hipponot packages) modes:
+
+```bash
+# Local development mode (default)
+./scripts/dev-setup.sh local
+
+# Published packages mode (requires GitHub token)
+./scripts/dev-setup.sh ci
+```
+
+**For detailed dependency management:** See [Dependencies Guide](DEPENDENCIES.md)
+
+### AWS Deployment Prerequisites
+
+- **AWS CLI** configured with appropriate permissions
+- **Required AWS permissions**: Ensure your credentials include `amplify:CreateDeployment` for web client deployment
+- See [aws-deploy-permissions.json](./aws-deploy-permissions.json) for complete AWS permission requirements
 
 ### Applications
 
@@ -118,10 +185,21 @@ cd saga-sm && pnpm dev
 ```bash
 pnpm dev          # Run both API and web client
 pnpm build        # Build all applications  
-pnpm test         # Run all tests
+pnpm test         # Run unit tests (API, types)
 pnpm check        # Full validation (build + test + lint + typecheck)
 pnpm lint         # Lint all code
 pnpm typecheck    # TypeScript validation
+
+# End-to-End Testing
+pnpm playwright         # Run E2E tests (headless)
+pnpm playwright:headed  # Run E2E tests (with browser UI)
+pnpm playwright:ui      # Run E2E tests (interactive UI)
+pnpm playwright:debug   # Debug E2E tests
+
+# Deployment (from anywhere in monorepo)
+pnpm run deploy:web     # Deploy web client to Amplify
+pnpm run deploy:api     # Deploy API to ECS/Fargate  
+pnpm run deploy         # Build + deploy both (API then web)
 ```
 
 ### Individual Applications
@@ -152,7 +230,7 @@ Following saga-soa patterns:
 Next.js 15 application with App Router providing:
 
 - **Interactive Endpoint Testing** - Full tRPC and HTTP testing interface
-- **Live Demo Interface** - Schedule management with real-time updates
+- **Live Demo Interface** - Example management with real-time updates
 - **Connection Diagnostics** - API health monitoring
 - **Code Generation** - Both tRPC client and cURL examples
 - **Dual Service Support** - tRPC client and HTTP-based access
@@ -161,27 +239,27 @@ Next.js 15 application with App Router providing:
 - `/` - Navigation hub with application overview
 - `/endpoints` - Interactive API endpoint explorer
 - `/api-test` - Connection testing and diagnostics
-- `/schedule-demo` - Live schedule management interface
+- `/example-demo` - Live example management interface
 
 ## 📡 Available Endpoints
 
-The tRPC API provides these schedule management endpoints:
+The tRPC API provides these example endpoints:
 
-- `schedule.getSchedules` - Retrieve all schedules
-- `schedule.getScheduleById` - Get specific schedule by ID
-- `schedule.createSchedule` - Create new schedule
-- `schedule.updateSchedule` - Update existing schedule
-- `schedule.deleteSchedule` - Remove schedule
+- `example.getExamples` - Retrieve all examples
+- `example.getExampleById` - Get specific example by ID
+- `example.createExample` - Create new example
+- `example.updateExample` - Update existing example
+- `example.deleteExample` - Remove example
 
 ## 📻 PubSub Events
 
-Real-time events for schedule changes:
+Real-time events for example entity changes:
 
-- `schedule:created` - New schedule created
-- `schedule:updated` - Schedule modified
-- `schedule:deleted` - Schedule removed
-- `schedule:started` - Schedule execution began
-- `schedule:completed` - Schedule execution finished
+- `example:created` - New example created
+- `example:updated` - Example modified
+- `example:deleted` - Example removed
+- `example:started` - Example execution began
+- `example:completed` - Example execution finished
 
 ## 🧪 Testing
 
@@ -196,6 +274,13 @@ pnpm --filter @saga-sm/web-client test # Client tests only
 - **Unit tests**: Individual function/class testing
 - **Integration tests**: API endpoint and database testing
 - **Type checking**: TypeScript validation across codebase
+
+### Testing Documentation
+For detailed testing conventions and strategies, see our [Testing Documentation](./memory-bank/testing/README.md). This includes:
+- Unit testing patterns and best practices
+- Test organization using `__tests__/` directory structure
+- Framework choices (Vitest preferred, Jest for legacy)
+- Integration with saga-soa testing standards
 
 ## 🔧 Development Features
 
@@ -222,9 +307,15 @@ The web client provides comprehensive testing tools:
 
 ### Common Issues
 
-**"saga-soa packages not found"**
+**"Cannot find module '@saga-sm/api-types'" or similar dependency errors**
+- This happens after `git clean` or when workspace symlinks are broken
+- Fix: Run `pnpm install` to recreate workspace symlinks
+- Or re-run: `./scripts/quick-start.sh`
+
+**"saga-soa packages not found"** or **"403 Forbidden" from GitHub Packages**
 - Ensure saga-soa is cloned in the correct directory structure
-- Re-run the setup script: `./scripts/setup-local-dev.sh`
+- For published packages: Set up GitHub token (see [GitHub Setup](GITHUB_SETUP.md))
+- Re-run the setup script: `./scripts/dev-setup.sh local`
 
 **"Database connection failed"**
 - Check MongoDB is running locally or update `MONGODB_URI` in `apps/api/.env`
@@ -238,18 +329,73 @@ The web client provides comprehensive testing tools:
 - Restart both terminal sessions
 - Verify saga-soa packages are building with `turbo run dev`
 
+## 🐳 Docker
+
+### Docker Compose Setup
+
+Build and run the full application stack using Docker:
+
+```bash
+# Set up GitHub token for package access
+export GITHUB_TOKEN=$(gh auth token)
+
+# Build all services
+docker-compose build
+
+# Start the full stack (databases + API + web client)
+docker-compose up -d
+
+# Or start specific services
+docker-compose up -d api web-client
+```
+
+### Authentication Requirements
+
+Docker builds require GitHub Packages access for @hipponot packages:
+
+- **Quick setup**: `export GITHUB_TOKEN=$(gh auth token)` 
+- **Docker guide**: See [Docker Setup](DOCKER_SETUP.md)
+- **GitHub tokens**: See [GitHub Setup](GITHUB_SETUP.md)
+- **Fallback option**: Use local dependencies with `./scripts/switch-saga-soa-deps.sh local`
+
+### Services
+
+- **API**: `http://localhost:3000` (tRPC + REST endpoints)
+- **Web Client**: `http://localhost:3001` (Testing interface)  
+- **Database**: PostgreSQL (5432), MongoDB (27017), Redis (6379)
+- **Adminer**: `http://localhost:8080` (Database admin, dev mode only)
+
 ## 🚀 Deployment
 
-When ready for production:
+### Quick Deployment (from monorepo root)
+
+```bash
+# Deploy web client only
+pnpm run deploy:web --env qa --force
+
+# Deploy API only  
+pnpm run deploy:api v1.2.3 prod
+
+# Deploy everything (builds first)
+pnpm run deploy
+```
+
+### Production Deployment Steps
 
 1. Update saga-soa dependencies to published npm packages
 2. Build applications: `pnpm build`
-3. Deploy API and web client independently
+3. Deploy using convenience scripts:
+   - **API**: `pnpm run deploy:api [tag] [environment] [deploy:true|false]`
+   - **Web Client**: `pnpm run deploy:web [--env ENV] [--force]`
 4. Configure environment variables for production
+
+See individual deployment guides:
+- [Web Client Deployment Guide](./apps/web-client/DEPLOYMENT_GUIDE.md)
+- [API Deployment Guide](./apps/api/DEPLOYMENT_GUIDE.md)
 
 ## 📚 Next Steps
 
-1. **Explore the codebase**: Start with `apps/api/src/sectors/schedule/`
+1. **Explore the codebase**: Start with `apps/api/src/sectors/example/`
 2. **Test the API**: Use the web client to understand available endpoints
 3. **Read saga-soa docs**: Understand the underlying infrastructure patterns
 4. **Make your first change**: Add a new endpoint or modify existing logic

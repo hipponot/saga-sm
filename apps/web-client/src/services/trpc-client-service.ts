@@ -1,18 +1,18 @@
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
+import type { ApiRouter } from '@saga-sm/api-types'
 import { ServiceInterface, Endpoint, ApiResponse } from './types'
-import { TRPC_ENDPOINT } from './endpoints'
-
-// This would normally import from @saga-sm/api-types when available
-type AppRouter = any // Placeholder - will be replaced with proper types
+import { getTrpcEndpoint } from './endpoints'
 
 export class TrpcClientService implements ServiceInterface {
-    private client: ReturnType<typeof createTRPCClient<AppRouter>>
+    private client: ReturnType<typeof createTRPCClient<ApiRouter>>
+    private currentUrl: string
 
-    constructor() {
-        this.client = createTRPCClient<AppRouter>({
+    constructor(customApiUrl?: string, customBasePath?: string) {
+        this.currentUrl = getTrpcEndpoint(customApiUrl, customBasePath)
+        this.client = createTRPCClient<ApiRouter>({
             links: [
                 httpBatchLink({
-                    url: TRPC_ENDPOINT,
+                    url: this.currentUrl,
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -21,12 +21,32 @@ export class TrpcClientService implements ServiceInterface {
         })
     }
 
+    // Method to update the API URL at runtime
+    public updateApiUrl(customApiUrl: string, customBasePath?: string) {
+        this.currentUrl = getTrpcEndpoint(customApiUrl, customBasePath)
+        this.client = createTRPCClient<ApiRouter>({
+            links: [
+                httpBatchLink({
+                    url: this.currentUrl,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }),
+            ],
+        })
+    }
+
+    // Get current URL being used
+    public getCurrentUrl(): string {
+        return this.currentUrl
+    }
+
     async executeEndpoint(endpoint: Endpoint, input: string): Promise<ApiResponse> {
         const startTime = Date.now()
 
         try {
-            let parsedInput: any = null
-            
+            let parsedInput: unknown = null
+
             if (input.trim()) {
                 try {
                     parsedInput = JSON.parse(input)
@@ -35,26 +55,25 @@ export class TrpcClientService implements ServiceInterface {
                 }
             }
 
-            let result: any
+            let result: unknown
 
             // Parse the endpoint path to determine the method and procedure
-            const [namespace, procedure] = endpoint.id.split('.')
 
             switch (endpoint.id) {
-                case 'schedule.getSchedules':
-                    result = await this.client.schedule.getSchedules.query()
+                case 'example.queryExamples':
+                    result = await this.client.example.queryExamples.query(parsedInput as never || {})
                     break
-                case 'schedule.getScheduleById':
-                    result = await this.client.schedule.getScheduleById.query(parsedInput)
+                case 'example.getExampleById':
+                    result = await this.client.example.getExampleById.query(parsedInput as never)
                     break
-                case 'schedule.createSchedule':
-                    result = await this.client.schedule.createSchedule.mutate(parsedInput)
+                case 'example.createExample':
+                    result = await this.client.example.createExample.mutate(parsedInput as never)
                     break
-                case 'schedule.updateSchedule':
-                    result = await this.client.schedule.updateSchedule.mutate(parsedInput)
+                case 'example.updateExample':
+                    result = await this.client.example.updateExample.mutate(parsedInput as never)
                     break
-                case 'schedule.deleteSchedule':
-                    result = await this.client.schedule.deleteSchedule.mutate(parsedInput)
+                case 'example.deleteExample':
+                    result = await this.client.example.deleteExample.mutate(parsedInput as never)
                     break
                 default:
                     throw new Error(`Unknown endpoint: ${endpoint.id}`)
@@ -64,14 +83,14 @@ export class TrpcClientService implements ServiceInterface {
                 success: true,
                 data: result,
                 timestamp: new Date().toISOString(),
-                duration: Date.now() - startTime
+                duration: Date.now() - startTime,
             }
         } catch (error) {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred',
                 timestamp: new Date().toISOString(),
-                duration: Date.now() - startTime
+                duration: Date.now() - startTime,
             }
         }
     }
@@ -80,12 +99,12 @@ export class TrpcClientService implements ServiceInterface {
         const hasInput = input.trim().length > 0
         let code = `// tRPC Client Implementation\n`
         code += `import { createTRPCClient, httpBatchLink } from '@trpc/client'\n`
-        code += `import type { AppRouter } from '@saga-sm/api-types'\n\n`
-        
-        code += `const client = createTRPCClient<AppRouter>({\n`
+        code += `import type { ApiRouter } from '@saga-sm/api-types'\n\n`
+
+        code += `const client = createTRPCClient<ApiRouter>({\n`
         code += `    links: [\n`
         code += `        httpBatchLink({\n`
-        code += `            url: '${TRPC_ENDPOINT}',\n`
+        code += `            url: '${this.currentUrl}',\n`
         code += `        }),\n`
         code += `    ],\n`
         code += `})\n\n`
@@ -94,7 +113,14 @@ export class TrpcClientService implements ServiceInterface {
             code += `const input = ${input}\n\n`
         }
 
-        const isQuery = ['getSchedules', 'getScheduleById'].some(method => endpoint.id.includes(method))
+        const isQuery = [
+            'queryExamples',
+            'getExampleById',
+            'getEventHistory',
+            'getChannelInfo',
+            'getServiceStatus',
+            'getSubscriptionStats',
+        ].some(method => endpoint.id.includes(method))
         const methodType = isQuery ? 'query' : 'mutate'
         const inputParam = hasInput ? '(input)' : '()'
 

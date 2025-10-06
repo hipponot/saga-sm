@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "vitest.explorer",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-json",
+        "zxh404.vscode-proto3",
+        "ms-playwright.playwright",
+        "prisma.prisma",
+        "ms-vscode.vscode-eslint",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "ms-vscode.vscode-node-azure-pack"
+    ]
+}
