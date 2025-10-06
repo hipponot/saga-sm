@@ -218,8 +218,8 @@ log_step "Updating package.json files"
 update_package_json "$PROJECT_ROOT/apps/api" "dependencies"
 update_package_json "$PROJECT_ROOT/apps/api" "devDependencies"
 
-# Process apps/api/types
-update_package_json "$PROJECT_ROOT/apps/api/types" "devDependencies"
+# Process packages/api-types
+update_package_json "$PROJECT_ROOT/packages/api-types" "devDependencies"
 
 if [ "$DRY_RUN" = false ]; then
     log_step "Cleaning up package-lock files and node_modules"

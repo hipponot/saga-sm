@@ -259,8 +259,8 @@ verify_setup() {
         log_warning "API tests had issues. Check: pnpm run --dir apps/api test"
     fi
     
-    # Test API types package  
-    if pnpm run --dir apps/api/types test >/dev/null 2>&1; then
+    # Test API types package
+    if pnpm run --dir packages/api-types test >/dev/null 2>&1; then
         log_success "API types tests passed"
     else
         log_warning "API types tests had issues"

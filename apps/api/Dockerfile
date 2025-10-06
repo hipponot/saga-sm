@@ -18,7 +18,6 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml turbo.json ./
 
 # Copy all package.json files for dependency resolution
 COPY apps/api/package.json apps/api/.npmrc ./apps/api/
-COPY apps/api/types/package.json apps/api/types/.npmrc ./apps/api/types/
 COPY packages/ ./packages/
 
 # Configure GitHub Packages registry for @hipponot packages
@@ -40,11 +39,12 @@ FROM dependencies AS builder
 # Copy source code only after dependencies are installed
 COPY apps/api/src/ ./apps/api/src/
 COPY apps/api/tsconfig.json apps/api/tsup.config.ts ./apps/api/
-COPY apps/api/types/src/ ./apps/api/types/src/
-COPY apps/api/types/tsconfig.json apps/api/types/tsup.config.ts apps/api/types/codegen.config.js ./apps/api/types/
 # Copy database sources and schema
 COPY packages/database/src/ ./packages/database/src/
 COPY packages/database/prisma/ ./packages/database/prisma/
+# Copy api-types package sources
+COPY packages/api-types/src/ ./packages/api-types/src/
+COPY packages/api-types/tsconfig.json packages/api-types/tsup.config.ts packages/api-types/codegen.config.js ./packages/api-types/
 
 # Generate Prisma client and build with turbo
 WORKDIR /app
@@ -70,7 +70,6 @@ RUN addgroup -g 1001 -S nodejs && \
 COPY --from=builder /app/pnpm-workspace.yaml /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/packages/ ./packages/
 COPY --from=builder /app/apps/api/package.json /app/apps/api/.npmrc ./apps/api/
-COPY --from=builder /app/apps/api/types/package.json /app/apps/api/types/.npmrc ./apps/api/types/
 
 # Install pnpm and production dependencies only
 RUN npm install -g pnpm@8.15.4 && \

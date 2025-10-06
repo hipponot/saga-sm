@@ -18,7 +18,6 @@ COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/pnpm-lock.yaml sag
 
 # Copy all saga-sm package.json files for dependency resolution
 COPY saga-sm/apps/api/package.json ./saga-sm/apps/api/
-COPY saga-sm/apps/api/types/package.json ./saga-sm/apps/api/types/
 COPY saga-sm/packages/ ./saga-sm/packages/
 
 # Install dependencies (file: references will work because saga-soa is copied)
@@ -37,11 +36,12 @@ WORKDIR /app/saga-sm
 # Copy saga-sm source code only after dependencies are installed
 COPY saga-sm/apps/api/src/ ./apps/api/src/
 COPY saga-sm/apps/api/tsconfig.json saga-sm/apps/api/tsup.config.ts ./apps/api/
-COPY saga-sm/apps/api/types/src/ ./apps/api/types/src/
-COPY saga-sm/apps/api/types/tsconfig.json saga-sm/apps/api/types/tsup.config.ts saga-sm/apps/api/types/codegen.config.js ./apps/api/types/
 # Copy database sources and schema
 COPY saga-sm/packages/database/src/ ./packages/database/src/
 COPY saga-sm/packages/database/prisma/ ./packages/database/prisma/
+# Copy api-types package sources
+COPY saga-sm/packages/api-types/src/ ./packages/api-types/src/
+COPY saga-sm/packages/api-types/tsconfig.json saga-sm/packages/api-types/tsup.config.ts saga-sm/packages/api-types/codegen.config.js ./packages/api-types/
 
 # Generate Prisma client and build with turbo
 RUN cd packages/database && npx prisma generate && cd ../.. && \
@@ -69,7 +69,6 @@ COPY --from=builder /app/saga-soa/ ./saga-soa/
 COPY --from=builder /app/saga-sm/pnpm-workspace.yaml /app/saga-sm/package.json ./saga-sm/
 COPY --from=builder /app/saga-sm/packages/ ./saga-sm/packages/
 COPY --from=builder /app/saga-sm/apps/api/package.json ./saga-sm/apps/api/
-COPY --from=builder /app/saga-sm/apps/api/types/package.json ./saga-sm/apps/api/types/
 
 # Install production dependencies only
 WORKDIR /app/saga-sm

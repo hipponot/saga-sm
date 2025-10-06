@@ -17,7 +17,6 @@ COPY saga-soa/ ./saga-soa/
 COPY saga-sm/pnpm-workspace.yaml saga-sm/package.json saga-sm/turbo.json ./saga-sm/
 
 # Copy saga-sm package files for dependency resolution
-COPY saga-sm/apps/api/types/package.json ./saga-sm/apps/api/types/
 COPY saga-sm/apps/web-client/package.json ./saga-sm/apps/web-client/
 COPY saga-sm/packages/ ./saga-sm/packages/
 
@@ -35,11 +34,11 @@ FROM dependencies AS builder
 WORKDIR /app/saga-sm
 
 # First copy and build API types (dependency for web-client)
-COPY saga-sm/apps/api/types/src/ ./apps/api/types/src/
-COPY saga-sm/apps/api/types/tsconfig.json saga-sm/apps/api/types/tsup.config.ts saga-sm/apps/api/types/codegen.config.js ./apps/api/types/
+COPY saga-sm/packages/api-types/src/ ./packages/api-types/src/
+COPY saga-sm/packages/api-types/tsconfig.json saga-sm/packages/api-types/tsup.config.ts saga-sm/packages/api-types/codegen.config.js ./packages/api-types/
 
 # Build API types first
-RUN cd apps/api/types && pnpm build && cd ../..
+RUN cd packages/api-types && pnpm build && cd ../..
 
 # Copy web client source code
 COPY saga-sm/apps/web-client/app/ ./apps/web-client/app/
@@ -73,7 +72,6 @@ COPY --from=builder /app/saga-soa/ ./saga-soa/
 # Copy saga-sm workspace files for production install
 COPY --from=builder /app/saga-sm/pnpm-workspace.yaml /app/saga-sm/package.json ./saga-sm/
 COPY --from=builder /app/saga-sm/packages/ ./saga-sm/packages/
-COPY --from=builder /app/saga-sm/apps/api/types/package.json ./saga-sm/apps/api/types/
 COPY --from=builder /app/saga-sm/apps/web-client/package.json ./saga-sm/apps/web-client/
 
 # Install production dependencies only
@@ -83,7 +81,7 @@ RUN pnpm install --prod --no-frozen-lockfile
 # Copy built static application and API types with correct ownership
 COPY --from=builder --chown=nextuser:nodejs /app/saga-sm/apps/web-client/out ./apps/web-client/out
 COPY --from=builder --chown=nextuser:nodejs /app/saga-sm/apps/web-client/next.config.js ./apps/web-client/
-COPY --from=builder --chown=nextuser:nodejs /app/saga-sm/apps/api/types/dist ./apps/api/types/dist
+COPY --from=builder --chown=nextuser:nodejs /app/saga-sm/packages/api-types/dist ./packages/api-types/dist
 
 # Set Docker environment variable to indicate containerized deployment
 ENV DOCKER_ENV=true

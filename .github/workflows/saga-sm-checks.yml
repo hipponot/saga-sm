@@ -97,7 +97,7 @@ jobs:
 
       - name: 🏗️ Build API types
         run: |
-          cd apps/api/types  
+          cd packages/api-types
           pnpm build
 
       - name: 🏗️ Build API
@@ -218,9 +218,9 @@ jobs:
 
       - name: 🏗️ Build API
         run: |
-          cd apps/api/types
+          cd packages/api-types
           pnpm build
-          cd ..
+          cd ../../apps/api
           pnpm build
 
       - name: 🧪 Run integration tests
@@ -297,9 +297,9 @@ jobs:
           npx prisma generate --schema ./prisma/schema.prisma
           npx prisma db push --schema ./prisma/schema.prisma --accept-data-loss
           pnpm build
-          cd ../../apps/api/types
+          cd ../api-types
           pnpm build
-          cd ..
+          cd ../../apps/api
           pnpm build
 
       - name: 🧪 Run complete test suite with coverage

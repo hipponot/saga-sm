@@ -21,10 +21,10 @@ RUN echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc && \
     fi
 
 # Copy pre-built API types (dist folder only)
-COPY apps/api/types/dist/ ./apps/api/types/dist/
+COPY packages/api-types/dist/ ./packages/api-types/dist/
 
 # Create minimal package.json for API types (production only)
-RUN echo '{"name":"@saga-sm/api-types","version":"1.0.0","type":"module","private":true,"main":"./dist/index.js","types":"./dist/index.d.ts","exports":{".":{"types":"./dist/index.d.ts","default":"./dist/index.js"},"./schemas":{"types":"./dist/schemas/index.d.ts","default":"./dist/schemas/index.js"},"./generated":{"types":"./dist/generated/index.d.ts","default":"./dist/generated/index.js"}},"dependencies":{"zod":"^3.25.67"}}' > ./apps/api/types/package.json
+RUN echo '{"name":"@saga-sm/api-types","version":"1.0.0","type":"module","private":true,"main":"./dist/index.js","types":"./dist/index.d.ts","exports":{".":{"types":"./dist/index.d.ts","default":"./dist/index.js"},"./schemas":{"types":"./dist/schemas/index.d.ts","default":"./dist/schemas/index.js"},"./generated":{"types":"./dist/generated/index.d.ts","default":"./dist/generated/index.js"}},"dependencies":{"zod":"^3.25.67"}}' > ./packages/api-types/package.json
 
 # Copy web client package files
 COPY apps/web-client/package.json apps/web-client/.npmrc ./apps/web-client/
@@ -66,11 +66,11 @@ RUN addgroup -g 1001 -S nodejs && \
 
 # Copy workspace configuration from builder
 COPY --from=builder /app/pnpm-workspace.yaml /app/package.json /app/pnpm-lock.yaml ./
-COPY --from=builder /app/apps/api/types/dist/ ./apps/api/types/dist/
+COPY --from=builder /app/packages/api-types/dist/ ./packages/api-types/dist/
 COPY --from=builder /app/apps/web-client/package.json /app/apps/web-client/.npmrc ./apps/web-client/
 
 # Recreate minimal package.json for API types and install dependencies
-RUN echo '{"name":"@saga-sm/api-types","version":"1.0.0","type":"module","private":true,"main":"./dist/index.js","types":"./dist/index.d.ts","exports":{".":{"types":"./dist/index.d.ts","default":"./dist/index.js"},"./schemas":{"types":"./dist/schemas/index.d.ts","default":"./dist/schemas/index.js"},"./generated":{"types":"./dist/generated/index.d.ts","default":"./dist/generated/index.js"}},"dependencies":{"zod":"^3.25.67"}}' > ./apps/api/types/package.json && \
+RUN echo '{"name":"@saga-sm/api-types","version":"1.0.0","type":"module","private":true,"main":"./dist/index.js","types":"./dist/index.d.ts","exports":{".":{"types":"./dist/index.d.ts","default":"./dist/index.js"},"./schemas":{"types":"./dist/schemas/index.d.ts","default":"./dist/schemas/index.js"},"./generated":{"types":"./dist/generated/index.d.ts","default":"./dist/generated/index.js"}},"dependencies":{"zod":"^3.25.67"}}' > ./packages/api-types/package.json && \
     echo '@hipponot:registry=https://npm.pkg.github.com' > .npmrc && \
     if [ -n "$GITHUB_TOKEN" ]; then \
         echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \

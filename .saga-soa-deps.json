@@ -31,14 +31,14 @@
         }
       }
     },
-    "apps/api/types": {
+    "packages/api-types": {
       "devDependencies": {
         "@hipponot/soa-trpc-codegen": {
-          "local": "file:../../../../saga-soa/packages/trpc-codegen",
+          "local": "file:../../../saga-soa/packages/trpc-codegen",
           "published": "^1.0.3"
         },
         "@hipponot/soa-zod2ts": {
-          "local": "file:../../../../saga-soa/build-tools/zod2ts",
+          "local": "file:../../../saga-soa/build-tools/zod2ts",
           "published": "^1.0.3"
         }
       }
